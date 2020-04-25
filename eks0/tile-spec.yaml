@@ -1,0 +1,61 @@
+apiVersion: mahjong.io/v1alpha1
+kind: Tile
+metadata:
+    name: Eks0
+    version: 0.0.1
+spec:
+    inputs:
+        # string
+        - name: vpc
+          depend:
+            - tile: Network0
+              version: 0.0.1
+              field: baseVpc
+          require: yes
+        # array 
+        - name: vpcSubnets
+          depend:
+            - tile: Network0
+              version: 0.0.1
+              field: publicSubnetId1
+            - tile: Network0
+              version: 0.0.1
+              field: publicSubnetId2
+            - tile: Network0
+              version: 0.0.1
+              field: privateSubnetId1
+            - tile: Network0
+              version: 0.0.1
+              field: privateSubnetId2
+          require: no
+        # string
+        - name: clusterName
+          require: yes
+        # number/ default: 2
+        - name: capacity
+          require: no
+        # string/ default: 'c5.large'
+        - name: capacityInstance
+          require: no
+        # string/ default: '1.15'
+        - name: version
+          require: no
+
+    outputs:
+        # string/ type = CloudFormation type
+        - name: clusterName
+          type: AWS::EKS::Cluster.Name
+        # string/ type = CloudFormation type
+        - name: clusterEndpoint
+          type: AWS::EKS::Cluster.Endpoint
+        # string/ type = CloudFormation type
+        - name: masterRoleARN
+          type: AWS::IAM::Role.ARN
+        # string/ type = Custome type if it's costomized output
+        - name: kubectlConfigCommand
+          type: Custom::kubectlConfigCommand
+
+    notes:
+      - "Tag public subnets with 'kubernetes.io/role/elb=1'"
+      - "Tag priavte subnets with 'kubernetes.io/role/internal-elb=1'"
+

@@ -1,0 +1,54 @@
+apiVersion: mahjong.io/v1alpha1
+kind: Deployment 
+metadata:
+  name: mahjong
+spec:
+  template:
+    network:
+      - basicNework:
+          # {{ vpc/ cidr / subnet / internet gateway / NAT / ... }}
+          version: 1.0.0
+          override:
+            vpc:
+              name:
+            subnet:
+              public:
+              private:
+      - basicCloudFront:
+          version: 1.0.0
+    compute:
+      # {{ ec2 / spot-ec2 / auto scaling group / elb / ... }}
+      - ec2:
+          version: 1.0.0
+      - autoscalinggroup:
+          version: 1.0.0
+      
+    container:
+      # {{ eks / ecs / ecr  }}
+      - basicEKS:
+          version: 1.0.0
+      - basicEKSWithStandardNodes:
+      - basicEKSWithSpotNodes:
+      - basicEKSWithManagedNodes:
+    
+    storage:
+      # {{ EBS / EFS / CSI + EBS CSI + EFS / ...}}
+      - basicsCSI:
+          version: 1.0.0
+    
+    database:
+      # {{ standard RDS / Aurora / Redis / ...}}
+
+    application:
+      # {{ Istio / Argo CD / Grafana / Prometheus / Knative / Kubeflow }}
+      - basicDevops:
+          # {{ ArgoCD / Argo Roolouts / Flux / Grafana / Prometheus }}
+          version: 1.0.0
+      - basicServerless:
+          # {{ knative }}
+          version: 1.0.0
+      - basicMisroservice:
+          # {{  Istio / Argo CD / Grafana / Prometheus / Thanose }}
+          version: 1.0.0
+      - basicML:
+          #{{ kubeflow }}
