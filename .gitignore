@@ -10,3 +10,70 @@ cdk.out
 # Parcel build directories
 .cache
 .build
+
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, build with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+.idea
+my
+**/*.DS_Store
+**/*.tmp
+**/vendor
+
+
+# See http://help.github.com/ignore-files/ for more about ignoring files.
+
+# compiled output
+src/bee/dist
+**/tmp
+/out-tsc
+# Only exists if Bazel was run
+**/bazel-out
+
+# dependencies
+**/node_modules
+
+# profiling files
+src/bee/chrome-profiler-events*.json
+src/bee/speed-measure-plugin*.json
+
+# IDEs and editors
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/*
+
+# misc
+**/.sass-cache
+**/connect.lock
+**/coverage
+**/libpeerconnection.log
+npm-debug.log
+yarn-error.log
+testem.log
+**/typings
+
+# System Files
+.DS_Store
+Thumbs.db

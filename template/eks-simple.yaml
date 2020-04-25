@@ -1,0 +1,10 @@
+apiVersion: mahjong.io/v1alpha1
+kind: Deployment 
+metadata:
+  name: mahjong
+spec:
+  template:      
+    container:
+      - name: Eks0
+        version: 1.0.0
+    

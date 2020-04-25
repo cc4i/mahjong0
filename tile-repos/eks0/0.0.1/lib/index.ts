@@ -18,6 +18,7 @@ export class Eks0 extends cdk.Construct {
   public readonly clusterName: string;
   public readonly clusterEndpoint: string;
   public readonly masterRoleARN: string;
+  public readonly clusterArn: string;
 
   constructor(scope: cdk.Construct, id: string, props: Eks0Props) {
     super(scope, id);
@@ -70,7 +71,8 @@ export class Eks0 extends cdk.Construct {
 
     this.clusterName = cluster.clusterName;
     this.masterRoleARN = eksRole.roleArn;
-    this.clusterEndpoint = cluster.clusterEndpoint
+    this.clusterEndpoint = cluster.clusterEndpoint;
+    this.clusterArn = cluster.clusterArn;
     
   
   }

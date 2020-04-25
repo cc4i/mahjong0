@@ -5,14 +5,15 @@ metadata:
     version: 0.0.1
 spec:
     inputs:
-        # string
+        # object
         - name: vpc
+          type: object
           depend:
             - tile: Network0
               version: 0.0.1
               field: baseVpc
           require: yes
-        # array 
+        # object[]
         - name: vpcSubnets
           depend:
             - tile: Network0
@@ -46,14 +47,15 @@ spec:
         - name: clusterName
           type: AWS::EKS::Cluster.Name
         # string/ type = CloudFormation type
+        - name: clusterArn
+          type: AWS::EKS::Cluster.ARN          
+        # string/ type = CloudFormation type
         - name: clusterEndpoint
           type: AWS::EKS::Cluster.Endpoint
         # string/ type = CloudFormation type
         - name: masterRoleARN
           type: AWS::IAM::Role.ARN
-        # string/ type = Custome type if it's costomized output
-        - name: kubectlConfigCommand
-          type: Custom::kubectlConfigCommand
+
 
     notes:
       - "Tag public subnets with 'kubernetes.io/role/elb=1'"

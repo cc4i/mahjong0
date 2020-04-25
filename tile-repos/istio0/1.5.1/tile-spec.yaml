@@ -1,0 +1,38 @@
+apiVersion: mahjong.io/v1alpha1
+kind: Tile
+metadata:
+    name: Istio0
+    version: 1.5.1
+spec:
+    inputs:
+        # string
+        - name: clusterName
+          depend:
+            - tile: Eks0
+              version: 0.0.1
+              field: clusterName
+          require: yes
+        # string
+        - name: masterRoleARN
+          require: yes
+        # number/ default: 2
+        - name: namespace
+          require: no
+        # manifest: k8s / kustomization / helm 
+        - name: manifests
+          type: k8s
+          reuire: yes
+          manifest:
+            - ?
+          
+
+    outputs:
+        # string/ type = CloudFormation type
+        - name: adminUser
+          type: Custom::adminUser
+        # string/ type = CloudFormation type
+        - name: adminPassword
+          type: Custom::adminPassword
+
+    notes: []
+

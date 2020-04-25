@@ -1,0 +1,39 @@
+apiVersion: mahjong.io/v1alpha1
+kind: Tile
+metadata:
+    name: Argocd0
+    version: 0.0.1
+spec:
+    inputs:
+        # string
+        - name: clusterName
+          depend:
+            - tile: Eks0
+              version: 0.0.1
+              field: clusterName
+          require: yes
+        # string
+        - name: masterRoleARN
+          require: yes
+        # number/ default: 2
+        - name: namespace
+          require: no
+          default: argocd
+        # manifest: k8s / kustomization / helm 
+        - name: manifests
+          type: k8s
+          reuire: yes
+          manifest:
+            - k8s/install.yaml
+          
+
+    outputs:
+        # string/ type = CloudFormation type
+        - name: adminUser
+          type: Custom::adminUser
+        # string/ type = CloudFormation type
+        - name: adminPassword
+          type: Custom::adminPassword
+
+    notes: []
+
