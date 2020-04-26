@@ -2,20 +2,27 @@ apiVersion: mahjong.io/v1alpha1
 kind: Tile
 metadata:
     name: Eks0
+    # Category: network, compute, container, storage, database, appliaction, analysis, ml
+    category: container
     version: 0.0.1
 spec:
     inputs:
-        # object
+        # inputType : string, number, cdk_object, k8s_manifest, helm_manifest, kustomize_manifest 
+        #             string[], number[], cdk_object[], k8s_manifest[], helm_manifest[], kustomize_manifest[]
+        # cdk_object
         - name: vpc
-          type: object
-          depend:
+          inputType: cdk_object
+          description: ''
+          dependencies:
             - tile: Network0
               version: 0.0.1
               field: baseVpc
           require: yes
-        # object[]
+        # cdk_object[]
         - name: vpcSubnets
-          depend:
+          inputType: cdk_object[]
+          description: ''
+          dependencies:
             - tile: Network0
               version: 0.0.1
               field: publicSubnetId1
@@ -31,30 +38,45 @@ spec:
           require: no
         # string
         - name: clusterName
+          inputType: string
+          description: ''
           require: yes
         # number/ default: 2
         - name: capacity
+          inputType: number
+          description: ''
+          defaultValue: '2'
           require: no
         # string/ default: 'c5.large'
         - name: capacityInstance
+          inputType: string
+          description: ''
+          defaultValue: 'c5.large'
           require: no
         # string/ default: '1.15'
         - name: version
+          inputType: string
+          description: ''
+          defaultValue: '1.15'
           require: no
 
     outputs:
-        # string/ type = CloudFormation type
+        # string
         - name: clusterName
-          type: AWS::EKS::Cluster.Name
+          outputType: string
+          description: AWS::EKS::Cluster.Name
         # string/ type = CloudFormation type
         - name: clusterArn
-          type: AWS::EKS::Cluster.ARN          
+          outputType: string
+          description: AWS::EKS::Cluster.ARN          
         # string/ type = CloudFormation type
         - name: clusterEndpoint
-          type: AWS::EKS::Cluster.Endpoint
+          outputType: string
+          description: AWS::EKS::Cluster.Endpoint
         # string/ type = CloudFormation type
         - name: masterRoleARN
-          type: AWS::IAM::Role.ARN
+          outputType: string
+          description: AWS::IAM::Role.ARN
 
 
     notes:

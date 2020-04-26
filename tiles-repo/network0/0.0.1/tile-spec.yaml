@@ -2,31 +2,43 @@ apiVersion: mahjong.io/v1alpha1
 kind: Tile
 metadata:
     name: Network0
+    # Category: network, compute, container, storage, database, appliaction, analysis, ml
+    category: network
     version: 0.0.1
 spec:
     inputs:
         # string
         - name: cidr
+          inputType: string
+          description: 'CIDR for VPC'
+          defaultValue: '10.0.0.0/16'
           require: yes
 
     outputs:
-        # string/ type = CloudFormation type
+        # cdk_object
         - name: baseVpc
-          type: AWS::EC2::VPC
-        # string/ type = CloudFormation type
+          outputType: cdk_object
+          description: AWS::EC2::VPC
+        # string
         - name: vpcId
-          type: AWS::EC2::VPC.ID
-        # string/ type = CloudFormation type
+          outputType: string
+          description: AWS::EC2::VPC.ID
+        # string
         - name: publicSubnetId1
-          type: AWS::EC2::Subnet.ID
-        # string/ type = CloudFormation type
+          outputType: string
+          description: AWS::EC2::Subnet.ID
+        # string
         - name: publicSubnetId2
-          type: AWS::EC2::Subnet.ID
-        # string/ type = CloudFormation type
+          outputType: string
+          description: AWS::EC2::Subnet.ID
+        # string
         - name: privateSubnetId1
-          type: AWS::EC2::Subnet.ID
+          outputType: string
+          description: AWS::EC2::Subnet.ID
+        #string
         - name: privateSubnetId2
-          type: AWS::EC2::Subnet.ID
+          outputType: string
+          description: AWS::EC2::Subnet.ID
 
     notes: 
       - 'Resources: vpc, internet gateway, subnets, nat, route table, EIP'

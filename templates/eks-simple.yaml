@@ -4,7 +4,16 @@ metadata:
   name: mahjong
 spec:
   template:      
-    container:
+    containers:
       - name: Eks0
         version: 1.0.0
+        inputs:
+          - name: clusterName
+            value: 
+          - name: capacity
+            value: 2
+          - name: capacityInstance
+            value: m5.large
+          - name: version
+            value: 1.15
     
