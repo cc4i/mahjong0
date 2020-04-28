@@ -4,12 +4,12 @@ metadata:
   name: mahjong
 spec:
   template:      
-    containers:
-      - name: Eks0
-        version: 1.0.0
+    container:
+      - tileReference: Eks0
+        tileVersion: 0.0.1
         inputs:
           - name: clusterName
-            value: 
+            value: mahjong-cluster0
           - name: capacity
             value: 2
           - name: capacityInstance

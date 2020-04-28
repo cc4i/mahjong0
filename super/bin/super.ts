@@ -8,10 +8,10 @@ import ec2 = require('@aws-cdk/aws-ec2');
 //
 
 // generated
-import {Eks0} from '../lib/eks0/lib/index'
+import Eks0 from '../lib/eks0/lib/index'
 //
 // generated
-import {Network0} from '../lib/network0/lib/index'
+import Network0 from '../lib/network0/lib/index'
 //
 //{{EO:}}
 

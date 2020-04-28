@@ -4,43 +4,53 @@ metadata:
     name: Argocd0
     # Category: network, compute, container, storage, database, appliaction, analysis, ml
     category: appliaction
-    version: 0.0.1
+    version: 1.5.2
 spec:
-    inputs:
-        # string
-        - name: clusterName
-          inputType: string
-          depend:
-            - tile: Eks0
-              version: 0.0.1
-              field: clusterName
-          require: yes
-        # string
-        - name: masterRoleARN
-          inputType: string
-          require: yes
-        # number/ default: 2
-        - name: namespace
-          inputType: string
-          require: no
-          defaultValue: argocd
-        # manifest: k8s / kustomization / helm 
-        - name: manifests
-          type: k8s_manifest[]
-          reuire: yes
-          manifests:
-            - k8s/install.yaml
+  dependencies:
+    - name: eks
+      tileReference: Eks0
+      tileVersion: 0.0.1
+  inputs:
+    # string
+    - name: clusterName
+      inputType: string
+      dependencies:
+        - name: eks
+          field: clusterName
+      require: yes
+    # string
+    - name: masterRoleARN
+      inputType: string
+      dependencies:
+        - name: eks
+          field: masterRoleARN
+      require: yes
+    # number/ default: 2
+    - name: namespace
+      inputType: string
+      require: no
+      defaultValue: argocd
+  
+  manifests:
+    # manifest: k8s / kustomization / helm 
+    manifestType: k8s_manifest
+    files:
+      - k8s/install.yaml
+    # folders:
+    #   - k8s
           
 
-    outputs:
-        # string
-        - name: adminUser
-          outputType: string
-          description: Custom::adminUser
-        # string
-        - name: adminPassword
-          outputType: string
-          description: Custom::adminPassword        
+  outputs:
+    # string
+    - name: user
+      outputType: string
+      defaultValue: admin
+      description: Custom::User
+    # string
+    - name: password
+      outputType: string
+      defaultValueCommand: kubectl get pods -n {{.namespace}} -l app.kubernetes.io/name=argocd-server -o name | cut -d'/' -f 2
+      description: Custom::Password        
 
-    notes: []
+  notes: []
 
