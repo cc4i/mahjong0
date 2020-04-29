@@ -23,8 +23,7 @@ type WsBox struct {
 }
 
 type WsWorker interface {
-	Processor(messageType int, p []byte) ([]byte, error)
-
+	Processor(ctx context.Context, messageType int, p []byte) error
 }
 
 func WsHandler(ctx context.Context, c *gin.Context) {
@@ -33,9 +32,11 @@ func WsHandler(ctx context.Context, c *gin.Context) {
 		log.Print("upgrade error:", err)
 		return
 	}
+	stx, cancel := context.WithCancel(ctx)
 	ws.SetCloseHandler(func(code int, txt string) error {
-		return WsCloseHandler(code, txt)
+		return WsCloseHandler(cancel, code, txt)
 	})
+	//ws.SetWriteDeadline(time.Now().Add(5 * time.Second))
 	defer ws.Close()
 
 	for {
@@ -47,7 +48,7 @@ func WsHandler(ctx context.Context, c *gin.Context) {
 		log.Printf("recv: %s\n", message)
 
 		wb := WsBox{out: ws}
-		_, err = wb.Processor(mt, message)
+		err = wb.Processor(stx, mt, message)
 		if err != nil {
 			engine.SendResponse(wb.out, []byte(err.Error()))
 		}
@@ -55,52 +56,50 @@ func WsHandler(ctx context.Context, c *gin.Context) {
 
 }
 
-func WsCloseHandler(code int, txt string) error {
+func WsCloseHandler(cancel context.CancelFunc, code int, txt string) error {
 	log.Printf("WebSocket connection was closed...error: %d - %s\n", code, txt)
+	cancel()
 	return nil
 }
 
-func (wb *WsBox) Processor(messageType int, p []byte) ([]byte, error) {
+func (wb *WsBox) Processor(ctx context.Context, messageType int, p []byte) error {
 	var ep *engine.ExecutionPlan
 	//
 	// 1. parse yaml +
-	engine.SendResponse(wb.out,[]byte("Parsing Deployment..."))
+	engine.SendResponse(wb.out, []byte("Parsing Deployment..."))
 	dt := engine.Data(p)
 	deploy, err := dt.ParseDeployment()
 	if err != nil {
-		engine.SendResponsef(wb.out,"Parsing Deployment error : %s \n", err)
-		engine.SendResponsef(wb.out,"!!! Treat input < %s > as command and to be executing...\n", p)
-		resp, err := ep.CommandExecutor(p, wb.out)
+		engine.SendResponsef(wb.out, "Parsing Deployment error : %s \n", err)
+		engine.SendResponsef(wb.out, "!!! Treat input < %s > as command and to be executing...\n", p)
+		_, err := ep.CommandExecutor(ctx, p, wb.out)
 		if err != nil {
-			engine.SendResponsef(wb.out,"CommandExecutor error : %s \n", err)
-			return resp, err
+			engine.SendResponsef(wb.out, "CommandExecutor error : %s \n", err)
+			return err
 		}
-		return resp, err
+		return err
 	}
-	engine.SendResponse(wb.out,[]byte("Parsing Deployment was success."))
-	engine.SendResponse(wb.out,[]byte("---"))
+	engine.SendResponse(wb.out, []byte("Parsing Deployment was success."))
+	engine.SendResponse(wb.out, []byte("---"))
 	b, _ := yaml.Marshal(deploy)
-	engine.SendResponse(wb.out,b)
-	engine.SendResponse(wb.out,[]byte("---"))
+	engine.SendResponse(wb.out, b)
+	engine.SendResponse(wb.out, []byte("---"))
 
 	//
 	// 2. assemble super app with base templates +
-	engine.SendResponse(wb.out,[]byte("Generating CDK App..."))
+	engine.SendResponse(wb.out, []byte("Generating CDK App..."))
 	ep, err = deploy.GenerateCdkApp(wb.out)
 	if err != nil {
-		engine.SendResponsef(wb.out,"GenerateCdkApp error : %s \n", err)
-		return nil, err
+		engine.SendResponsef(wb.out, "GenerateCdkApp error : %s \n", err)
+		return err
 	}
-	engine.SendResponse(wb.out,[]byte("Generating CDK App was success."))
+	engine.SendResponse(wb.out, []byte("Generating CDK App was success."))
 
 	//
 	// 3. execute cdk / manifest +
-	return nil, ep.ExecutePlan(wb.out)
-
+	return ep.ExecutePlan(ctx, wb.out)
 
 }
-
-
 
 func Deployment(ctx context.Context, c *gin.Context) {
 	buf, err := c.GetRawData()

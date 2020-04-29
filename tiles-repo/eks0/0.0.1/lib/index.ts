@@ -3,7 +3,9 @@ import eks = require('@aws-cdk/aws-eks');
 import ec2 = require('@aws-cdk/aws-ec2');
 import iam = require('@aws-cdk/aws-iam');
 import region = require('@aws-cdk/region-info');
+import { CfnOutput } from '@aws-cdk/core';
 
+/** Input parameters */
 export interface Eks0Props {
   vpc: ec2.Vpc,
   vpcSubnets?: ec2.SubnetSelection[],
@@ -15,6 +17,7 @@ export interface Eks0Props {
 
 export class Eks0 extends cdk.Construct {
   
+  /** Directly exposed to other stack */
   public readonly clusterName: string;
   public readonly clusterEndpoint: string;
   public readonly masterRoleARN: string;
@@ -69,12 +72,17 @@ export class Eks0 extends cdk.Construct {
     })
 
 
+    /** Added CF Output */
+    new cdk.CfnOutput(this,"clusterName", {value: cluster.clusterName})
+    new cdk.CfnOutput(this,"masterRoleARN", {value: eksRole.roleArn})
+    new cdk.CfnOutput(this,"clusterEndpoint", {value: cluster.clusterEndpoint})
+    new cdk.CfnOutput(this,"clusterArn", {value: cluster.clusterArn})
+    
     this.clusterName = cluster.clusterName;
     this.masterRoleARN = eksRole.roleArn;
     this.clusterEndpoint = cluster.clusterEndpoint;
     this.clusterArn = cluster.clusterArn;
-    
-  
+
   }
 
 

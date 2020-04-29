@@ -1,13 +1,16 @@
 import * as cdk from '@aws-cdk/core';
 import ec2 = require('@aws-cdk/aws-ec2');
 
+/** Input parameters */
 export interface Network0Props {
   cidr?: string
   
 }
 
 export class Network0 extends cdk.Construct {
-  /** @returns the ARN of the SQS queue */
+
+  /** Directly exposed to other stack  */
+  public readonly baseVpc: ec2.Vpc;
   public readonly vpcId: string;
   public readonly publicSubnetId1: string;
   public readonly publicSubnetId2: string;
@@ -19,18 +22,23 @@ export class Network0 extends cdk.Construct {
   public readonly privateSubnet1: ec2.ISubnet;
   public readonly privateSubnet2: ec2.ISubnet;
 
-
-  public readonly baseVpc: ec2.Vpc;
-
   constructor(scope: cdk.Construct, id: string, props: Network0Props) {
     super(scope, id);
 
-    // Create the base VPC
+    /**  Create the base VPC */
     this.baseVpc = new ec2.Vpc(this, "BaseVPC", {
       cidr: props.cidr || "10.0.0.0/16",
       maxAzs: 2
     });
 
+
+    /** Tags for EKS */
+    this.baseVpc.publicSubnets[0].node.applyAspect(new cdk.Tag("kubernetes.io/role/elb","1"));
+    this.baseVpc.publicSubnets[1].node.applyAspect(new cdk.Tag("kubernetes.io/role/elb","1"));
+    this.baseVpc.privateSubnets[0].node.applyAspect(new cdk.Tag("kubernetes.io/role/internal-elb","1"));
+    this.baseVpc.privateSubnets[1].node.applyAspect(new cdk.Tag("kubernetes.io/role/internal-elb","1"));
+
+   
     this.publicSubnetId1 = this.baseVpc.publicSubnets[0].subnetId;
     this.publicSubnetId2 = this.baseVpc.publicSubnets[1].subnetId;
     this.privateSubnetId1 = this.baseVpc.privateSubnets[0].subnetId;
@@ -40,13 +48,6 @@ export class Network0 extends cdk.Construct {
     this.publicSubnet2 = this.baseVpc.publicSubnets[1];
     this.privateSubnet1 = this.baseVpc.privateSubnets[0];
     this.privateSubnet2 = this.baseVpc.privateSubnets[1];
-
-    // Tags for EKS 
-    this.baseVpc.publicSubnets[0].node.applyAspect(new cdk.Tag("kubernetes.io/role/elb","1"));
-    this.baseVpc.publicSubnets[1].node.applyAspect(new cdk.Tag("kubernetes.io/role/elb","1"));
-    this.baseVpc.privateSubnets[0].node.applyAspect(new cdk.Tag("kubernetes.io/role/internal-elb","1"));
-    this.baseVpc.privateSubnets[1].node.applyAspect(new cdk.Tag("kubernetes.io/role/internal-elb","1"));
-
 
 
     

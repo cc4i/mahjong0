@@ -61,16 +61,16 @@ type TileDependency struct {
 }
 
 type TileInput struct {
-	Name         string                `json:"name"`
-	InputType    string                `json:"inputType"`
-	Description  string                `json:"description"`
-	Dependencies []TileInputDependency `json:"dependencies"`
-	DefaultValue string                `json:"defaultValue"`
-	DefaultValues []string `json:"defaultValues"`
-	InputValue   string                `json:"inputValue"`
+	Name          string                `json:"name"`
+	InputType     string                `json:"inputType"`
+	Description   string                `json:"description"`
+	Dependencies  []TileInputDependency `json:"dependencies"`
+	DefaultValue  string                `json:"defaultValue"`
+	DefaultValues []string              `json:"defaultValues"`
+	InputValue    string                `json:"inputValue"`
 	InputValues   string                `json:"inputValues"`
-	Manifests    []string              `json:"manifests"`
-	Require      string                `json:"require"` // yes/no
+	Manifests     []string              `json:"manifests"`
+	Require       string                `json:"require"` // yes/no
 }
 
 type TileManifest struct {

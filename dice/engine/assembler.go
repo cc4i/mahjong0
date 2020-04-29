@@ -12,9 +12,6 @@ import (
 	"text/template"
 )
 
-
-//var TsAll = &Ts{}
-
 // AssemblerCore represents a group of functions to assemble CDK App.
 type AssemblerCore interface {
 	// Generate CDK App from base template with necessary tiles
@@ -78,7 +75,7 @@ func (d *Deployment) GenerateCdkApp(out *websocket.Conn) (*ExecutionPlan, error)
 	}
 
 	// 3. Generate super.ts
-	if err := d.ApplyMainTs(out, tsAll); err !=nil {
+	if err := d.ApplyMainTs(out, tsAll); err != nil {
 		return ep, err
 	}
 
@@ -87,7 +84,7 @@ func (d *Deployment) GenerateCdkApp(out *websocket.Conn) (*ExecutionPlan, error)
 
 }
 
-func (d *Deployment) PullTile(to string, tile string, version string, out *websocket.Conn, tsAll *Ts)  error {
+func (d *Deployment) PullTile(to string, tile string, version string, out *websocket.Conn, tsAll *Ts) error {
 
 	// 1. Download tile from s3 & unzip
 	repoDir := "../tiles-repo/"
@@ -120,14 +117,14 @@ func (d *Deployment) PullTile(to string, tile string, version string, out *webso
 			// Ref -> Tile
 			dependenciesMap := make(map[string]string)
 			for _, m := range tile.Spec.Dependencies {
-				dependenciesMap[m.Name]=m.TileReference
+				dependenciesMap[m.Name] = m.TileReference
 			}
 
 			tsAll.TsLibs = append(tsAll.TsLibs, TsLib{
-				TileName: tile.Metadata.Name,
+				TileName:   tile.Metadata.Name,
 				TileFolder: strings.ToLower(tile.Metadata.Name),
 			})
-			inputs := make(map[string]string)//[]TsInputParameter  {}
+			inputs := make(map[string]string) //[]TsInputParameter  {}
 			for _, in := range tile.Spec.Inputs {
 				input := TsInputParameter{}
 				if in.Require == "true" {
@@ -135,21 +132,21 @@ func (d *Deployment) PullTile(to string, tile string, version string, out *webso
 						if len(in.Dependencies) == 1 {
 							input.InputName = in.Name
 							stile := strings.ToLower(dependenciesMap[in.Dependencies[0].Name])
-							input.InputValue = stile + "stack"+"var." + stile + "var." + in.Dependencies[0].Field
+							input.InputValue = stile + "stack" + "var." + stile + "var." + in.Dependencies[0].Field
 						} else {
 							input.InputName = in.Name
 							vals := "{ "
 							for _, d := range in.Dependencies {
 								stile := strings.ToLower(dependenciesMap[d.Name])
-								val := stile + "stack"+"var." + stile + "var." + d.Field
+								val := stile + "stack" + "var." + stile + "var." + d.Field
 								vals = vals + val + ","
 							}
-							input.InputValue = strings.TrimSuffix(vals,",")+" }"
+							input.InputValue = strings.TrimSuffix(vals, ",") + " }"
 						}
 
 					} else {
 						input.InputName = in.Name
-						if in.DefaultValues !=nil {
+						if in.DefaultValues != nil {
 							vals := "{ "
 							for _, d := range in.DefaultValues {
 								if in.InputType == "string" || in.InputType == "string[]" {
@@ -159,8 +156,7 @@ func (d *Deployment) PullTile(to string, tile string, version string, out *webso
 								}
 
 							}
-							input.InputValue = strings.TrimSuffix(vals,",")+" }"
-
+							input.InputValue = strings.TrimSuffix(vals, ",") + " }"
 
 						} else if len(in.DefaultValue) > 0 {
 							if in.InputType == "string" || in.InputType == "string[]" {
@@ -172,19 +168,18 @@ func (d *Deployment) PullTile(to string, tile string, version string, out *webso
 						}
 
 					}
-					inputs[input.InputName] = input.InputValue//append(inputs, input)
+					inputs[input.InputName] = input.InputValue //append(inputs, input)
 
 				}
 			}
 
 			tsAll.TsStacks = append(tsAll.TsStacks, TsStack{
 				TileName:          tile.Metadata.Name,
-				TileVariable:      strings.ToLower(tile.Metadata.Name+"var"),
-				TileStackName:     tile.Metadata.Name+"Stack",
-				TileStackVariable: strings.ToLower(tile.Metadata.Name+"stack"+"var"),
+				TileVariable:      strings.ToLower(tile.Metadata.Name + "var"),
+				TileStackName:     tile.Metadata.Name + "Stack",
+				TileStackVariable: strings.ToLower(tile.Metadata.Name + "stack" + "var"),
 				InputParameters:   inputs,
 			})
-
 
 			for _, t := range tile.Spec.Dependencies {
 				if err = d.PullTile(to, t.TileReference, t.TileVersion, out, tsAll); err != nil {
@@ -199,21 +194,21 @@ func (d *Deployment) PullTile(to string, tile string, version string, out *webso
 }
 
 // TODO: Simplify & refactor !!!
-func (d *Deployment) ApplyMainTs(out *websocket.Conn,  tsAll *Ts) error {
+func (d *Deployment) ApplyMainTs(out *websocket.Conn, tsAll *Ts) error {
 	destDir := "/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/"
 	superts := destDir + "super/bin/super.ts"
 
 	tp, _ := template.ParseFiles(superts)
 
-	file, err := os.Create(superts+"_new")
+	file, err := os.Create(superts + "_new")
 	if err != nil {
 		SendResponse(out, []byte(err.Error()))
 		return err
 	}
 
 	//!!!reverse tsAll.TsStacks due to CDK require!!!
-	for i := len(tsAll.TsStacks)/2-1; i >= 0; i-- {
-		opp := len(tsAll.TsStacks)-1-i
+	for i := len(tsAll.TsStacks)/2 - 1; i >= 0; i-- {
+		opp := len(tsAll.TsStacks) - 1 - i
 		tsAll.TsStacks[i], tsAll.TsStacks[opp] = tsAll.TsStacks[opp], tsAll.TsStacks[i]
 	}
 
@@ -222,7 +217,7 @@ func (d *Deployment) ApplyMainTs(out *websocket.Conn,  tsAll *Ts) error {
 		SendResponse(out, []byte(err.Error()))
 		return err
 	}
-	err =file.Close()
+	err = file.Close()
 	if err != nil {
 		SendResponse(out, []byte(err.Error()))
 		return err
@@ -238,19 +233,18 @@ func (d *Deployment) ApplyMainTs(out *websocket.Conn,  tsAll *Ts) error {
 	return nil
 }
 
-
 func (d *Deployment) GenerateExecutePlan(out *websocket.Conn, tsAll *Ts) (*ExecutionPlan, error) {
-	destDir := "/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/"
+	destDir := "/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/super/"
 
 	var p = ExecutionPlan{
-		Plan: list.New(),
+		Plan:       list.New(),
 		PlanMirror: make(map[string]ExecutionStage),
 	}
 	for i, ts := range tsAll.TsStacks {
 
 		stage := ExecutionStage{
-			Name: ts.TileStackName,
-			Command: list.New(),
+			Name:          ts.TileName,
+			Command:       list.New(),
 			CommandMirror: make(map[string]string),
 		}
 		if ts.TsManifests != nil {
@@ -259,9 +253,9 @@ func (d *Deployment) GenerateExecutePlan(out *websocket.Conn, tsAll *Ts) (*Execu
 				//TODO: support other type of manifest
 				switch stage.Kind {
 				case "k8s_manifest":
-					cmd := "kubectl -f "+destDir+"./lib/"+strings.ToLower(ts.TileName)+"/lib/"+f
+					cmd := "kubectl -f " + destDir + "./lib/" + strings.ToLower(ts.TileName) + "/lib/" + f
 					stage.Command.PushFront(cmd)
-					stage.CommandMirror[strconv.Itoa(j)]=cmd
+					stage.CommandMirror[strconv.Itoa(j)] = cmd
 					break
 				}
 
@@ -270,7 +264,7 @@ func (d *Deployment) GenerateExecutePlan(out *websocket.Conn, tsAll *Ts) (*Execu
 			for j, f := range ts.TsManifests.Folders {
 
 				stage.Command.PushFront(f)
-				stage.CommandMirror[strconv.Itoa(j)]=f
+				stage.CommandMirror[strconv.Itoa(j)] = f
 			}
 		} else {
 			stage.Kind = "cdk"
@@ -279,19 +273,16 @@ func (d *Deployment) GenerateExecutePlan(out *websocket.Conn, tsAll *Ts) (*Execu
 			stage.Preparation = append(stage.Preparation, "npm install")
 			stage.Preparation = append(stage.Preparation, "npm run build")
 			stage.Preparation = append(stage.Preparation, "cdk list")
-			cmd := "cdk deploy "+ts.TileStackName
+			cmd := "cdk deploy " + ts.TileStackName + " --require-approval never"
 			stage.Command.PushFront(cmd)
-			stage.CommandMirror[strconv.Itoa(1)]=cmd
+			stage.CommandMirror[strconv.Itoa(1)] = cmd
 		}
 		p.Plan.PushFront(stage)
 		p.PlanMirror[strconv.Itoa(i)] = stage
 		//ts.TileStackName
 	}
 
-
-	buf,_ := yaml.Marshal(p)
+	buf, _ := yaml.Marshal(p)
 	err := SendResponse(out, buf)
 	return &p, err
 }
-
-
