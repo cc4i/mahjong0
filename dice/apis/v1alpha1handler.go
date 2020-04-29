@@ -1,20 +1,14 @@
 package apis
 
 import (
-	"bufio"
 	"context"
 	"dice/engine"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	"io"
 	"log"
 	"net/http"
-	"os/exec"
 	"sigs.k8s.io/yaml"
-	"strings"
 )
-
 
 var upGrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -29,12 +23,9 @@ type WsBox struct {
 }
 
 type WsWorker interface {
-	Processor(messageType int, p []byte)([]byte, error)
-	CommandExecutor(cmd []byte)([]byte, error)
-	SendResponse(response []byte) error
-	WsTail(reader io.ReadCloser)
-}
+	Processor(messageType int, p []byte) ([]byte, error)
 
+}
 
 func WsHandler(ctx context.Context, c *gin.Context) {
 	ws, err := upGrader.Upgrade(c.Writer, c.Request, nil)
@@ -55,14 +46,11 @@ func WsHandler(ctx context.Context, c *gin.Context) {
 		}
 		log.Printf("recv: %s\n", message)
 
-
 		wb := WsBox{out: ws}
-		_,err = wb.Processor(mt, message)
+		_, err = wb.Processor(mt, message)
 		if err != nil {
-			wb.SendResponse([]byte(err.Error()))
-
+			engine.SendResponse(wb.out, []byte(err.Error()))
 		}
-
 	}
 
 }
@@ -72,111 +60,46 @@ func WsCloseHandler(code int, txt string) error {
 	return nil
 }
 
-func (wb *WsBox) Processor(messageType int, p []byte)([]byte, error) {
-
+func (wb *WsBox) Processor(messageType int, p []byte) ([]byte, error) {
+	var ep *engine.ExecutionPlan
 	//
 	// 1. parse yaml +
-	wb.SendResponse([]byte("Parsing Deployment..."))
+	engine.SendResponse(wb.out,[]byte("Parsing Deployment..."))
 	dt := engine.Data(p)
 	deploy, err := dt.ParseDeployment()
 	if err != nil {
-		wb.SendResponsef("Parsing Deployment error : %s \n", err)
-		wb.SendResponsef("!!! Treat input < %s > as command and to be executing...\n", p)
-		resp, err := wb.CommandExecutor(p)
+		engine.SendResponsef(wb.out,"Parsing Deployment error : %s \n", err)
+		engine.SendResponsef(wb.out,"!!! Treat input < %s > as command and to be executing...\n", p)
+		resp, err := ep.CommandExecutor(p, wb.out)
 		if err != nil {
-			wb.SendResponsef("CommandExecutor error : %s \n", err)
+			engine.SendResponsef(wb.out,"CommandExecutor error : %s \n", err)
 			return resp, err
 		}
 		return resp, err
 	}
-	wb.SendResponse([]byte("Parsing Deployment was success."))
-	wb.SendResponse([]byte("---"))
+	engine.SendResponse(wb.out,[]byte("Parsing Deployment was success."))
+	engine.SendResponse(wb.out,[]byte("---"))
 	b, _ := yaml.Marshal(deploy)
-	wb.SendResponse(b)
-	wb.SendResponse([]byte("---"))
-
+	engine.SendResponse(wb.out,b)
+	engine.SendResponse(wb.out,[]byte("---"))
 
 	//
 	// 2. assemble super app with base templates +
-	wb.SendResponse([]byte("Generating CDK App..."))
-	_, err = deploy.GenerateCdkApp(wb.out)
+	engine.SendResponse(wb.out,[]byte("Generating CDK App..."))
+	ep, err = deploy.GenerateCdkApp(wb.out)
 	if err != nil {
-		wb.SendResponsef("GenerateCdkApp error : %s \n", err)
+		engine.SendResponsef(wb.out,"GenerateCdkApp error : %s \n", err)
 		return nil, err
 	}
-	wb.SendResponse([]byte("Generating CDK App was success."))
-
+	engine.SendResponse(wb.out,[]byte("Generating CDK App was success."))
 
 	//
 	// 3. execute cdk / manifest +
-	//resp,err := wb.CommandExecutor(p)
-	//if err != nil {
-	//	log.Printf("commandExecutor error : %s \n", err)
-	//	return nil, err
-	//}
-	//
-	return nil, err
-}
+	return nil, ep.ExecutePlan(wb.out)
 
-func (wb *WsBox)SendResponse(response []byte) error {
-	log.Printf("%s\n", response)
-	err := wb.out.WriteMessage(websocket.TextMessage, response)
-	if err !=nil {
-		log.Printf("write error: %s\n", err)
-	}
-	return err
 
 }
 
-func (wb *WsBox)SendResponsef(format string, v ...interface{}) error {
-	str := fmt.Sprintf(format, v...)
-	log.Println(str)
-	err := wb.out.WriteMessage(websocket.TextMessage, []byte(str))
-	if err !=nil {
-		log.Printf("write error: %s\n", err)
-	}
-	return err
-
-}
-
-func (wb *WsBox) CommandExecutor(cmdTxt []byte)([]byte, error) {
-	ct := string(cmdTxt)
-	cts := strings.Split(ct, " ")
-	cmd := exec.Command(cts[0], cts[1:len(cts)]...)
-
-	stdoutIn, _ := cmd.StdoutPipe()
-	stderrIn, _ := cmd.StderrPipe()
-
-
-	err := cmd.Start()
-	if err != nil {
-		wb.SendResponsef("cmd.Start() failed with '%s'\n", err)
-		return nil, err
-	}
-	go wb.WsTail(stdoutIn)
-	go wb.WsTail(stderrIn)
-
-	err = cmd.Wait()
-	if err != nil {
-		wb.SendResponsef("cmd.Run() failed with %s\n", err)
-		return nil, err
-	}
-
-	return nil, nil
-}
-
-
-func (wb *WsBox)WsTail(reader io.ReadCloser) {
-	scanner := bufio.NewScanner(reader)
-	scanner.Split(bufio.ScanLines)
-	for scanner.Scan() {
-		buf := scanner.Bytes()
-		if err := wb.out.WriteMessage(websocket.TextMessage, buf); err !=nil {
-			log.Printf("write error: %s\n", err)
-		}
-	}
-
-}
 
 
 func Deployment(ctx context.Context, c *gin.Context) {
@@ -215,7 +138,6 @@ func Tile(ctx context.Context, c *gin.Context) {
 	b, _ := yaml.Marshal(tile)
 	c.String(http.StatusOK, string(b))
 }
-
 
 func allowCORS(ctx context.Context, c *gin.Context) {
 

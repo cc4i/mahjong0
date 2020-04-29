@@ -20,45 +20,44 @@ spec:
       dependencies:
         - name: network
           field: baseVpc
-      require: true
+      require: yes
     # cdk_object[]
     - name: vpcSubnets
       inputType: cdk_object[]
       description: ''
       dependencies:
         - name: network
-          field: publicSubnet1
+          field: publicSubnetId1
         - name: network
-          field: publicSubnet2
+          field: publicSubnetId2
         - name: network
-          field: privateSubnet1
+          field: privateSubnetId1
         - name: network
-          field: privateSubnet2
-      require: false
+          field: privateSubnetId2
+      require: no
     # string
     - name: clusterName
       inputType: string
       description: ''
-      defaultValue: default-eks-cluster
-      require: true
+      require: yes
     # number/ default: 2
     - name: capacity
       inputType: number
       description: ''
-      defaultValue: 2
-      require: false
+      defaultValue: '2'
+      require: no
     # string/ default: 'c5.large'
     - name: capacityInstance
       inputType: string
       description: ''
       defaultValue: 'c5.large'
-      require: false
+      require: no
     # string/ default: '1.15'
     - name: version
       inputType: string
       description: ''
       defaultValue: '1.15'
-      require: false
+      require: no
 
   outputs:
     # string

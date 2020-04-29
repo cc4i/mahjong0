@@ -1,10 +1,10 @@
 package utils
 
 import (
-"io"
-"io/ioutil"
-"os"
-"path/filepath"
+	"io"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 )
 
 const (

@@ -17,23 +17,23 @@ spec:
       dependencies:
         - name: eks
           field: clusterName
-      require: yes
+      require: true
     # string
     - name: masterRoleARN
       inputType: string
       dependencies:
         - name: eks
           field: masterRoleARN
-      require: yes
+      require: true
     # number/ default: 2
     - name: namespace
       inputType: string
-      require: no
+      require: false
       defaultValue: argocd
   
   manifests:
     # manifest: k8s / kustomization / helm 
-    manifestType: k8s_manifest
+    manifestType: k8s
     files:
       - k8s/install.yaml
     # folders:

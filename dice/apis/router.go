@@ -13,7 +13,7 @@ func Router(ctx context.Context) *gin.Engine {
 		c.String(http.StatusOK, "pong")
 	})
 
-	r.GET("/v1alpha1/Ws", func(c *gin.Context) {
+	r.GET("/v1alpha1/ws", func(c *gin.Context) {
 		WsHandler(ctx, c)
 	})
 	r.POST("/v1alpha1/tile", func(c *gin.Context) {
@@ -24,5 +24,5 @@ func Router(ctx context.Context) *gin.Engine {
 		Deployment(ctx, c)
 	})
 
-return r
+	return r
 }

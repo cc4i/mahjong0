@@ -12,7 +12,7 @@ spec:
           inputType: string
           description: 'CIDR for VPC'
           defaultValue: '10.0.0.0/16'
-          require: true
+          require: yes
 
     outputs:
         # cdk_object
@@ -23,22 +23,6 @@ spec:
         - name: vpcId
           outputType: string
           description: AWS::EC2::VPC.ID
-        # cdk_object
-        - name: publicSubnet1
-          outputType: string
-          description: AWS::EC2::Subnet
-        # cdk_object
-        - name: publicSubnet2
-          outputType: string
-          description: AWS::EC2::Subnet
-        # cdk_object
-        - name: privateSubnet1
-          outputType: string
-          description: AWS::EC2::Subnet
-        #cdk_object
-        - name: privateSubnet2
-          outputType: string
-          description: AWS::EC2::Subnet
         # string
         - name: publicSubnetId1
           outputType: string

@@ -69,7 +69,6 @@ func Unzip(src string, dest string) ([]string, error) {
 	return filenames, nil
 }
 
-
 func Untargz(srcFile string, num int) {
 	f, err := os.Open(srcFile)
 	if err != nil {
