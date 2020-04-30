@@ -17,6 +17,4 @@ spec:
             inputValue: m5.large
           - name: version
             inputValue: 1.15
-
-
     

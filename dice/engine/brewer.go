@@ -33,37 +33,7 @@ type ExecutionStage struct {
 	CommandMirror map[string]string `json:"commandMirror"`
 }
 
-type Ts struct {
-	TsLibs   []TsLib
-	TsStacks []TsStack
-}
 
-type TsLib struct {
-	TileName   string
-	TileFolder string
-}
-
-type TsStack struct {
-	TileName          string
-	TileVariable      string
-	TileStackName     string
-	TileStackVariable string
-	TileCategory string
-	InputParameters   map[string]string //[]TsInputParameter
-	TsManifests       *TsManifests
-
-}
-
-type TsInputParameter struct {
-	InputName  string
-	InputValue string
-}
-
-type TsManifests struct {
-	ManifestType string
-	Files        []string
-	Folders      []string
-}
 
 // BrewerCore represent a group of core functions to execute & manage for
 // execution plan.
@@ -133,7 +103,7 @@ func (ep *ExecutionPlan) CommandExecutor(ctx context.Context, cmdTxt []byte, out
 // CommandWrapperExecutor wrap commands as a unix script in order to execute.
 func (ep *ExecutionPlan) CommandWrapperExecutor(ctx context.Context, stage *ExecutionStage, out *websocket.Conn) (string, error) {
 	//stage.WorkHome
-	script := stage.WorkHome + "script-" + stage.Name + "-" + randString(8) + ".sh"
+	script := stage.WorkHome + "/script-" + stage.Name + "-" + randString(8) + ".sh"
 	tContent := `#!/bin/bash
 set -xe
 
@@ -166,7 +136,11 @@ echo $?
 	}
 	// Show script
 	buf, err := ioutil.ReadFile(script)
+	SendResponsef(out, "Generated script -  %s with content: \n", script)
+	SendResponse(out, []byte("--BO:-------------------------------------------------"))
 	SendResponse(out, buf)
+	SendResponse(out, []byte("--EO:-------------------------------------------------"))
+
 	return script, err
 
 }

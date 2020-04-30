@@ -39,7 +39,7 @@ func WsHandler(ctx context.Context, c *gin.Context) {
 	//ws.SetWriteDeadline(time.Now().Add(5 * time.Second))
 	defer ws.Close()
 
-	dryRun := c.GetBool("dryRun")
+	dryRun := c.Query("dryRun")=="true"
 	for {
 		mt, message, err := ws.ReadMessage()
 		if err != nil {
@@ -81,10 +81,10 @@ func (wb *WsBox) Processor(ctx context.Context, messageType int, p []byte, dryRu
 		return err
 	}
 	engine.SendResponse(wb.out, []byte("Parsing Deployment was success."))
-	engine.SendResponse(wb.out, []byte("---"))
+	engine.SendResponse(wb.out, []byte("--BO:-------------------------------------------------"))
 	b, _ := yaml.Marshal(deploy)
 	engine.SendResponse(wb.out, b)
-	engine.SendResponse(wb.out, []byte("---"))
+	engine.SendResponse(wb.out, []byte("--EO:-------------------------------------------------"))
 
 	//
 	// 2. assemble super app with base templates +

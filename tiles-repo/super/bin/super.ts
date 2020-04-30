@@ -7,7 +7,9 @@ import ec2 = require('@aws-cdk/aws-ec2');
 // BO: import-libs 
 //
 {{range .TsLibs}}
+{{if and (ne .TileCategory "ContainerApplication") (ne .TileCategory "Application")}}
 import { {{.TileName}} } from '../lib/{{.TileFolder}}/lib/index'
+{{end}}
 {{end}}
 //
 // EO: 
@@ -20,6 +22,7 @@ const app = new cdk.App();
 // BO: import-stacks
 //
 {{range .TsStacks}}
+{{if and (ne .TileCategory "ContainerApplication") (ne .TileCategory "Application")}}
 export class {{.TileStackName}} extends cdk.Stack {
     public readonly {{.TileVariable}}: {{.TileName}};
 
@@ -41,6 +44,7 @@ const {{.TileStackVariable}} = new {{.TileStackName}}(app, '{{.TileStackName}}',
         region: process.env.CDK_DEFAULT_REGION
     }
 });
+{{end}}
 {{end}}
 //
 // EO: 

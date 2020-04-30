@@ -32,7 +32,7 @@ spec:
           # Filed name in refered Tile
           field: baseVpc
       # Input is mandatory or not, true is mandatory and false is optional
-      require: true
+      require: false
     # CDKObject[]
     - name: vpcSubnets
       inputType: CDKObject[]

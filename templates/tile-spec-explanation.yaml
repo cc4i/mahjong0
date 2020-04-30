@@ -15,7 +15,7 @@ metadata:
     #             ContainerProvider, provisioned through CDK approach.
     #             Storage, provisioned through CDK approach.
     #             Database, provisioned through CDK approach.
-    #             Application, provisioned through CDK approach.
+    #             Application, !!! provisioned through specific approach due to application features. Not defined yet!!!
     #             ContainerApplication, !!! provisioned through specific approach based on manifest type. !!!
     #             Analysis, provisioned through CDK approach.
     #             ML, provisioned through CDK approach.
@@ -41,12 +41,14 @@ spec:
       #             Number/Number[], number type, [] indicate the input is array
       #             CDKObject/CDKObject[], input is a object refer to a CDK construct, [] indicate the input is array
       inputType: 
-      # Dependency list
+      # Dependency list, dependency could be more than one list and will orgnized as an array. -> {'', '', ''}
       dependencies:
           # Reference name in Dependencies
         - name: 
           # Filed name in refered Tile
           field: 
+          # Override input field of referred dependency if true
+          # override: true/false
       require: true
     
     # Name of input parameter with default value

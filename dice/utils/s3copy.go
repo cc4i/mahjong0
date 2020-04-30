@@ -34,8 +34,8 @@ func (s3 *S3Config) LoadTile(tile string, version string) (string, error) {
 func (s3 *S3Config) LoadTileDev(tile string, version string) (string, error) {
 
 	repoDir := s3.LocalRepo
-	srcDir := repoDir + strings.ToLower(tile) + "/" + strings.ToLower(version)
-	destDir := s3.WorkHome + "/lib/" + strings.ToLower(tile)
+	srcDir := repoDir + "/"+strings.ToLower(tile) + "/" + strings.ToLower(version)
+	destDir := s3.WorkHome + "/super/lib/" + strings.ToLower(tile)
 	tileSpecFile := destDir + "/tile-spec.yaml"
 	log.Printf("Load Tile < %s - %s > ... from < %s >\n", tile, version, s3.LocalRepo)
 

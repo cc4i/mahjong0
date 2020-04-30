@@ -3,6 +3,7 @@ package engine
 import (
 	"sigs.k8s.io/yaml"
 )
+//valid "github.com/asaskevich/govalidator"
 
 type Data []byte
 
@@ -62,13 +63,14 @@ type DeploymentSpec struct {
 
 type DeploymentTemplate struct {
 	Category string `json:"category"`
-	tiles []DeploymentTemplateDetail `json:"tiles"`
+	Tiles []DeploymentTemplateDetail `json:"tiles"`
 }
 
 type DeploymentTemplateDetail struct {
 	TileReference string      `json:"tileReference"`
 	TileVersion   string      `json:"tileVersion"`
 	Inputs        []TileInput `json:"inputs"`
+	Manifests	TileManifest	`json:"manifests"`
 }
 
 // Tile specification
@@ -107,13 +109,18 @@ type TileInput struct {
 	DefaultValue  string                `json:"defaultValue"`
 	DefaultValues []string              `json:"defaultValues"`
 	InputValue    string                `json:"inputValue"`
-	InputValues   string                `json:"inputValues"`
-	Manifests     []string              `json:"manifests"`
-	Require       string                `json:"require"` // yes/no
+	InputValues   []string                `json:"inputValues"`
+	Require       bool                `json:"require"` // true/false
+	Override TileInputOverride `json:"override"`
 }
 
+type TileInputOverride struct {
+	Name  string `json:"name"`
+	Field string `json:"field"`
+}
 type TileManifest struct {
 	ManifestType string   `json:"manifestType"`
+	Namespace string `json:"namespace"`
 	Files        []string `json:"files"`
 	Folders      []string `json:"folders"`
 }

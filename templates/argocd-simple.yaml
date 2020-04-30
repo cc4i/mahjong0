@@ -1,0 +1,26 @@
+apiVersion: mahjong.io/v1alpha1
+kind: Deployment 
+metadata:
+  name: mahjong
+spec:
+  template:
+    category: ContainerApplication
+    tiles:
+      - tileReference: Argocd0
+        tileVersion: 1.5.2
+        inputs:
+          - name: cidr
+            inputValue: 192.0.0.0/16        
+          - name: clusterName
+            inputValue: mahjong-cluster0
+          - name: capacity
+            inputValue: 3
+          - name: capacityInstance
+            inputValue: m5.large
+          - name: version
+            inputValue: 1.15
+
+        manifests:
+          namespace: argocd-new
+
+    
