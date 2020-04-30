@@ -30,48 +30,57 @@ type AssemblerCore interface {
 	GenerateExecutePlan(out *websocket.Conn, tsAll *Ts) (*ExecutionPlan, error)
 }
 
+var s3Config *utils.S3Config
+
+func init() {
+	// TODO: load from config
+	s3Config = &utils.S3Config {
+		WorkHome: "/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace",
+		Region: "",
+		BucketName: "",
+		Mode: "dev",
+		LocalRepo: "/Users/chuancc/mywork/mylabs/csdc/mahjong-0/tiles-repo",
+	}
+}
+
 // GenerateCdkApp return path where the base CDK App was generated.
 func (d *Deployment) GenerateCdkApp(out *websocket.Conn) (*ExecutionPlan, error) {
 
-	// 1. Pull super.zip from s3 & unzip
-	// 2. Pull tiles.zip from s3
+	// 1. Loading Super from s3 & unzip
+	// 2. Loading Tiles from s3 & unzip
 	var tsAll = &Ts{}
 	var ep *ExecutionPlan
-
-	repoDir := "../tiles-repo/"
-	destDir := "/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/"
-	if err := utils.Copy(repoDir+"super", destDir+"super"); err != nil {
+	SendResponse(out, []byte("Loading Super ... from RePO."))
+	_, err := s3Config.LoadSuper()
+	if err != nil {
 		return ep, err
 	}
-	// Network
-	for _, t := range d.Spec.Template.Network {
-		SendResponse(out, []byte(t.TileReference))
-	}
-	// Compute
-	for _, t := range d.Spec.Template.Compute {
-		SendResponse(out, []byte(t.TileReference))
-	}
-	// Container
-	for _, t := range d.Spec.Template.Container {
-		if err := d.PullTile(destDir+"super", t.TileReference, t.TileVersion, out, tsAll); err != nil {
-			return ep, err
+	SendResponse(out, []byte("Loading Super ... from RePO with success."))
+
+	switch d.Spec.Template.Category {
+	case Network.CString():
+		break
+	case Compute.CString():
+		break
+	case ContainerProvider.CString():
+		for _, t := range d.Spec.Template.tiles {
+			if err := d.PullTile(t.TileReference, t.TileVersion, out, tsAll); err != nil {
+				return ep, err
+			}
 		}
-	}
-	// Database
-	for _, t := range d.Spec.Template.Database {
-		SendResponse(out, []byte(t.TileReference))
-	}
-	// Application
-	for _, t := range d.Spec.Template.Application {
-		SendResponse(out, []byte(t.TileReference))
-	}
-	// Analysis
-	for _, t := range d.Spec.Template.Analysis {
-		SendResponse(out, []byte(t.TileReference))
-	}
-	// ML
-	for _, t := range d.Spec.Template.ML {
-		SendResponse(out, []byte(t.TileReference))
+		break
+	case Storage.CString():
+		break
+	case Database.CString():
+		break
+	case Application.CString():
+		break
+	case ContainerApplication.CString():
+		break
+	case Analysis.CString():
+		break
+	case ML.CString():
+		break
 	}
 
 	// 3. Generate super.ts
@@ -84,29 +93,18 @@ func (d *Deployment) GenerateCdkApp(out *websocket.Conn) (*ExecutionPlan, error)
 
 }
 
-func (d *Deployment) PullTile(to string, tile string, version string, out *websocket.Conn, tsAll *Ts) error {
+func (d *Deployment) PullTile(tile string, version string, out *websocket.Conn, tsAll *Ts) error {
 
-	// 1. Download tile from s3 & unzip
-	repoDir := "../tiles-repo/"
-	srcDir := repoDir + strings.ToLower(tile) + "/" + strings.ToLower(version)
-	destDir := to + "/lib/" + strings.ToLower(tile)
-	tileSpecFile := destDir + "/tile-spec.yaml"
-
-	SendResponsef(out, "Pulling Tile < %s - %s > ...\n", tile, version)
-
-	if err := utils.Copy(srcDir, destDir,
-		utils.Options{
-			OnSymlink: func(src string) utils.SymlinkAction {
-				return utils.Skip
-			},
-			Skip: func(src string) bool {
-				return strings.Contains(src, "node_modules")
-			},
-		}); err != nil {
-		return err
+	// 1. Loading Tile from s3 & unzip
+	tileSpecFile, err := s3Config.LoadTile(tile, version)
+	if err != nil {
+		SendResponsef(out, "Failed to pulling Tile < %s - %s > ... from RePO\n", tile, version)
+	} else {
+		SendResponsef(out, "Pulling Tile < %s - %s > ... from RePO with success\n", tile, version)
 	}
 
 	//parse tile-spec.yaml if need more tile
+	SendResponsef(out, "Parsing spec of Tile: < %s - %s > ...\n", tile, version)
 	if buf, err := ioutil.ReadFile(tileSpecFile); err != nil {
 		return err
 	} else {
@@ -143,7 +141,6 @@ func (d *Deployment) PullTile(to string, tile string, version string, out *webso
 							}
 							input.InputValue = strings.TrimSuffix(vals, ",") + " }"
 						}
-
 					} else {
 						input.InputName = in.Name
 						if in.DefaultValues != nil {
@@ -164,12 +161,9 @@ func (d *Deployment) PullTile(to string, tile string, version string, out *webso
 							} else {
 								input.InputValue = in.DefaultValue
 							}
-
 						}
-
 					}
 					inputs[input.InputName] = input.InputValue //append(inputs, input)
-
 				}
 			}
 
@@ -182,21 +176,21 @@ func (d *Deployment) PullTile(to string, tile string, version string, out *webso
 			})
 
 			for _, t := range tile.Spec.Dependencies {
-				if err = d.PullTile(to, t.TileReference, t.TileVersion, out, tsAll); err != nil {
+				if err = d.PullTile(t.TileReference, t.TileVersion, out, tsAll); err != nil {
 					return err
 				}
 			}
 		}
 
 	}
-	SendResponsef(out, "Pulling Tile < %s - %s > was success.\n", tile, version)
+	SendResponsef(out, "Parsing spec of Tile: < %s - %s > was success.\n", tile, version)
 	return nil
 }
 
 // TODO: Simplify & refactor !!!
 func (d *Deployment) ApplyMainTs(out *websocket.Conn, tsAll *Ts) error {
-	destDir := "/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/"
-	superts := destDir + "super/bin/super.ts"
+	superts := s3Config.WorkHome + "/super/bin/super.ts"
+	SendResponse(out, []byte("Generating main.ts for Super ..."))
 
 	tp, _ := template.ParseFiles(superts)
 
@@ -229,13 +223,13 @@ func (d *Deployment) ApplyMainTs(out *websocket.Conn, tsAll *Ts) error {
 		SendResponse(out, []byte(err.Error()))
 		return err
 	}
+	SendResponse(out, []byte("Generating main.ts for Super ... with success"))
 	SendResponse(out, buf)
 	return nil
 }
 
 func (d *Deployment) GenerateExecutePlan(out *websocket.Conn, tsAll *Ts) (*ExecutionPlan, error) {
-	destDir := "/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/super/"
-
+	SendResponse(out, []byte("Generating execution plan... "))
 	var p = ExecutionPlan{
 		Plan:       list.New(),
 		PlanMirror: make(map[string]ExecutionStage),
@@ -247,29 +241,27 @@ func (d *Deployment) GenerateExecutePlan(out *websocket.Conn, tsAll *Ts) (*Execu
 			Command:       list.New(),
 			CommandMirror: make(map[string]string),
 		}
-		if ts.TsManifests != nil {
-			stage.Kind = ts.TsManifests.ManifestType
-			for j, f := range ts.TsManifests.Files {
-				//TODO: support other type of manifest
-				switch stage.Kind {
-				case "k8s_manifest":
-					cmd := "kubectl -f " + destDir + "./lib/" + strings.ToLower(ts.TileName) + "/lib/" + f
+		if ts.TileCategory == ContainerApplication.CString() {
+			switch ts.TsManifests.ManifestType {
+			case K8s.MTString():
+				for j, f := range ts.TsManifests.Files {
+					cmd := "kubectl -f ./lib/" + strings.ToLower(ts.TileName) + "/lib/" + f
 					stage.Command.PushFront(cmd)
 					stage.CommandMirror[strconv.Itoa(j)] = cmd
-					break
 				}
-
+				break
+			case Helm.MTString():
+				// TODO: not quite yet to support Helm
+				break
+			case Kustomize.MTString():
+				// TODO: not quite yet to support Kustomize
+				break
 			}
-			//TODO: support folder with other type of manifest
-			for j, f := range ts.TsManifests.Folders {
 
-				stage.Command.PushFront(f)
-				stage.CommandMirror[strconv.Itoa(j)] = f
-			}
 		} else {
-			stage.Kind = "cdk"
-			stage.WorkHome = destDir
-			stage.Preparation = append(stage.Preparation, "cd "+destDir)
+			stage.Kind = ts.TileCategory
+			stage.WorkHome = s3Config.WorkHome
+			stage.Preparation = append(stage.Preparation, "cd " + s3Config.WorkHome)
 			stage.Preparation = append(stage.Preparation, "npm install")
 			stage.Preparation = append(stage.Preparation, "npm run build")
 			stage.Preparation = append(stage.Preparation, "cdk list")
@@ -279,10 +271,10 @@ func (d *Deployment) GenerateExecutePlan(out *websocket.Conn, tsAll *Ts) (*Execu
 		}
 		p.Plan.PushFront(stage)
 		p.PlanMirror[strconv.Itoa(i)] = stage
-		//ts.TileStackName
 	}
 
 	buf, _ := yaml.Marshal(p)
 	err := SendResponse(out, buf)
+	SendResponse(out, []byte("Generating execution plan... with success"))
 	return &p, err
 }

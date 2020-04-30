@@ -23,7 +23,7 @@ type WsBox struct {
 }
 
 type WsWorker interface {
-	Processor(ctx context.Context, messageType int, p []byte) error
+	Processor(ctx context.Context, messageType int, p []byte, dryRun bool) error
 }
 
 func WsHandler(ctx context.Context, c *gin.Context) {
@@ -39,6 +39,7 @@ func WsHandler(ctx context.Context, c *gin.Context) {
 	//ws.SetWriteDeadline(time.Now().Add(5 * time.Second))
 	defer ws.Close()
 
+	dryRun := c.GetBool("dryRun")
 	for {
 		mt, message, err := ws.ReadMessage()
 		if err != nil {
@@ -48,7 +49,7 @@ func WsHandler(ctx context.Context, c *gin.Context) {
 		log.Printf("recv: %s\n", message)
 
 		wb := WsBox{out: ws}
-		err = wb.Processor(stx, mt, message)
+		err = wb.Processor(stx, mt, message, dryRun)
 		if err != nil {
 			engine.SendResponse(wb.out, []byte(err.Error()))
 		}
@@ -62,7 +63,7 @@ func WsCloseHandler(cancel context.CancelFunc, code int, txt string) error {
 	return nil
 }
 
-func (wb *WsBox) Processor(ctx context.Context, messageType int, p []byte) error {
+func (wb *WsBox) Processor(ctx context.Context, messageType int, p []byte, dryRun bool) error {
 	var ep *engine.ExecutionPlan
 	//
 	// 1. parse yaml +
@@ -97,7 +98,7 @@ func (wb *WsBox) Processor(ctx context.Context, messageType int, p []byte) error
 
 	//
 	// 3. execute cdk / manifest +
-	return ep.ExecutePlan(ctx, wb.out)
+	return ep.ExecutePlan(ctx, dryRun, wb.out)
 
 }
 

@@ -6,6 +6,49 @@ import (
 
 type Data []byte
 
+// Enumeration for category of metadata in Tile specification.
+type Category int
+const (
+	Network Category = iota
+	Compute
+	ContainerProvider
+	Storage
+	Database
+	Application
+	ContainerApplication
+	Analysis
+	ML
+)
+func (c Category) CString() string {
+	return [...]string{"Network", "Compute", "ContainerProvider", "Storage", "Database", "Application", "ContainerApplication", "Analysis", "ML"}[c]
+}
+
+// Enumeration for input/output in Tile specification
+type IOType int
+const (
+	String IOType = iota
+	Number
+	CDKObject
+	FromCommand
+)
+func (iot IOType) IOTString() string {
+	return [...]string{"String", "Number", "CDKObject", "FromCommand"}[iot]
+}
+
+// Manifest type
+type ManifestType int
+const (
+	K8s ManifestType = iota
+	Helm
+	Kustomize
+)
+func (mts ManifestType) MTString() string {
+	return [...]string{"K8s", "Helm", "Kustomize"}[mts]
+}
+
+
+
+// Deployment specification
 type Deployment struct {
 	ApiVersion string         `json:"apiVersion"`
 	Kind       string         `json:"kind"`
@@ -18,13 +61,8 @@ type DeploymentSpec struct {
 }
 
 type DeploymentTemplate struct {
-	Network     []DeploymentTemplateDetail `json:"network"`
-	Compute     []DeploymentTemplateDetail `json:"compute"`
-	Container   []DeploymentTemplateDetail `json:"container"`
-	Database    []DeploymentTemplateDetail `json:"database"`
-	Application []DeploymentTemplateDetail `json:"application"`
-	Analysis    []DeploymentTemplateDetail `json:"analysis"`
-	ML          []DeploymentTemplateDetail `json:"ml"`
+	Category string `json:"category"`
+	tiles []DeploymentTemplateDetail `json:"tiles"`
 }
 
 type DeploymentTemplateDetail struct {
@@ -33,6 +71,7 @@ type DeploymentTemplateDetail struct {
 	Inputs        []TileInput `json:"inputs"`
 }
 
+// Tile specification
 type Tile struct {
 	ApiVersion string   `json:"apiVersion"`
 	Kind       string   `json:"kind"`
@@ -92,11 +131,13 @@ type TileOutput struct {
 	Description         string `json:"description"`
 }
 
+// Parsing functions
 type ParserCore interface {
 	ParseTile() (*Tile, error)
 	ParseDeployment() (*Deployment, error)
 }
 
+// ParseTile parse Tile
 func (d *Data) ParseTile() (*Tile, error) {
 	var tile Tile
 
@@ -108,6 +149,7 @@ func (d *Data) ParseTile() (*Tile, error) {
 	return &tile, nil
 }
 
+// ParseDeployment parse Deployment
 func (d *Data) ParseDeployment() (*Deployment, error) {
 	var deployment Deployment
 

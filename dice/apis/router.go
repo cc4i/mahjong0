@@ -16,6 +16,9 @@ func Router(ctx context.Context) *gin.Engine {
 	r.GET("/v1alpha1/ws", func(c *gin.Context) {
 		WsHandler(ctx, c)
 	})
+	r.GET("/v1alpha1/ws?dryRun=true", func(c *gin.Context) {
+		WsHandler(ctx, c)
+	})
 	r.POST("/v1alpha1/tile", func(c *gin.Context) {
 		Tile(ctx, c)
 	})

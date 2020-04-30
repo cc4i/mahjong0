@@ -1,15 +1,26 @@
+# API version
 apiVersion: mahjong.io/v1alpha1
+# Kind of entity
 kind: Tile
+# Metadata
 metadata:
+    # Name of entity
     name: Argocd0
-    # Category: network, compute, container, storage, database, appliaction, analysis, ml
-    category: appliaction
+    # Category of entity
+    category: ContainerApplication
+    # Version of entity
     version: 1.5.2
+# Specification
 spec:
+  # Dependencies represent dependency with other Tile
   dependencies:
+      # As a reference name 
     - name: eks
+      # Tile name
       tileReference: Eks0
+      # Tile version
       tileVersion: 0.0.1
+  # 
   inputs:
     # string
     - name: clusterName
@@ -30,25 +41,27 @@ spec:
       inputType: string
       require: false
       defaultValue: argocd
-  
+
   manifests:
-    # manifest: k8s / kustomization / helm 
+    # Type of manifest
     manifestType: k8s
+    # manifest list
     files:
       - k8s/install.yaml
+    # manifest folder
     # folders:
     #   - k8s
           
-
+  # Ouptputs represnt output value after launched, for 'ContainerApplication' might need leverage specific command to retrive output.
   outputs:
-    # string
+    # String
     - name: user
-      outputType: string
+      outputType: String
       defaultValue: admin
       description: Custom::User
-    # string
+    # FromCommand
     - name: password
-      outputType: string
+      outputType: FromCommand
       defaultValueCommand: kubectl get pods -n {{.namespace}} -l app.kubernetes.io/name=argocd-server -o name | cut -d'/' -f 2
       description: Custom::Password        
 

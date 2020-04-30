@@ -48,8 +48,10 @@ type TsStack struct {
 	TileVariable      string
 	TileStackName     string
 	TileStackVariable string
+	TileCategory string
 	InputParameters   map[string]string //[]TsInputParameter
 	TsManifests       *TsManifests
+
 }
 
 type TsInputParameter struct {
@@ -66,24 +68,27 @@ type TsManifests struct {
 // BrewerCore represent a group of core functions to execute & manage for
 // execution plan.
 type BrewerCore interface {
-	ExecutePlan(ctx context.Context, out *websocket.Conn) error
+	ExecutePlan(ctx context.Context, dryRun bool, out *websocket.Conn) error
 	CommandExecutor(ctx context.Context, cmd []byte, out *websocket.Conn) ([]byte, error)
 	CommandWrapperExecutor(ctx context.Context, stage *ExecutionStage, out *websocket.Conn) (string, error)
 	WsTail(reader io.ReadCloser, out *websocket.Conn)
 }
 
 //ExecutePlan is a orchestrator to run execution plan.
-func (ep *ExecutionPlan) ExecutePlan(ctx context.Context, out *websocket.Conn) error {
+func (ep *ExecutionPlan) ExecutePlan(ctx context.Context, dryRun bool, out *websocket.Conn) error {
 	for e := ep.Plan.Back(); e != nil; e = e.Prev() {
 		stage := e.Value.(ExecutionStage)
 		cmd, err := ep.CommandWrapperExecutor(ctx, &stage, out)
 		if err != nil {
 			return err
 		}
-		_, err = ep.CommandExecutor(ctx, []byte(cmd), out)
-		if err != nil {
-			return err
+		if !dryRun {
+			_, err = ep.CommandExecutor(ctx, []byte(cmd), out)
+			if err != nil {
+				return err
+			}
 		}
+
 
 	}
 	return nil

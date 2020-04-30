@@ -1,29 +1,41 @@
+# API version
 apiVersion: mahjong.io/v1alpha1
+# Kind of entity
 kind: Tile
+# Metadata
 metadata:
+    # Name of entity
     name: Eks0
-    # Category: network, compute, container, storage, database, appliaction, analysis, ml
-    category: container
+    # Category of entity
+    category: ContainerProvider
+    # Version of entity
     version: 0.0.1
+# Specification
 spec:
+  # Dependencies represent dependency with other Tile
   dependencies:
+      # As a reference name 
     - name: network
+      # Tile name
       tileReference: Network0
+      # Tile version
       tileVersion: 0.0.1
+  # Inputs are input parameters when lauching 
   inputs:
-    # inputType : string, number, cdk_object, k8s_manifest, helm_manifest, kustomize_manifest 
-    #             string[], number[], cdk_object[], k8s_manifest[], helm_manifest[], kustomize_manifest[]
-    # cdk_object
+    # CDKObject
     - name: vpc
-      inputType: cdk_object
-      description: ''
+      inputType: CDKObject
+      description: 'Refer to VPC object on Tile - Network0'
       dependencies:
+          # Reference name in Dependencies
         - name: network
+          # Filed name in refered Tile
           field: baseVpc
+      # Input is mandatory or not, true is mandatory and false is optional
       require: true
-    # cdk_object[]
+    # CDKObject[]
     - name: vpcSubnets
-      inputType: cdk_object[]
+      inputType: CDKObject[]
       description: ''
       dependencies:
         - name: network
@@ -35,49 +47,50 @@ spec:
         - name: network
           field: privateSubnet2
       require: false
-    # string
+    # String
     - name: clusterName
-      inputType: string
+      inputType: String
       description: ''
       defaultValue: default-eks-cluster
       require: true
-    # number/ default: 2
+    # Number/ default: 2
     - name: capacity
-      inputType: number
+      inputType: Number
       description: ''
       defaultValue: 2
       require: false
-    # string/ default: 'c5.large'
+    # String/ default: 'c5.large'
     - name: capacityInstance
-      inputType: string
+      inputType: String
       description: ''
       defaultValue: 'c5.large'
       require: false
-    # string/ default: '1.15'
+    # String/ default: '1.15'
     - name: version
-      inputType: string
+      inputType: String
       description: ''
       defaultValue: '1.15'
       require: false
-
+  # Ouptputs represnt output value after launched, for 'ContainerApplication' might need leverage specific command to retrive output.
   outputs:
-    # string
+    # String
     - name: clusterName
-      outputType: string
+      outputType: String
       description: AWS::EKS::Cluster.Name
-    # string/ type = CloudFormation type
+    # String
     - name: clusterArn
-      outputType: string
+      outputType: String
       description: AWS::EKS::Cluster.ARN          
-    # string/ type = CloudFormation type
+    # String
     - name: clusterEndpoint
-      outputType: string
+      outputType: String
       description: AWS::EKS::Cluster.Endpoint
-    # string/ type = CloudFormation type
+    # String
     - name: masterRoleARN
-      outputType: string
+      outputType: String
       description: AWS::IAM::Role.ARN
 
+  # Notes are description list for addtional information.
   notes:
     - "Tag public subnets with 'kubernetes.io/role/elb=1'"
     - "Tag priavte subnets with 'kubernetes.io/role/internal-elb=1'"

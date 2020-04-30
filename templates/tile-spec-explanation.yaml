@@ -1,0 +1,99 @@
+# API version
+apiVersion: mahjong.io/v1alpha1
+# Kind of entity
+# - Options:  Tile, a construct component
+#             Deployment, a deployment unit 
+#             Hu, a prepared deployment unit with architectural design
+kind: 
+# Metadata
+metadata:
+    # Name of entity
+    name: 
+    # Category of entity
+    # - Options:  Network, provisioned through CDK approach.
+    #             Compute, provisioned through CDK approach.
+    #             ContainerProvider, provisioned through CDK approach.
+    #             Storage, provisioned through CDK approach.
+    #             Database, provisioned through CDK approach.
+    #             Application, provisioned through CDK approach.
+    #             ContainerApplication, !!! provisioned through specific approach based on manifest type. !!!
+    #             Analysis, provisioned through CDK approach.
+    #             ML, provisioned through CDK approach.
+    category: 
+    # Version of entity
+    version: 
+# Specification
+spec:
+  # Dependencies represent dependency with other Tile
+  dependencies:
+      # As a reference name 
+    - name: 
+      # Tile name
+      tileReference: 
+      # Tile version
+      tileVersion: 
+  # Inputs are input parameters when lauching 
+  inputs:
+      # Name of input parameter, with dependency
+    - name: 
+      # Type of input parameter
+      # - Options:  String/String[], string type, [] indicate the input is array
+      #             Number/Number[], number type, [] indicate the input is array
+      #             CDKObject/CDKObject[], input is a object refer to a CDK construct, [] indicate the input is array
+      inputType: 
+      # Dependency list
+      dependencies:
+          # Reference name in Dependencies
+        - name: 
+          # Filed name in refered Tile
+          field: 
+      require: true
+    
+    # Name of input parameter with default value
+    - name: 
+      inputType: 
+      require: false
+      # default value of input parameter
+      defaultValue: 
+
+  manifests:
+    # Type of manifest
+    # - Options:  K8s, standard k8s manifest: deployment, service, etc.
+    #             Helm, helm style manifiest, parsing with 'folders'
+    #             Kustomize, kustomize style manifest, parsing with 'folders'
+    # manifest: k8s / Kustomization / Helm 
+    manifestType: 
+    # manifest list
+    files:
+      - k8s/install.yaml
+    # manifest folder
+    folders:
+      - kustomization
+          
+  # Ouptputs represnt output value after launched, for 'ContainerApplication' might need leverage specific command to retrive output.
+  outputs:
+      # Type of output value
+      # - Options:  String, string type
+      #             Number, number type
+      #             CDKObject, output is a object refer to a CDK construct
+      #             FromCommand, output is retrieved by a command, which refer to 'defaultValueCommand'
+      # Name of output
+    - name: 
+      outputType: 
+      defaultValue: 
+      # Description is definition for output, recommend to use CloudFormation, such as AWS::EKS::Cluster,
+      # AWS::EKS::Cluster.Endpoint as per convention. For those output wasn't included in CloudFormation,
+      # recommend to use style 'Custom::[definition]'
+      description: 
+      # Name of output
+    - name: 
+      # Type of output
+      outputType: FromCommand
+      # Command to retrieve output
+      defaultValueCommand: 
+      #
+      description: Custom::Password        
+
+  # Notes are description list for addtional information.
+  notes: []
+

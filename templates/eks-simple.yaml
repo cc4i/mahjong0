@@ -3,8 +3,9 @@ kind: Deployment
 metadata:
   name: mahjong
 spec:
-  template:      
-    container:
+  template:
+    category: ContainerProvider
+    tiles:
       - tileReference: Eks0
         tileVersion: 0.0.1
         inputs:
@@ -16,4 +17,6 @@ spec:
             inputValue: m5.large
           - name: version
             inputValue: 1.15
+
+
     
