@@ -28,7 +28,8 @@ spec:
             inputValues: 
               - ...
               - ...
-
+        manifests:
+          namespace: 
     #   - basicNework:
     #       # {{ vpc/ cidr / subnet / internet gateway / NAT / ... }}
     #       version: 1.0.0

@@ -294,7 +294,6 @@ func (d *Deployment) PullTile(tile string, version string, out *websocket.Conn, 
 			for _, m := range tile.Spec.Manifests.Folders {
 				tm.Folders = append(tm.Folders, m)
 			}
-
 			////
 
 			//5. Store import Stacks && avoid repeated one
