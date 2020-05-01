@@ -73,12 +73,11 @@ func (wb *WsBox) Processor(ctx context.Context, messageType int, p []byte, dryRu
 	if err != nil {
 		engine.SendResponsef(wb.out, "Parsing Deployment error : %s \n", err)
 		engine.SendResponsef(wb.out, "!!! Treat input < %s > as command and to be executing...\n", p)
-		_, err := ep.CommandExecutor(ctx, p, wb.out)
-		if err != nil {
+		if _, err := ep.CommandExecutor(ctx, p, wb.out); err != nil {
 			engine.SendResponsef(wb.out, "CommandExecutor error : %s \n", err)
 			return err
 		}
-		return err
+		return nil
 	}
 	engine.SendResponse(wb.out, []byte("Parsing Deployment was success."))
 	engine.SendResponse(wb.out, []byte("--BO:-------------------------------------------------"))

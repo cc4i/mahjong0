@@ -38,7 +38,7 @@ export class Network0 extends cdk.Construct {
     this.baseVpc.privateSubnets[0].node.applyAspect(new cdk.Tag("kubernetes.io/role/internal-elb","1"));
     this.baseVpc.privateSubnets[1].node.applyAspect(new cdk.Tag("kubernetes.io/role/internal-elb","1"));
 
-   
+    this.vpcId = this.baseVpc.vpcId;
     this.publicSubnetId1 = this.baseVpc.publicSubnets[0].subnetId;
     this.publicSubnetId2 = this.baseVpc.publicSubnets[1].subnetId;
     this.privateSubnetId1 = this.baseVpc.privateSubnets[0].subnetId;
@@ -49,7 +49,18 @@ export class Network0 extends cdk.Construct {
     this.privateSubnet1 = this.baseVpc.privateSubnets[0];
     this.privateSubnet2 = this.baseVpc.privateSubnets[1];
 
-
+    /** Added CF Output */
+    new cdk.CfnOutput(this,"vpcId", {value: this.vpcId})
+    new cdk.CfnOutput(this,"publicSubnetId1", {value: this.publicSubnetId1})
+    new cdk.CfnOutput(this,"publicSubnetId2", {value: this.publicSubnetId2})
+    new cdk.CfnOutput(this,"privateSubnetId1", {value: this.privateSubnetId1})
+    new cdk.CfnOutput(this,"privateSubnetId2", {value: this.privateSubnetId2})
+    let i=1
+    this.availabilityZones.forEach( z => {
+      new cdk.CfnOutput(this,"availabilityZones_"+z, {value: z});
+      i++;
+    });
+    
     
   }
 }

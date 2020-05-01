@@ -52,7 +52,7 @@ func (mts ManifestType) MTString() string {
 // Deployment specification
 type Deployment struct {
 	ApiVersion string         `json:"apiVersion"`
-	Kind       string         `json:"kind"`
+	Kind       string         `json:"kind" valid:"in(Deployment)"`
 	Metadata   Metadata       `json:"metadata"`
 	Spec       DeploymentSpec `json:"spec"`
 }
@@ -62,9 +62,10 @@ type DeploymentSpec struct {
 }
 
 type DeploymentTemplate struct {
-	Category string `json:"category"`
+	Category string `json:"category" valid:"in(Network|Compute|ContainerProvider|Storage|Database|Application|ContainerApplication|Analysis|ML)"`
 	Tiles []DeploymentTemplateDetail `json:"tiles"`
 }
+
 
 type DeploymentTemplateDetail struct {
 	TileReference string      `json:"tileReference"`
@@ -84,6 +85,7 @@ type Tile struct {
 type Metadata struct {
 	Name     string `json:"name"`
 	Category string `json:"category"`
+	VendorService string `json:"vendorService"`
 	Version  string `json:"version"`
 }
 
@@ -146,6 +148,7 @@ type ParserCore interface {
 	ParseDeployment() (*Deployment, error)
 }
 
+
 // ParseTile parse Tile
 func (d *Data) ParseTile() (*Tile, error) {
 	var tile Tile
@@ -162,8 +165,7 @@ func (d *Data) ParseTile() (*Tile, error) {
 func (d *Data) ParseDeployment() (*Deployment, error) {
 	var deployment Deployment
 
-	err := yaml.Unmarshal(*d, &deployment)
-	if err != nil {
+	if err := yaml.Unmarshal(*d, &deployment); err != nil {
 		return &deployment, err
 	}
 

@@ -8,6 +8,8 @@ metadata:
     name: Eks0
     # Category of entity
     category: ContainerProvider
+    # Vendor
+    vendorService: EKS
     # Version of entity
     version: 0.0.1
 # Specification

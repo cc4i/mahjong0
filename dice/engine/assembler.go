@@ -46,6 +46,7 @@ type TsManifests struct {
 	Namespace string
 	Files        []string
 	Folders      []string
+	VendorService string
 }
 
 
@@ -138,7 +139,7 @@ func (d *Deployment) PullTile(tile string, version string, out *websocket.Conn, 
 			return err
 		} else {
 
-			// Step 0. Caching inputs of deployment
+			// Step 0. Caching deployment inputs
 			deploymentInputs := make(map[string][]string) //tileName -> map[inputName]inputValues
 			for _, tts := range d.Spec.Template.Tiles {
 				for _, n := range tts.Inputs {
@@ -153,13 +154,13 @@ func (d *Deployment) PullTile(tile string, version string, out *websocket.Conn, 
 				}
 			}
 			////
-			// Step 1. Caching dependencies for further process
+			// Step 1. Caching tile dependencies for further process
 			dependenciesMap := make(map[string]string)
 			for _, m := range tile.Spec.Dependencies {
 				dependenciesMap[m.Name] = m.TileReference
 			}
 
-			// Step 2. Caching override for further process; depends on Step 1
+			// Step 2. Caching tile override for further process; depends on Step 1
 			for _, ov := range tile.Spec.Inputs {
 				if ov.Override.Name != "" {
 					if _, ok := dependenciesMap[ov.Override.Name]; ok {
@@ -187,7 +188,8 @@ func (d *Deployment) PullTile(tile string, version string, out *websocket.Conn, 
 			}
 			////
 
-			// Step 4. Caching inputs for further process
+			// Step 4. Caching inputs <key, value> for further process
+			// inputs: inputName -> inputValue
 			inputs := make(map[string]string)
 			for _, in := range tile.Spec.Inputs {
 				input := TsInputParameter{}
@@ -201,13 +203,13 @@ func (d *Deployment) PullTile(tile string, version string, out *websocket.Conn, 
 					} else {
 						// multiple dependencies will be organized as an array
 						input.InputName = in.Name
-						vals := "{ "
+						v := "[ "
 						for _, d := range in.Dependencies {
 							stile := strings.ToLower(dependenciesMap[d.Name])
 							val := stile + "stack" + "var." + stile + "var." + d.Field
-							vals = vals + val + ","
+							v = v + val + ","
 						}
-						input.InputValue = strings.TrimSuffix(vals, ",") + " }"
+						input.InputValue = strings.TrimSuffix(v, ",") + " ]"
 					}
 				// For independent value
 				} else {
@@ -216,7 +218,7 @@ func (d *Deployment) PullTile(tile string, version string, out *websocket.Conn, 
 					if val, ok := deploymentInputs[tile.Metadata.Name+"-"+in.Name]; ok {
 
 							if len(val) >1 {
-								v := "{ "
+								v := "[ "
 								for _, d := range val {
 									if strings.Contains(in.InputType, String.IOTString()) {
 										v = v + "'" + d + "',"
@@ -225,7 +227,7 @@ func (d *Deployment) PullTile(tile string, version string, out *websocket.Conn, 
 									}
 
 								}
-								input.InputValue = strings.TrimSuffix(v, ",") + " }"
+								input.InputValue = strings.TrimSuffix(v, ",") + " ]"
 
 							} else {
 								if strings.Contains(in.InputType, String.IOTString()) {
@@ -237,7 +239,7 @@ func (d *Deployment) PullTile(tile string, version string, out *websocket.Conn, 
 
 					} else {
 						if in.DefaultValues != nil {
-							vals := "{ "
+							vals := "[ "
 							for _, d := range in.DefaultValues {
 								if strings.Contains(in.InputType, String.IOTString()) {
 									vals = vals + "'" + d + "',"
@@ -246,7 +248,7 @@ func (d *Deployment) PullTile(tile string, version string, out *websocket.Conn, 
 								}
 
 							}
-							input.InputValue = strings.TrimSuffix(vals, ",") + " }"
+							input.InputValue = strings.TrimSuffix(vals, ",") + " ]"
 
 						} else if len(in.DefaultValue) > 0 {
 							if strings.Contains(in.InputType, String.IOTString()) {
@@ -268,8 +270,16 @@ func (d *Deployment) PullTile(tile string, version string, out *websocket.Conn, 
 			}
 			////
 
+			// Step 5.Setup values for cached override, depend on Step 4
+			for _, v := range override {
+				if val, ok := inputs[v.InputName]; ok {
+					v.OverrideValue = val
+				}
+			}
+			////
+
 			// Step 6. Caching manifest & overwrite
-			//Overwrite namespace as deployment
+			// Overwrite namespace as deployment
 			ns := ""
 			for _, m := range d.Spec.Template.Tiles {
 				if m.TileReference == tile.Metadata.Name {
@@ -281,7 +291,7 @@ func (d *Deployment) PullTile(tile string, version string, out *websocket.Conn, 
 				ManifestType: tile.Spec.Manifests.ManifestType,
 				Namespace: ns,
 			}
-			//Overwrite files/folders as deployment
+			// Overwrite files/folders as deployment
 			var ffs []string
 			var fds []string
 			for _, m := range d.Spec.Template.Tiles {
@@ -300,15 +310,7 @@ func (d *Deployment) PullTile(tile string, version string, out *websocket.Conn, 
 			}
 			////
 
-			// Step 7.Rewrite values in override values
-			for _, v := range override {
-				if val, ok := inputs[v.InputName]; ok {
-					v.OverrideValue = val
-				}
-			}
-			////
-
-			// Step 8. Store import Stacks && avoid repeated one
+			// Step 7. Store import Stacks && avoid repeated one
 			ts := TsStack {
 				TileName:          tile.Metadata.Name,
 				TileVariable:      strings.ToLower(tile.Metadata.Name + "var"),
@@ -406,29 +408,43 @@ func (d *Deployment) GenerateExecutePlan(out *websocket.Conn, tsAll *Ts) (*Execu
 	}
 	for i, ts := range tsAll.TsStacks {
 		workHome := s3Config.WorkHome + "/super"
-		stage := ExecutionStage {
+		stage := ExecutionStage{
 			Name:          ts.TileName,
 			Command:       list.New(),
 			CommandMirror: make(map[string]string),
-			Kind: ts.TileCategory,
-			WorkHome: workHome,
-			Preparation: []string{"cd " + workHome},
+			Kind:          ts.TileCategory,
+			WorkHome:      workHome,
+			Preparation:   []string{"cd " + workHome},
 		}
 
-		if ts.TileCategory == ContainerApplication.CString()  {
+		if ts.TileCategory == ContainerApplication.CString() {
+			//stage.Preparation = ? how to connect to EKS
 			switch ts.TsManifests.ManifestType {
 			case K8s.MTString():
 				for j, f := range ts.TsManifests.Files {
-					cmd := "kubectl -f ./lib/" + strings.ToLower(ts.TileName) + "/lib/" + f + " -n "+ ts.TsManifests.Namespace
+					cmd := "kubectl -f ./lib/" + strings.ToLower(ts.TileName) + "/lib/" + f + " -n " + ts.TsManifests.Namespace
 					stage.Command.PushFront(cmd)
 					stage.CommandMirror[strconv.Itoa(j)] = cmd
 				}
 			case Helm.MTString():
 				// TODO: not quite yet to support Helm
+				for j, f := range ts.TsManifests.Folders {
+					cmd := "helm install " + ts.TileName + " ./lib/" + strings.ToLower(ts.TileName) + "/lib/" + f + " -n " + ts.TsManifests.Namespace
+					stage.Command.PushFront(cmd)
+					stage.CommandMirror[strconv.Itoa(j)] = cmd
+				}
+
 			case Kustomize.MTString():
 				// TODO: not quite yet to support Kustomize
+				for j, f := range ts.TsManifests.Folders {
+					cmd := "kustomize build -f ./lib/" + strings.ToLower(ts.TileName) + "/lib/" + f + "|kubectl -f - " + " -n " + ts.TsManifests.Namespace
+					stage.Command.PushFront(cmd)
+					stage.CommandMirror[strconv.Itoa(j)] = cmd
+				}
 			}
 
+		} else if ts.TileCategory == Application.CString() {
+			//TODO: What to do with application?
 		} else {
 
 			stage.Preparation = append(stage.Preparation, "npm install")

@@ -63,7 +63,7 @@ spec:
         field: version
       defaultValue: 1.15
 
-
+  #aws eks --region <region> update-kubeconfig --name <cluster> --role-arn <master role arn> --kubeconfig <config>
   manifests:
     # Type of manifest
     manifestType: K8s
@@ -74,6 +74,9 @@ spec:
     # manifest folder
     # folders:
     #   - k8s
+    dependencies:
+      # As a reference name 
+      - name: eks
           
   # Ouptputs represnt output value after launched, for 'ContainerApplication' might need leverage specific command to retrive output.
   outputs:

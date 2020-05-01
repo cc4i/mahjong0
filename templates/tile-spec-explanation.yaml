@@ -20,6 +20,15 @@ metadata:
     #             Analysis, provisioned through CDK approach.
     #             ML, provisioned through CDK approach.
     category: 
+
+    # Indicate service of contianer vendor when category is ContainerApplication, different vendor require specific 
+    # parameters to connect with Cluster.
+    # - Options:  EKS, AWS Elastic Kubernetes Service, require: Cluster Name, Master Role ARN
+    #             ECS, ???
+    #             Kops, ???
+    #             Kubernetes, ???
+    vendorService: 
+    
     # Version of entity
     version: 
 # Specification
@@ -57,7 +66,12 @@ spec:
       require: false
       # default value of input parameter
       defaultValue: 
-
+    - name: 
+      inputType: 
+      require: false
+      override: 
+        name: 
+        field: 
   manifests:
     # Type of manifest
     # - Options:  K8s, standard k8s manifest: deployment, service, etc.

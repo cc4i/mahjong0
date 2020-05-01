@@ -8,7 +8,7 @@ import { CfnOutput } from '@aws-cdk/core';
 /** Input parameters */
 export interface Eks0Props {
   vpc: ec2.Vpc,
-  vpcSubnets?: ec2.SubnetSelection[],
+  vpcSubnets?: ec2.ISubnet[],
   clusterName: string,
   capacity?: number,
   capacityInstance?: string,
@@ -53,16 +53,25 @@ export class Eks0 extends cdk.Construct {
         })
       );
 
+    // Instance type for node group
     let capacityInstance: ec2.InstanceType;
-    if (props.capacityInstance==undefined) {
+    if (props.capacityInstance == undefined) {
       capacityInstance=ec2.InstanceType.of(ec2.InstanceClass.C5, ec2.InstanceSize.LARGE);
     } else {
       capacityInstance=new ec2.InstanceType(props.capacityInstance);
     }
 
+    // Prepared subnet for node group
+    let vpcSubnets: ec2.SubnetSelection[];
+    if (props.vpcSubnets == undefined){
+      vpcSubnets = [{subnets: props.vpc.publicSubnets}, {subnets: props.vpc.privateSubnets}]
+    } else {
+      vpcSubnets = [{subnets: props.vpcSubnets}]
+    }
+    // Innitial EKS cluster
     const cluster = new eks.Cluster (this, "BasicEKSCluster", {
       vpc: props.vpc,
-      vpcSubnets: props.vpcSubnets || [{subnets: props.vpc.publicSubnets}, {subnets: props.vpc.privateSubnets}],
+      vpcSubnets: vpcSubnets,
       clusterName: props.clusterName,
       defaultCapacity: props.capacity,
       defaultCapacityInstance: capacityInstance,

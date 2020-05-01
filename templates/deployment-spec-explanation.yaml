@@ -30,42 +30,23 @@ spec:
               - ...
         manifests:
           namespace: 
-    #   - basicNework:
+    # Nework:
     #       # {{ vpc/ cidr / subnet / internet gateway / NAT / ... }}
-    #       version: 1.0.0
-    #       override:
-    #         vpc:
-    #           name:
-    #         subnet:
-    #           public:
-    #           private:
-    #   - basicCloudFront:
-    #       version: 1.0.0
-    # compute:
-    #   # {{ ec2 / spot-ec2 / auto scaling group / elb / ... }}
-    #   - ec2:
-    #       version: 1.0.0
-    #   - autoscalinggroup:
-    #       version: 1.0.0
+    
+    # Compute:
+    #       # {{ ec2 / spot-ec2 / auto scaling group / elb / ... }}
       
-    # container:
-    #   # {{ eks / ecs / ecr  }}
-    #   - basicEKS:
-    #       version: 1.0.0
-    #   - basicEKSWithStandardNodes:
-    #   - basicEKSWithSpotNodes:
-    #   - basicEKSWithManagedNodes:
+    # ContainerProvider:
+    #       # {{ eks / ecs   }}
     
-    # storage:
-    #   # {{ EBS / EFS / CSI + EBS CSI + EFS / ...}}
-    #   - basicsCSI:
-    #       version: 1.0.0
+    # Storage:
+    #       # {{ EBS / EFS / CSI + EBS CSI + EFS / ...}}
     
-    # database:
-    #   # {{ standard RDS / Aurora / Redis / ...}}
+    # Database:
+    #       # {{ standard RDS / Aurora / Redis / ...}}
 
-    # application:
-    #   # {{ Istio / Argo CD / Grafana / Prometheus / Knative / Kubeflow }}
+    # ContainerApplication:
+    #       # {{ Istio / Argo CD / Grafana / Prometheus / Knative / Kubeflow }}
     #   - basicDevops:
     #       # {{ ArgoCD / Argo Roolouts / Flux / Grafana / Prometheus }}
     #       version: 1.0.0
@@ -77,3 +58,9 @@ spec:
     #       version: 1.0.0
     #   - basicML:
     #       #{{ kubeflow }}
+
+    # Application
+    # Analysis
+    # ML
+    # 
+    #
