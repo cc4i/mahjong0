@@ -1,3 +1,4 @@
+// Forked from https://github.com/otiai10/copy in April, 2020
 package utils
 
 import (

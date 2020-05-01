@@ -1,11 +1,8 @@
 package engine
 
 import (
-	"bytes"
 	"container/list"
 	"dice/utils"
-	"errors"
-	"fmt"
 	"github.com/gorilla/websocket"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
@@ -91,7 +88,7 @@ func (d *Deployment) GenerateCdkApp(out *websocket.Conn) (*ExecutionPlan, error)
 	// 1. Loading Super from s3 & unzip
 	// 2. Loading Tiles from s3 & unzip
 	var tsAll = &Ts{}
-	var override = make(map[string]TileInputOverride) //TileName->TileInputOverride
+	var override = make(map[string]*TileInputOverride) //TileName->TileInputOverride
 	var ep *ExecutionPlan
 	SendResponse(out, []byte("Loading Super ... from RePO."))
 	_, err := s3Config.LoadSuper()
@@ -121,7 +118,7 @@ func (d *Deployment) GenerateCdkApp(out *websocket.Conn) (*ExecutionPlan, error)
 }
 
 
-func (d *Deployment) PullTile(tile string, version string, out *websocket.Conn, tsAll *Ts, override map[string]TileInputOverride) error {
+func (d *Deployment) PullTile(tile string, version string, out *websocket.Conn, tsAll *Ts, override map[string]*TileInputOverride) error {
 
 	// 1. Loading Tile from s3 & unzip
 	tileSpecFile, err := s3Config.LoadTile(tile, version)
@@ -140,43 +137,46 @@ func (d *Deployment) PullTile(tile string, version string, out *websocket.Conn, 
 		if tile, err := data.ParseTile(); err != nil {
 			return err
 		} else {
-			// 0. validate coverage of required inputs
-			// Caching inputs of deployment
-			deploymentInputs := make(map[string]map[string][]string) //tileName -> map[inputName]inputValues
-			var tins bytes.Buffer
+
+			// Step 0. Caching inputs of deployment
+			deploymentInputs := make(map[string][]string) //tileName -> map[inputName]inputValues
 			for _, tts := range d.Spec.Template.Tiles {
-				//if tts.TileReference == tile.Metadata.Name {
-					for _, n := range tts.Inputs {
-						tins.WriteString(n.Name+",")
-						x := make(map[string][]string)
-						if len(n.InputValues)>0 {
-							x[n.Name]=n.InputValues
-						} else {
-							x[n.Name]=[]string{n.InputValue}
+				for _, n := range tts.Inputs {
 
-						}
-						deploymentInputs[tts.TileReference]=x
+					if len(n.InputValues)>0 {
+						deploymentInputs[tts.TileReference+"-"+n.Name]=n.InputValues
+					} else {
+						deploymentInputs[tts.TileReference+"-"+n.Name]=[]string{n.InputValue}
 
-					}
-				//}
-			}
-			for _, ti := range tile.Spec.Inputs {
-				if ti.Require {
-					if !strings.Contains(tins.String(), ti.Name) {
-						return errors.New(fmt.Sprintf("%s is mandatory input in Tile - %s, which was included in the Deployment.",ti.Name, tile.Metadata.Name))
 					}
 
 				}
 			}
-
-
-			// 1. Caching dependencies for further process
+			////
+			// Step 1. Caching dependencies for further process
 			dependenciesMap := make(map[string]string)
 			for _, m := range tile.Spec.Dependencies {
 				dependenciesMap[m.Name] = m.TileReference
 			}
+
+			// Step 2. Caching override for further process; depends on Step 1
+			for _, ov := range tile.Spec.Inputs {
+				if ov.Override.Name != "" {
+					if _, ok := dependenciesMap[ov.Override.Name]; ok {
+						override[dependenciesMap[ov.Override.Name]+"-"+ov.Override.Field] = &TileInputOverride {
+							Name: ov.Override.Name,
+							Field: ov.Override.Field,
+							InputName: ov.Name,
+						}
+						//
+					}
+
+				}
+			}
 			////
-			// 2. Store import libs && avoid to add repeated one
+
+			////
+			// Step 3. Store import libs && avoid to add repeated one
 			newTsLib := TsLib{
 				TileName:   tile.Metadata.Name,
 				TileFolder: strings.ToLower(tile.Metadata.Name),
@@ -187,7 +187,7 @@ func (d *Deployment) PullTile(tile string, version string, out *websocket.Conn, 
 			}
 			////
 
-			//3. Caching inputs for further process
+			// Step 4. Caching inputs for further process
 			inputs := make(map[string]string)
 			for _, in := range tile.Spec.Inputs {
 				input := TsInputParameter{}
@@ -213,29 +213,27 @@ func (d *Deployment) PullTile(tile string, version string, out *websocket.Conn, 
 				} else {
 					input.InputName = in.Name
 					// Overwrite values as per Deployment
-					if _, ok := deploymentInputs[tile.Metadata.Name]; ok {
-						if _, okx := deploymentInputs[tile.Metadata.Name][in.Name]; okx {
-							if len(deploymentInputs[tile.Metadata.Name][in.Name]) >0 {
-								vals := "{ "
-								for _, d := range deploymentInputs[tile.Metadata.Name][in.Name] {
+					if val, ok := deploymentInputs[tile.Metadata.Name+"-"+in.Name]; ok {
+
+							if len(val) >1 {
+								v := "{ "
+								for _, d := range val {
 									if strings.Contains(in.InputType, String.IOTString()) {
-										vals = vals + "'" + d + "',"
+										v = v + "'" + d + "',"
 									} else {
-										vals = vals + d + ","
+										v = v + d + ","
 									}
 
 								}
-								input.InputValue = strings.TrimSuffix(vals, ",") + " }"
+								input.InputValue = strings.TrimSuffix(v, ",") + " }"
 
 							} else {
 								if strings.Contains(in.InputType, String.IOTString()) {
-									input.InputValue = "'" + deploymentInputs[tile.Metadata.Name][in.Name][0] + "'"
+									input.InputValue = "'" + val[0] + "'"
 								} else {
-									input.InputValue = deploymentInputs[tile.Metadata.Name][in.Name][0]
+									input.InputValue = val[0]
 								}
 							}
-
-						}
 
 					} else {
 						if in.DefaultValues != nil {
@@ -260,11 +258,17 @@ func (d *Deployment) PullTile(tile string, version string, out *websocket.Conn, 
 
 					}
 				}
+				//lookup override
+				if or, ok := override[tile.Metadata.Name+"-"+input.InputName]; ok {
+					if input.InputName == or.Field {
+						input.InputValue = or.OverrideValue
+					}
+				}
 				inputs[input.InputName] = input.InputValue
 			}
 			////
 
-			//4. Caching manifest
+			// Step 6. Caching manifest & overwrite
 			//Overwrite namespace as deployment
 			ns := ""
 			for _, m := range d.Spec.Template.Tiles {
@@ -296,8 +300,16 @@ func (d *Deployment) PullTile(tile string, version string, out *websocket.Conn, 
 			}
 			////
 
-			//5. Store import Stacks && avoid repeated one
-			ts := TsStack{
+			// Step 7.Rewrite values in override values
+			for _, v := range override {
+				if val, ok := inputs[v.InputName]; ok {
+					v.OverrideValue = val
+				}
+			}
+			////
+
+			// Step 8. Store import Stacks && avoid repeated one
+			ts := TsStack {
 				TileName:          tile.Metadata.Name,
 				TileVariable:      strings.ToLower(tile.Metadata.Name + "var"),
 				TileStackName:     tile.Metadata.Name + "Stack",

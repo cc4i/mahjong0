@@ -117,6 +117,8 @@ type TileInput struct {
 type TileInputOverride struct {
 	Name  string `json:"name"`
 	Field string `json:"field"`
+	InputName string
+	OverrideValue string
 }
 type TileManifest struct {
 	ManifestType string   `json:"manifestType"`
