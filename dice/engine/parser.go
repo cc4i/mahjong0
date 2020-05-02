@@ -1,9 +1,10 @@
 package engine
 
 import (
+	valid "github.com/asaskevich/govalidator"
 	"sigs.k8s.io/yaml"
 )
-//valid "github.com/asaskevich/govalidator"
+
 
 type Data []byte
 
@@ -22,6 +23,17 @@ const (
 )
 func (c Category) CString() string {
 	return [...]string{"Network", "Compute", "ContainerProvider", "Storage", "Database", "Application", "ContainerApplication", "Analysis", "ML"}[c]
+}
+
+type VendorService int
+const (
+	EKS VendorService = iota
+	ECS
+	Kubernetes
+	Kops
+)
+func (vs VendorService) VSString() string {
+	return [...]string{"EKS", "ECS", "Kubernetes", "Kops"}[vs]
 }
 
 // Enumeration for input/output in Tile specification
@@ -77,7 +89,7 @@ type DeploymentTemplateDetail struct {
 // Tile specification
 type Tile struct {
 	ApiVersion string   `json:"apiVersion"`
-	Kind       string   `json:"kind"`
+	Kind       string   `json:"kind" valid:"in(Tile)"`
 	Metadata   Metadata `json:"metadata"`
 	Spec       TileSpec `json:"spec"`
 }
@@ -146,6 +158,9 @@ type TileOutput struct {
 type ParserCore interface {
 	ParseTile() (*Tile, error)
 	ParseDeployment() (*Deployment, error)
+	ValidateTile(tile *Tile) error
+	ValidateDeployment(deployment *Deployment) error
+
 }
 
 
@@ -158,8 +173,9 @@ func (d *Data) ParseTile() (*Tile, error) {
 		return &tile, err
 	}
 
-	return &tile, nil
+	return &tile, d.ValidateTile(&tile)
 }
+
 
 // ParseDeployment parse Deployment
 func (d *Data) ParseDeployment() (*Deployment, error) {
@@ -169,5 +185,21 @@ func (d *Data) ParseDeployment() (*Deployment, error) {
 		return &deployment, err
 	}
 
-	return &deployment, nil
+	return &deployment, d.ValidateDeployment(&deployment)
+}
+
+// ValidateTile validates Tile as per tile-spec.yaml
+func (d *Data) ValidateTile(tile *Tile) error {
+	//TODO implementing ValidateTile
+	//	such as: name='folder' version='version_folder'
+	_,err := valid.ValidateStruct(tile)
+	return err
+}
+
+// ValidateDeployment validate Deployment as per deployment-spec.yaml
+func (d *Data) ValidateDeployment(deployment *Deployment) error {
+	//TODO implementing ValidateDeployment
+	//	such as: Are inputs covered all required inputs?
+	_,err := valid.ValidateStruct(deployment)
+	return err
 }
