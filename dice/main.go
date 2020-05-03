@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"dice/apis"
-	"log"
+	log "github.com/sirupsen/logrus"
 )
 
 func main() {

@@ -3,10 +3,10 @@ package engine
 import (
 	"fmt"
 	"github.com/gorilla/websocket"
-	"log"
+	log "github.com/sirupsen/logrus"
 )
 
-func SendResponse(out *websocket.Conn, response []byte) error {
+func SR(out *websocket.Conn, response []byte) error {
 	log.Printf("%s\n", response)
 	err := out.WriteMessage(websocket.TextMessage, response)
 	if err != nil {
@@ -16,7 +16,7 @@ func SendResponse(out *websocket.Conn, response []byte) error {
 
 }
 
-func SendResponsef(out *websocket.Conn, format string, v ...interface{}) error {
+func SRf(out *websocket.Conn, format string, v ...interface{}) error {
 	log.Printf(format, v...)
 	err := out.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf(format, v...)))
 	if err != nil {

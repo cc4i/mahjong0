@@ -4,8 +4,9 @@ import (
 	"context"
 	"dice/engine"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	"sigs.k8s.io/yaml"
 )
@@ -51,7 +52,7 @@ func WsHandler(ctx context.Context, c *gin.Context) {
 		wb := WsBox{out: ws}
 		err = wb.Processor(stx, mt, message, dryRun)
 		if err != nil {
-			engine.SendResponse(wb.out, []byte(err.Error()))
+			engine.SR(wb.out, []byte(err.Error()))
 		}
 	}
 
@@ -64,36 +65,37 @@ func WsCloseHandler(cancel context.CancelFunc, code int, txt string) error {
 }
 
 func (wb *WsBox) Processor(ctx context.Context, messageType int, p []byte, dryRun bool) error {
+	ctx = context.WithValue(ctx, "d-sid", uuid.New().String())
 	var ep *engine.ExecutionPlan
 	//
 	// 1. parse yaml +
-	engine.SendResponse(wb.out, []byte("Parsing Deployment..."))
+	engine.SR(wb.out, []byte("Parsing Deployment..."))
 	dt := engine.Data(p)
-	deploy, err := dt.ParseDeployment()
+	deploy, err := dt.ParseDeployment(ctx)
 	if err != nil {
-		engine.SendResponsef(wb.out, "Parsing Deployment error : %s \n", err)
-		engine.SendResponsef(wb.out, "!!! Treat input < %s > as command and to be executing...\n", p)
-		if _, err := ep.CommandExecutor(ctx, p, wb.out); err != nil {
-			engine.SendResponsef(wb.out, "CommandExecutor error : %s \n", err)
+		engine.SRf(wb.out, "Parsing Deployment error : %s \n", err)
+		engine.SRf(wb.out, "!!! Treat input < %s > as command and to be executing...\n", p)
+		if err := ep.CommandExecutor(ctx, nil, p, wb.out); err != nil {
+			engine.SRf(wb.out, "CommandExecutor error : %s \n", err)
 			return err
 		}
 		return nil
 	}
-	engine.SendResponse(wb.out, []byte("Parsing Deployment was success."))
-	engine.SendResponse(wb.out, []byte("--BO:-------------------------------------------------"))
+	engine.SR(wb.out, []byte("Parsing Deployment was success."))
+	engine.SR(wb.out, []byte("--BO:-------------------------------------------------"))
 	b, _ := yaml.Marshal(deploy)
-	engine.SendResponse(wb.out, b)
-	engine.SendResponse(wb.out, []byte("--EO:-------------------------------------------------"))
+	engine.SR(wb.out, b)
+	engine.SR(wb.out, []byte("--EO:-------------------------------------------------"))
 
 	//
 	// 2. assemble super app with base templates +
-	engine.SendResponse(wb.out, []byte("Generating CDK App..."))
-	ep, err = deploy.GenerateCdkApp(wb.out)
+	engine.SR(wb.out, []byte("Generating CDK App..."))
+	ep, err = deploy.GenerateCdkApp(ctx, wb.out)
 	if err != nil {
-		engine.SendResponsef(wb.out, "GenerateCdkApp error : %s \n", err)
+		engine.SRf(wb.out, "GenerateCdkApp error : %s \n", err)
 		return err
 	}
-	engine.SendResponse(wb.out, []byte("Generating CDK App was success."))
+	engine.SR(wb.out, []byte("Generating CDK App was success."))
 
 	//
 	// 3. execute cdk / manifest +
@@ -109,7 +111,7 @@ func Deployment(ctx context.Context, c *gin.Context) {
 	}
 
 	d := engine.Data(buf)
-	deployment, err := d.ParseDeployment()
+	deployment, err := d.ParseDeployment(ctx)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -128,7 +130,7 @@ func Tile(ctx context.Context, c *gin.Context) {
 	}
 
 	d := engine.Data(buf)
-	tile, err := d.ParseTile()
+	tile, err := d.ParseTile(ctx)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

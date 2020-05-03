@@ -2,8 +2,8 @@ package engine
 
 import (
 	"container/list"
+	"context"
 	"dice/utils"
-	"fmt"
 	"github.com/gorilla/websocket"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
@@ -13,58 +13,21 @@ import (
 	"text/template"
 )
 
-// Ts is key struct to fulfil super.ts template and key element to generate execution plan.
-type Ts struct {
-	TsLibs   []TsLib
-	TsStacks []TsStack
-	AllTiles map[string]Tile // "Category - TileName" -> Tile
-}
-
-type TsLib struct {
-	TileName   string
-	TileFolder string
-	TileCategory string
-}
-
-type TsStack struct {
-	TileName          string
-	TileVariable      string
-	TileStackName     string
-	TileStackVariable string
-	TileCategory string
-	InputParameters   map[string]string //[]TsInputParameter
-	TsManifests       *TsManifests
-}
-
-type TsInputParameter struct {
-	InputName  string
-	InputValue string
-}
-
-type TsManifests struct {
-	ManifestType string
-	Namespace string
-	Files        []string
-	Folders      []string
-	VendorService string
-	DependentTile string
-	DependentTileVersion string
-}
 
 
 // AssemblerCore represents a group of functions to assemble CDK App.
 type AssemblerCore interface {
 	// Generate CDK App from base template with necessary tiles
-	GenerateCdkApp(out *websocket.Conn) (*ExecutionPlan, error)
+	GenerateCdkApp(ctx context.Context, out *websocket.Conn) (*ExecutionPlan, error)
 
 	// Pull Tile from repo
-	PullTile(name string, version string, out *websocket.Conn, tsAll *Ts) error
+	PullTile(ctx context.Context, name string, version string, out *websocket.Conn, aTs *Ts) error
 
 	//Generate Main Ts inside of CDK app
-	ApplyMainTs(out *websocket.Conn, tsAll *Ts) error
+	ApplyMainTs(ctx context.Context, out *websocket.Conn, aTs *Ts) error
 
 	//Generate execution plan to direct provision resources
-	GenerateExecutePlan(out *websocket.Conn, tsAll *Ts) (*ExecutionPlan, error)
+	GenerateExecutePlan(ctx context.Context, out *websocket.Conn, aTs *Ts) (*ExecutionPlan, error)
 }
 
 var s3Config *utils.S3Config
@@ -81,23 +44,23 @@ func init() {
 }
 
 // GenerateCdkApp return path where the base CDK App was generated.
-func (d *Deployment) GenerateCdkApp(out *websocket.Conn) (*ExecutionPlan, error) {
+func (d *Deployment) GenerateCdkApp(ctx context.Context, out *websocket.Conn) (*ExecutionPlan, error) {
 
 	// 1. Loading Super from s3 & unzip
 	// 2. Loading Tiles from s3 & unzip
-	var tsAll = &Ts{}
+	var aTs = &Ts{}
 	var override = make(map[string]*TileInputOverride) //TileName->TileInputOverride
 	var ep *ExecutionPlan
-	SendResponse(out, []byte("Loading Super ... from RePO."))
+	SR(out, []byte("Loading Super ... from RePO."))
 	_, err := s3Config.LoadSuper()
 	if err != nil { return ep, err }
-	SendResponse(out, []byte("Loading Super ... from RePO with success."))
+	SR(out, []byte("Loading Super ... from RePO with success."))
 
 	switch d.Spec.Template.Category {
 	case Network.CString(), Compute.CString(), ContainerProvider.CString(), Storage.CString(), Database.CString(),
 			Application.CString(), ContainerApplication.CString(), Analysis.CString(), ML.CString():
 		for _, t := range d.Spec.Template.Tiles {
-			if err := d.PullTile(t.TileReference, t.TileVersion, out, tsAll, override); err != nil {
+			if err := d.PullTile(ctx, t.TileReference, t.TileVersion, out, aTs, override); err != nil {
 				return ep, err
 			}
 		}
@@ -105,37 +68,40 @@ func (d *Deployment) GenerateCdkApp(out *websocket.Conn) (*ExecutionPlan, error)
 
 
 	// 3. Generate super.ts
-	if err := d.ApplyMainTs(out, tsAll); err != nil {
+	if err := d.ApplyMainTs(ctx, out, aTs); err != nil {
 		return ep, err
 	}
 
-	//4. Generate execution plan
-	return d.GenerateExecutePlan(out, tsAll)
+	// 4. Caching Ts
+	AllTs[ctx.Value("d-sid").(string)]=*aTs
 
+	// 4. Generate execution plan
+	return d.GenerateExecutePlan(ctx, out, aTs)
+	
 }
 
 
-func (d *Deployment) PullTile(tile string, version string, out *websocket.Conn, tsAll *Ts, override map[string]*TileInputOverride) error {
+func (d *Deployment) PullTile(ctx context.Context, tile string, version string, out *websocket.Conn, aTs *Ts, override map[string]*TileInputOverride) error {
 
 	// 1. Loading Tile from s3 & unzip
 	tileSpecFile, err := s3Config.LoadTile(tile, version)
 	if err != nil {
-		SendResponsef(out, "Failed to pulling Tile < %s - %s > ... from RePO\n", tile, version)
+		SRf(out, "Failed to pulling Tile < %s - %s > ... from RePO\n", tile, version)
 	} else {
-		SendResponsef(out, "Pulling Tile < %s - %s > ... from RePO with success\n", tile, version)
+		SRf(out, "Pulling Tile < %s - %s > ... from RePO with success\n", tile, version)
 	}
 
 	//parse tile-spec.yaml if need more tile
-	SendResponsef(out, "Parsing specification of Tile: < %s - %s > ...\n", tile, version)
+	SRf(out, "Parsing specification of Tile: < %s - %s > ...\n", tile, version)
 	buf, err := ioutil.ReadFile(tileSpecFile)
 	if err != nil { return err }
 	data := Data(buf)
-	parsedTile, err := data.ParseTile()
+	parsedTile, err := data.ParseTile(ctx)
 	if err != nil  { return err }
 	// TODO: to be refactor
 	// Step 0. Caching the tile
-	if tsAll.AllTiles == nil { tsAll.AllTiles = make(map[string]Tile) }
-	tsAll.AllTiles[parsedTile.Metadata.Category + "-" + parsedTile.Metadata.Name] = *parsedTile
+	if aTs.AllTiles == nil { aTs.AllTiles = make(map[string]Tile) }
+	aTs.AllTiles[parsedTile.Metadata.Category + "-" + parsedTile.Metadata.Name] = *parsedTile
 	////
 
 	// Step 1. Caching deployment inputs
@@ -178,11 +144,13 @@ func (d *Deployment) PullTile(tile string, version string, out *websocket.Conn, 
 	// Step 4. Store import libs && avoid to add repeated one
 	newTsLib := TsLib{
 		TileName:   parsedTile.Metadata.Name,
+		TileVersion: parsedTile.Metadata.Version,
 		TileFolder: strings.ToLower(parsedTile.Metadata.Name),
 		TileCategory: parsedTile.Metadata.Category,
 	}
-	if !containsTsLib(&newTsLib, tsAll.TsLibs) {
-		tsAll.TsLibs = append(tsAll.TsLibs, newTsLib)
+	if aTs.TsLibsMap == nil { aTs.TsLibsMap = make(map[string]TsLib) }
+	if  _, ok := aTs.TsLibsMap[parsedTile.Metadata.Name]; !ok {
+		aTs.TsLibsMap[parsedTile.Metadata.Name] = newTsLib
 	}
 	////
 
@@ -312,6 +280,7 @@ func (d *Deployment) PullTile(tile string, version string, out *websocket.Conn, 
 	// Step 8. Store import Stacks && avoid repeated one
 	ts := &TsStack {
 		TileName:          parsedTile.Metadata.Name,
+		TileVersion: 	parsedTile.Metadata.Version,
 		TileVariable:      strings.ToLower(parsedTile.Metadata.Name + "var"),
 		TileStackName:     parsedTile.Metadata.Name + "Stack",
 		TileStackVariable: strings.ToLower(parsedTile.Metadata.Name + "stack" + "var"),
@@ -319,14 +288,17 @@ func (d *Deployment) PullTile(tile string, version string, out *websocket.Conn, 
 		TileCategory: parsedTile.Metadata.Category,
 		TsManifests: tm,
 	}
-	if !containsTsStack(ts, tsAll.TsStacks) {
-		tsAll.TsStacks = append(tsAll.TsStacks, *ts)
+	if aTs.TsStacksMap == nil { aTs.TsStacksMap = make(map[string]TsStack) }
+	if _, ok := aTs.TsStacksMap[parsedTile.Metadata.Name]; !ok {
+		aTs.TsStacksMap[parsedTile.Metadata.Name]= *ts
+		if aTs.TsStacksOrder == nil { aTs.TsStacksOrder = list.New()}
+		aTs.TsStacksOrder.PushFront(parsedTile.Metadata.Name)
 	}
 	////
 
 	// recurred call
 	for _, t := range parsedTile.Spec.Dependencies {
-		if err = d.PullTile(t.TileReference, t.TileVersion, out, tsAll, override); err != nil {
+		if err = d.PullTile(ctx, t.TileReference, t.TileVersion, out, aTs, override); err != nil {
 			return err
 		}
 	}
@@ -334,7 +306,7 @@ func (d *Deployment) PullTile(tile string, version string, out *websocket.Conn, 
 	// !!!Last job: checking vendor service before leaving, do it after recurring.
 	// ???
 	if parsedTile.Metadata.Category == ContainerApplication.CString() {
-		for k , v := range tsAll.AllTiles {
+		for k , v := range aTs.AllTiles {
 			if strings.Contains(k, ContainerProvider.CString()) {
 				ts.TsManifests.VendorService = v.Metadata.VendorService
 				ts.TsManifests.DependentTile = v.Metadata.Name
@@ -344,78 +316,102 @@ func (d *Deployment) PullTile(tile string, version string, out *websocket.Conn, 
 	}
 	////
 
-	SendResponsef(out, "Parsing specification of Tile: < %s - %s > was success.\n", tile, version)
+	// !!!Caching Outputs
+	if aTs.AllOutputs == nil { aTs.AllOutputs = make(map[string]*TsOutput) }
+	to := &TsOutput{
+		TileName: tile,
+		TileVersion: parsedTile.Metadata.Version,
+		TsOutputs: make(map[string]*TsOutputDetail),
+	}
+	for _, o := range parsedTile.Spec.Outputs {
+		to.TsOutputs[o.Name] = &TsOutputDetail{
+			Name:                o.Name,
+			OutputType:          o.OutputType,
+			DefaultValue:        o.DefaultValue,
+			DefaultValueCommand: o.DefaultValueCommand,
+			OutputValue:         o.DefaultValue,
+			Description:         o.Description,
+		}
+	}
+	aTs.AllOutputs[tile] = to
+	////
+
+	SRf(out, "Parsing specification of Tile: < %s - %s > was success.\n", tile, version)
 	return nil
 }
 
-func containsTsLib(slice *TsLib, tls []TsLib) bool {
-	for _, tl := range tls {
-		if slice.TileName == tl.TileName && slice.TileFolder == tl.TileFolder {
-			return true
-		}
-	}
-	return false
-}
-
-func containsTsStack(slice *TsStack, tss []TsStack) bool {
-	for _, ts := range tss {
-		if slice.TileName == ts.TileName {
-			return true
-		}
-	}
-	return false
-}
+//func containsTsLib(slice *TsLib, tls []TsLib) bool {
+//	for _, tl := range tls {
+//		if slice.TileName == tl.TileName && slice.TileFolder == tl.TileFolder {
+//			return true
+//		}
+//	}
+//	return false
+//}
+//
+//func containsTsStack(slice *TsStack, tss []TsStack) bool {
+//	for _, ts := range tss {
+//		if slice.TileName == ts.TileName {
+//			return true
+//		}
+//	}
+//	return false
+//}
 
 // TODO: Simplify & refactor !!!
-func (d *Deployment) ApplyMainTs(out *websocket.Conn, tsAll *Ts) error {
+func (d *Deployment) ApplyMainTs(ctx context.Context, out *websocket.Conn, aTs *Ts) error {
 	superts := s3Config.WorkHome + "/super/bin/super.ts"
-	SendResponse(out, []byte("Generating main.ts for Super ..."))
+	SR(out, []byte("Generating main.ts for Super ..."))
 
 	tp, _ := template.ParseFiles(superts)
 
 	file, err := os.Create(superts + "_new")
 	if err != nil {
-		SendResponse(out, []byte(err.Error()))
+		SR(out, []byte(err.Error()))
 		return err
 	}
 
-	//!!!reverse tsAll.TsStacks due to CDK require!!!
-	for i := len(tsAll.TsStacks)/2 - 1; i >= 0; i-- {
-		opp := len(tsAll.TsStacks) - 1 - i
-		tsAll.TsStacks[i], tsAll.TsStacks[opp] = tsAll.TsStacks[opp], tsAll.TsStacks[i]
+	//!!!reverse aTs.TsStacks due to CDK require!!!
+	//for i := len(aTs.TsStacks)/2 - 1; i >= 0; i-- {
+	//	opp := len(aTs.TsStacks) - 1 - i
+	//	aTs.TsStacks[i], aTs.TsStacks[opp] = aTs.TsStacks[opp], aTs.TsStacks[i]
+	//}
+	for e := aTs.TsStacksOrder.Front(); e != nil; e = e.Next() {
+		n := e.Value.(string)
+		aTs.TsLibs = append(aTs.TsLibs, aTs.TsLibsMap[n])
+		aTs.TsStacks = append(aTs.TsStacks, aTs.TsStacksMap[n])
 	}
-
-	err = tp.Execute(file, tsAll)
+	err = tp.Execute(file, aTs)
 	if err != nil {
-		SendResponse(out, []byte(err.Error()))
+		SR(out, []byte(err.Error()))
 		return err
 	}
 	err = file.Close()
 	if err != nil {
-		SendResponse(out, []byte(err.Error()))
+		SR(out, []byte(err.Error()))
 		return err
 	}
 	os.Rename(superts, superts+"_old")
 	os.Rename(superts+"_new", superts)
 	buf, err := ioutil.ReadFile(superts)
 	if err != nil {
-		SendResponse(out, []byte(err.Error()))
+		SR(out, []byte(err.Error()))
 		return err
 	}
-	SendResponse(out, []byte("Generating main.ts for Super ... with success"))
-	SendResponse(out, []byte("--BO:-------------------------------------------------"))
-	SendResponse(out, buf)
-	SendResponse(out, []byte("--EO:-------------------------------------------------"))
+	SR(out, []byte("Generating main.ts for Super ... with success"))
+	SR(out, []byte("--BO:-------------------------------------------------"))
+	SR(out, buf)
+	SR(out, []byte("--EO:-------------------------------------------------"))
 	return nil
 }
 
-func (d *Deployment) GenerateExecutePlan(out *websocket.Conn, tsAll *Ts) (*ExecutionPlan, error) {
-	SendResponse(out, []byte("Generating execution plan... "))
+func (d *Deployment) GenerateExecutePlan(ctx context.Context, out *websocket.Conn, aTs *Ts) (*ExecutionPlan, error) {
+	SR(out, []byte("Generating execution plan... "))
 	var p = ExecutionPlan{
 		Plan:       list.New(),
-		PlanMirror: make(map[string]ExecutionStage),
+		PlanMirror: make(map[string]*ExecutionStage),
 	}
-	for i, ts := range tsAll.TsStacks {
+	for _, ts := range aTs.TsStacks {
 		workHome := s3Config.WorkHome + "/super"
 		stage := ExecutionStage{
 			Name:          ts.TileName,
@@ -424,21 +420,28 @@ func (d *Deployment) GenerateExecutePlan(out *websocket.Conn, tsAll *Ts) (*Execu
 			Kind:          ts.TileCategory,
 			WorkHome:      workHome,
 			Preparation:   []string{"cd " + workHome},
-		}
+			TileName: ts.TileName,
+			TileVersion: ts.TileVersion,
 
+		}
+		// Define Kind of Stage
+		if ts.TileCategory == ContainerApplication.CString() || ts.TileCategory == Application.CString() {
+			stage.Kind = Command.SKString()
+		} else {
+			stage.Kind = CDK.SKString()
+		}
 		if ts.TileCategory == ContainerApplication.CString() {
 			//stage.Preparation = ? how to connect to EKS
 			switch ts.TsManifests.ManifestType {
 			case K8s.MTString():
 				if ts.TsManifests.VendorService == EKS.VSString() {
-					stage.Preparation = append(stage.Preparation,
-						fmt.Sprintf("aws eks update-kubeconfig --name %s --role-arn <master role arn> --kubeconfig <config>",ts.TsManifests.DependentTile))
+
 				} else if ts.TsManifests.VendorService == Kubernetes.VSString() {
 					// To be address
 				}
 				stage.Preparation = append(stage.Preparation,"")
 				for j, f := range ts.TsManifests.Files {
-					cmd := "kubectl -f ./lib/" + strings.ToLower(ts.TileName) + "/lib/" + f + " -n " + ts.TsManifests.Namespace
+					cmd := "kubectl apply -f ./lib/" + strings.ToLower(ts.TileName) + "/lib/" + f + " -n " + ts.TsManifests.Namespace
 					stage.Command.PushFront(cmd)
 					stage.CommandMirror[strconv.Itoa(j)] = cmd
 				}
@@ -470,13 +473,13 @@ func (d *Deployment) GenerateExecutePlan(out *websocket.Conn, tsAll *Ts) (*Execu
 			stage.Command.PushFront(cmd)
 			stage.CommandMirror[strconv.Itoa(1)] = cmd
 		}
-		p.Plan.PushFront(stage)
-		p.PlanMirror[strconv.Itoa(i)] = stage
+		p.Plan.PushFront(&stage)
+		p.PlanMirror[ts.TileName] = &stage
 	}
 
 	buf, _ := yaml.Marshal(p)
-	err := SendResponse(out, buf)
-	SendResponse(out, []byte("Generating execution plan... with success"))
+	err := SR(out, buf)
+	SR(out, []byte("Generating execution plan... with success"))
 	return &p, err
 }
 

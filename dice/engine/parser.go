@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"context"
 	valid "github.com/asaskevich/govalidator"
 	"sigs.k8s.io/yaml"
 )
@@ -156,16 +157,16 @@ type TileOutput struct {
 
 // Parsing functions
 type ParserCore interface {
-	ParseTile() (*Tile, error)
-	ParseDeployment() (*Deployment, error)
-	ValidateTile(tile *Tile) error
-	ValidateDeployment(deployment *Deployment) error
+	ParseTile(ctx context.Context) (*Tile, error)
+	ParseDeployment(ctx context.Context) (*Deployment, error)
+	ValidateTile(ctx context.Context, tile *Tile) error
+	ValidateDeployment(ctx context.Context, deployment *Deployment) error
 
 }
 
 
 // ParseTile parse Tile
-func (d *Data) ParseTile() (*Tile, error) {
+func (d *Data) ParseTile(ctx context.Context) (*Tile, error) {
 	var tile Tile
 
 	err := yaml.Unmarshal(*d, &tile)
@@ -173,23 +174,23 @@ func (d *Data) ParseTile() (*Tile, error) {
 		return &tile, err
 	}
 
-	return &tile, d.ValidateTile(&tile)
+	return &tile, d.ValidateTile(ctx, &tile)
 }
 
 
 // ParseDeployment parse Deployment
-func (d *Data) ParseDeployment() (*Deployment, error) {
+func (d *Data) ParseDeployment(ctx context.Context) (*Deployment, error) {
 	var deployment Deployment
 
 	if err := yaml.Unmarshal(*d, &deployment); err != nil {
 		return &deployment, err
 	}
 
-	return &deployment, d.ValidateDeployment(&deployment)
+	return &deployment, d.ValidateDeployment(ctx, &deployment)
 }
 
 // ValidateTile validates Tile as per tile-spec.yaml
-func (d *Data) ValidateTile(tile *Tile) error {
+func (d *Data) ValidateTile(ctx context.Context, tile *Tile) error {
 	//TODO implementing ValidateTile
 	//	such as: name='folder' version='version_folder'
 	_,err := valid.ValidateStruct(tile)
@@ -197,7 +198,7 @@ func (d *Data) ValidateTile(tile *Tile) error {
 }
 
 // ValidateDeployment validate Deployment as per deployment-spec.yaml
-func (d *Data) ValidateDeployment(deployment *Deployment) error {
+func (d *Data) ValidateDeployment(ctx context.Context, deployment *Deployment) error {
 	//TODO implementing ValidateDeployment
 	//	such as: Are inputs covered all required inputs?
 	_,err := valid.ValidateStruct(deployment)
