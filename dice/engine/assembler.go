@@ -432,16 +432,19 @@ func (d *Deployment) GenerateExecutePlan(ctx context.Context, out *websocket.Con
 		}
 		if ts.TileCategory == ContainerApplication.CString() {
 			//stage.Preparation = ? how to connect to EKS
+			if ts.TsManifests.Namespace != "" && ts.TsManifests.Namespace != "default" {
+				stage.Preparation = append(stage.Preparation,"kubectl create ns "+ts.TsManifests.Namespace)
+			}
 			switch ts.TsManifests.ManifestType {
 			case K8s.MTString():
-				if ts.TsManifests.VendorService == EKS.VSString() {
 
-				} else if ts.TsManifests.VendorService == Kubernetes.VSString() {
-					// To be address
-				}
-				stage.Preparation = append(stage.Preparation,"")
 				for j, f := range ts.TsManifests.Files {
-					cmd := "kubectl apply -f ./lib/" + strings.ToLower(ts.TileName) + "/lib/" + f + " -n " + ts.TsManifests.Namespace
+					var cmd string
+					if ts.TsManifests.Namespace == "" || ts.TsManifests.Namespace != "default" {
+						cmd = "kubectl apply -f ./lib/" + strings.ToLower(ts.TileName) + "/lib/" + f + " -n default"
+					} else {
+						cmd = "kubectl apply -f ./lib/" + strings.ToLower(ts.TileName) + "/lib/" + f + " -n " + ts.TsManifests.Namespace
+					}
 					stage.Command.PushFront(cmd)
 					stage.CommandMirror[strconv.Itoa(j)] = cmd
 				}
