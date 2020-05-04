@@ -88,7 +88,7 @@ spec:
     # FromCommand
     - name: password
       outputType: FromCommand
-      defaultValueCommand: kubectl get pods -n {{.spec.inputs.namespace}} -l app.kubernetes.io/name=argocd-server -o name | cut -d'/' -f 2
+      defaultValueCommand: kubectl get pods -n $NAMESPACE -l app.kubernetes.io/name=argocd-server -o name | cut -d'/' -f 2
       description: Custom::Password        
 
   notes: []

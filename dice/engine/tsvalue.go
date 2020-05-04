@@ -15,7 +15,7 @@ type Ts struct {
 	// TsStacksOrder is an order of execution./ tileName ...> ....>
 	TsStacksOrder *list.List
 
-	// AllTiles : "Category - TileName" -> Tile
+	// AllTiles : "Category-TileName" -> Tile
 	AllTiles map[string]Tile
 	// AllOutputs :  TileName -> TsOutput
 	AllOutputs map[string]*TsOutput

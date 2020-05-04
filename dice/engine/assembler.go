@@ -340,25 +340,8 @@ func (d *Deployment) PullTile(ctx context.Context, tile string, version string, 
 	return nil
 }
 
-//func containsTsLib(slice *TsLib, tls []TsLib) bool {
-//	for _, tl := range tls {
-//		if slice.TileName == tl.TileName && slice.TileFolder == tl.TileFolder {
-//			return true
-//		}
-//	}
-//	return false
-//}
-//
-//func containsTsStack(slice *TsStack, tss []TsStack) bool {
-//	for _, ts := range tss {
-//		if slice.TileName == ts.TileName {
-//			return true
-//		}
-//	}
-//	return false
-//}
 
-// TODO: Simplify & refactor !!!
+// ApplyMainTs apply values with super.ts template
 func (d *Deployment) ApplyMainTs(ctx context.Context, out *websocket.Conn, aTs *Ts) error {
 	superts := s3Config.WorkHome + "/super/bin/super.ts"
 	SR(out, []byte("Generating main.ts for Super ..."))
@@ -431,16 +414,17 @@ func (d *Deployment) GenerateExecutePlan(ctx context.Context, out *websocket.Con
 			stage.Kind = CDK.SKString()
 		}
 		if ts.TileCategory == ContainerApplication.CString() {
-			//stage.Preparation = ? how to connect to EKS
+			//stage.Preparation
 			if ts.TsManifests.Namespace != "" && ts.TsManifests.Namespace != "default" {
-				stage.Preparation = append(stage.Preparation,"kubectl create ns "+ts.TsManifests.Namespace)
+				stage.Preparation = append(stage.Preparation,"kubectl create ns "+ts.TsManifests.Namespace + " || true")
+				stage.Preparation = append(stage.Preparation,"export NAMESPACE="+ts.TsManifests.Namespace)
 			}
 			switch ts.TsManifests.ManifestType {
 			case K8s.MTString():
 
 				for j, f := range ts.TsManifests.Files {
 					var cmd string
-					if ts.TsManifests.Namespace == "" || ts.TsManifests.Namespace != "default" {
+					if ts.TsManifests.Namespace == "" {
 						cmd = "kubectl apply -f ./lib/" + strings.ToLower(ts.TileName) + "/lib/" + f + " -n default"
 					} else {
 						cmd = "kubectl apply -f ./lib/" + strings.ToLower(ts.TileName) + "/lib/" + f + " -n " + ts.TsManifests.Namespace
@@ -464,6 +448,21 @@ func (d *Deployment) GenerateExecutePlan(ctx context.Context, out *websocket.Con
 					stage.CommandMirror[strconv.Itoa(j)] = cmd
 				}
 			}
+			//Post commands, output values to output.log
+			fileName := s3Config.WorkHome+"/super/"+stage.Name+"-output.log"
+			//Sleep 5 seconds to waiting pod's ready
+			stage.Command.PushFront("sleep 10")
+			stage.CommandMirror[strconv.Itoa(stage.Command.Len()+1)] = "sleep 10"
+			if tile, ok := aTs.AllTiles[ts.TileCategory+"-"+ts.TileName]; ok {
+				for _, o := range tile.Spec.Outputs {
+					if o.DefaultValueCommand != "" {
+						cmd := `echo "{\"`+o.Name+"=`"+o.DefaultValueCommand+"`"+`\"}" >>`+fileName
+						stage.Command.PushFront(cmd)
+						stage.CommandMirror[strconv.Itoa(stage.Command.Len()+1)] = cmd
+					}
+				}
+			}
+
 
 		} else if ts.TileCategory == Application.CString() {
 			//TODO: What to do with application?
@@ -486,4 +485,3 @@ func (d *Deployment) GenerateExecutePlan(ctx context.Context, out *websocket.Con
 	return &p, err
 }
 
-// extractValues

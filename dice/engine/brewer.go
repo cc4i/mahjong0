@@ -93,7 +93,8 @@ func (ep *ExecutionPlan) CommandExecutor(ctx context.Context, stage *ExecutionSt
 	if stage !=nil {
 		SR(out, []byte("Initializing stage log file ..."))
 		stageLog = log.New()
-		logFile, err := os.OpenFile(s3Config.WorkHome+"/super/"+stage.Name+"-output.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+		fileName := s3Config.WorkHome+"/super/"+stage.Name+"-output.log"
+		logFile, err := os.OpenFile(fileName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 		if err != nil {
 			SRf(out,"Failed to save stage log, using default stderr, %s\n", err)
 			return err
@@ -251,33 +252,37 @@ func (ep *ExecutionPlan) ExtractValue(ctx context.Context, buf []byte, out *webs
 		if outputs, ok := ts.AllOutputs[tileName]; ok {
 			outputs.StageName = ep.CurrentStage.Name
 			for outputName, outputDetail := range outputs.TsOutputs {
+				var regx *regexp.Regexp
 				if tileCategory == ContainerApplication.CString() || tileCategory == Application.CString() {
-					//outputDetail.DefaultValueCommand
-					//TODO: extract value from given command
+					// Extract key, value from Command outputs
+					regx = regexp.MustCompile("^\\{\"(" +
+						outputName +
+						"=" +
+						".*?)\"}$")
 				} else {
-					// Extract key, value as output from output.log
+					// Extract key, value from CDK outputs
 					if stack, ok := ts.TsStacksMap[tileName]; ok {
-
-						re := regexp.MustCompile("^\\{\"level\":\"info\"\\,\"msg\".*("+
+						regx = regexp.MustCompile("^\\{\"level\":\"info\"\\,\"msg\".*("+
 							stack.TileStackName+"."+
 							stack.TileName+
 							outputName+
 							".*?)\"}$")
 
-						scanner := bufio.NewScanner(bytes.NewReader(buf))
-						scanner.Split(bufio.ScanLines)
-						for scanner.Scan() {
-							txt := scanner.Text()
-							match := re.FindStringSubmatch(txt)
-							if len(match) >0 {
-								kv := strings.Split(match[1],"=")
-								outputDetail.OutputValue = strings.TrimSpace(kv[1])
-								SRf(out,"Extract [%s] = [%s] ", outputName,strings.TrimSpace(kv[1]))
-								break
-							}
-						}
 					}
 				}
+				scanner := bufio.NewScanner(bytes.NewReader(buf))
+				scanner.Split(bufio.ScanLines)
+				for scanner.Scan() {
+					txt := scanner.Text()
+					match := regx.FindStringSubmatch(txt)
+					if len(match) >0 {
+						kv := strings.Split(match[1],"=")
+						outputDetail.OutputValue = strings.TrimSpace(kv[1])
+						SRf(out,"Extract outputs: [%s] = [%s] ", outputName,strings.TrimSpace(kv[1]))
+						break
+					}
+				}
+
 			}
 
 		}
