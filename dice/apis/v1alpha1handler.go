@@ -54,6 +54,9 @@ func WsHandler(ctx context.Context, c *gin.Context) {
 		if err != nil {
 			engine.SR(wb.out, []byte(err.Error()))
 		}
+		// Signal client all done & Could close connection if need to
+		engine.SR(wb.out, []byte("d-done"))
+
 	}
 
 }
