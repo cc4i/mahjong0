@@ -4,17 +4,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
-
 var Init = &cobra.Command{
-	Use:   "init",
-	Short: "\tInitial Tile or Deployment.",
-	Long:  "\tInitial Tile or Deployment with all basic needs.",
+	Use:              "init",
+	Short:            "\tInitial Tile or Deployment.",
+	Long:             "\tInitial Tile or Deployment with all basic needs.",
 	TraverseChildren: true,
 	//Run: func(cmd *cobra.Command, args []string) {
 	//	fmt.Println("Tile")
 	//},
 }
-
 
 var Tile = &cobra.Command{
 	Use:   "tile",
@@ -34,16 +32,14 @@ var Deployment = &cobra.Command{
 	},
 }
 
-
 func init() {
-	Init.PersistentFlags().String("name","", "The name of building Tile/Deployment")
-	Init.PersistentFlags().String("version","0.0.1", "The version of building Tile/Deployment")
-	Init.PersistentFlags().String("directory","", "Where to place the Tile/Deployment with templates")
+	Init.PersistentFlags().String("name", "", "The name of building Tile/Deployment")
+	Init.PersistentFlags().String("version", "0.0.1", "The version of building Tile/Deployment")
+	Init.PersistentFlags().String("directory", "", "Where to place the Tile/Deployment with templates")
 
 	Init.AddCommand(Tile, Deployment)
 
 }
-
 
 func tileFunc(cmd *cobra.Command, args []string) {
 

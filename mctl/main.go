@@ -19,7 +19,6 @@ func main() {
 	dryRun := cmd.PersistentFlags().Lookup("dry-run")
 	dryRun.Shorthand = "d"
 
-
 	// Initial commands
 	cmd.AddCommand(initial.Init,
 		validate.Validate,

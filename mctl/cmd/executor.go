@@ -18,8 +18,8 @@ func Run(addr string, dryRun bool, cmd []byte) error {
 func Connect2Dice(addr string, dryRun bool) (*websocket.Conn, error) {
 	u := &url.URL{
 		Scheme: "ws",
-		Host: addr,
-		Path: "/v1alpha1/ws",
+		Host:   addr,
+		Path:   "/v1alpha1/ws",
 	}
 	if dryRun {
 		u.Path = "/v1alpha1/ws?dryRun=true"
@@ -48,7 +48,4 @@ func ExecCommand(cmd []byte, c *websocket.Conn) error {
 			log.Printf("%s\n", message)
 		}
 	}
-	return nil
 }
-
-
