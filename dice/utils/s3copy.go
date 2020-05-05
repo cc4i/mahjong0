@@ -6,11 +6,11 @@ import (
 )
 
 type S3Config struct {
-	WorkHome string
-	Region string
+	WorkHome   string
+	Region     string
 	BucketName string
-	Mode string // mode for develop purpose: dev/prod
-	LocalRepo string // folder to store Tiles on 'dev' mode
+	Mode       string // mode for develop purpose: dev/prod
+	LocalRepo  string // folder to store Tiles on 'dev' mode
 }
 
 type s3Functions interface {
@@ -19,7 +19,6 @@ type s3Functions interface {
 	LoadSuper() (string, error)
 	LoadSuperDev() (string, error)
 	Decompress(tile string, version string) error
-
 }
 
 func (s3 *S3Config) LoadTile(tile string, version string) (string, error) {
@@ -34,7 +33,7 @@ func (s3 *S3Config) LoadTile(tile string, version string) (string, error) {
 func (s3 *S3Config) LoadTileDev(tile string, version string) (string, error) {
 
 	repoDir := s3.LocalRepo
-	srcDir := repoDir + "/"+strings.ToLower(tile) + "/" + strings.ToLower(version)
+	srcDir := repoDir + "/" + strings.ToLower(tile) + "/" + strings.ToLower(version)
 	destDir := s3.WorkHome + "/super/lib/" + strings.ToLower(tile)
 	tileSpecFile := destDir + "/tile-spec.yaml"
 	log.Printf("Load Tile < %s - %s > ... from < %s >\n", tile, version, s3.LocalRepo)
@@ -60,9 +59,8 @@ func (s3 *S3Config) LoadSuper() (string, error) {
 	}
 }
 
-
 func (s3 *S3Config) LoadSuperDev() (string, error) {
 	repoDir := s3.LocalRepo + "/super"
-	destDir := s3.WorkHome+"/super"
-	return destDir,  Copy(repoDir, destDir)
+	destDir := s3.WorkHome + "/super"
+	return destDir, Copy(repoDir, destDir)
 }

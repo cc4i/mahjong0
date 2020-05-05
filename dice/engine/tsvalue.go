@@ -5,7 +5,7 @@ import "container/list"
 // Ts is key struct to fulfil super.ts template and key element to generate execution plan.
 type Ts struct {
 	// TsLibs
-	TsLibs   []TsLib
+	TsLibs []TsLib
 	// TsLibsMap : TileName -> TsLib
 	TsLibsMap map[string]TsLib
 	// TsStacks
@@ -22,19 +22,19 @@ type Ts struct {
 }
 
 type TsLib struct {
-	TileName   string
-	TileVersion string
-	TileFolder string
+	TileName     string
+	TileVersion  string
+	TileFolder   string
 	TileCategory string
 }
 
 type TsStack struct {
 	TileName          string
-	TileVersion 		string
+	TileVersion       string
 	TileVariable      string
 	TileStackName     string
 	TileStackVariable string
-	TileCategory string
+	TileCategory      string
 	InputParameters   map[string]string //[]TsInputParameter
 	TsManifests       *TsManifests
 }
@@ -45,31 +45,30 @@ type TsInputParameter struct {
 }
 
 type TsManifests struct {
-	ManifestType string
-	Namespace string
-	Files        []string
-	Folders      []string
-	VendorService string
-	DependentTile string
+	ManifestType         string
+	Namespace            string
+	Files                []string
+	Folders              []string
+	VendorService        string
+	DependentTile        string
 	DependentTileVersion string
 }
 
 type TsOutput struct {
-	TileName string
+	TileName    string
 	TileVersion string
-	StageName string
-	TsOutputs map[string]*TsOutputDetail //OutputName -> TsOutputDetail
+	StageName   string
+	TsOutputs   map[string]*TsOutputDetail //OutputName -> TsOutputDetail
 }
 
 type TsOutputDetail struct {
-	Name string
-	OutputType string
-	DefaultValue string
+	Name                string
+	OutputType          string
+	DefaultValue        string
 	DefaultValueCommand string
-	OutputValue string
-	Description string
+	OutputValue         string
+	Description         string
 }
 
 // AllTs represents all information about tiles, input, output, etc.,  session-id -> Ts
 var AllTs = make(map[string]Ts)
-

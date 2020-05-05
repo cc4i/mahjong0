@@ -40,7 +40,7 @@ func WsHandler(ctx context.Context, c *gin.Context) {
 	//ws.SetWriteDeadline(time.Now().Add(5 * time.Second))
 	defer ws.Close()
 
-	dryRun := c.Query("dryRun")=="true"
+	dryRun := c.Query("dryRun") == "true"
 	for {
 		mt, message, err := ws.ReadMessage()
 		if err != nil {

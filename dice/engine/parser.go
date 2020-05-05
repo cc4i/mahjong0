@@ -6,11 +6,11 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-
 type Data []byte
 
 // Enumeration for category of metadata in Tile specification.
 type Category int
+
 const (
 	Network Category = iota
 	Compute
@@ -22,45 +22,50 @@ const (
 	Analysis
 	ML
 )
+
 func (c Category) CString() string {
 	return [...]string{"Network", "Compute", "ContainerProvider", "Storage", "Database", "Application", "ContainerApplication", "Analysis", "ML"}[c]
 }
 
 type VendorService int
+
 const (
 	EKS VendorService = iota
 	ECS
 	Kubernetes
 	Kops
 )
+
 func (vs VendorService) VSString() string {
 	return [...]string{"EKS", "ECS", "Kubernetes", "Kops"}[vs]
 }
 
 // Enumeration for input/output in Tile specification
 type IOType int
+
 const (
 	String IOType = iota
 	Number
 	CDKObject
 	FromCommand
 )
+
 func (iot IOType) IOTString() string {
 	return [...]string{"String", "Number", "CDKObject", "FromCommand"}[iot]
 }
 
 // Manifest type
 type ManifestType int
+
 const (
 	K8s ManifestType = iota
 	Helm
 	Kustomize
 )
+
 func (mts ManifestType) MTString() string {
 	return [...]string{"K8s", "Helm", "Kustomize"}[mts]
 }
-
-
 
 // Deployment specification
 type Deployment struct {
@@ -72,33 +77,31 @@ type Deployment struct {
 
 type DeploymentSpec struct {
 	Template DeploymentTemplate `json:"template"`
-	Summary DeploymentSummary `json:"summary"`
+	Summary  DeploymentSummary  `json:"summary"`
 }
 
 type DeploymentTemplate struct {
-	Category string `json:"category" valid:"in(Network|Compute|ContainerProvider|Storage|Database|Application|ContainerApplication|Analysis|ML)"`
-	Tiles []DeploymentTemplateDetail `json:"tiles"`
+	Category string                     `json:"category" valid:"in(Network|Compute|ContainerProvider|Storage|Database|Application|ContainerApplication|Analysis|ML)"`
+	Tiles    []DeploymentTemplateDetail `json:"tiles"`
 }
 
 type DeploymentSummary struct {
-	Description string `json:"description"`
-	Outputs []DeploymentSummaryOutput `json:"outputs"`
-	Notes []string `json:"notes"`
+	Description string                    `json:"description"`
+	Outputs     []DeploymentSummaryOutput `json:"outputs"`
+	Notes       []string                  `json:"notes"`
 }
 
 type DeploymentSummaryOutput struct {
-	Name string `json:"name"`
-	TileReference string `json:"tileReference"`
+	Name           string `json:"name"`
+	TileReference  string `json:"tileReference"`
 	OutputValueRef string `json:"outputValueRef"`
-
 }
 
-
 type DeploymentTemplateDetail struct {
-	TileReference string      `json:"tileReference"`
-	TileVersion   string      `json:"tileVersion"`
-	Inputs        []TileInput `json:"inputs"`
-	Manifests	TileManifest	`json:"manifests"`
+	TileReference string       `json:"tileReference"`
+	TileVersion   string       `json:"tileVersion"`
+	Inputs        []TileInput  `json:"inputs"`
+	Manifests     TileManifest `json:"manifests"`
 }
 
 // Tile specification
@@ -110,16 +113,16 @@ type Tile struct {
 }
 
 type Metadata struct {
-	Name     string `json:"name"`
-	Category string `json:"category"`
-	VendorService string `json:"vendorService"`
+	Name                     string `json:"name"`
+	Category                 string `json:"category"`
+	VendorService            string `json:"vendorService"`
 	DependentOnVendorService string `json:"dependentOnVendorService"`
-	Version  string `json:"version"`
+	Version                  string `json:"version"`
 }
 
 type TileSpec struct {
-	Global GlobalDetail `json:"global"`
-	PreRun PreRunDetail `json:"preRun"`
+	Global       GlobalDetail     `json:"global"`
+	PreRun       PreRunDetail     `json:"preRun"`
 	Dependencies []TileDependency `json:"dependencies"`
 	Inputs       []TileInput      `json:"inputs"`
 	Manifests    TileManifest     `json:"manifests"`
@@ -131,8 +134,8 @@ type GlobalDetail struct {
 	Env []GlobalDetailEnv `json:"env"`
 }
 type GlobalDetailEnv struct {
-	Name string	`json:"name"`
-	Value string	`json:"value"`
+	Name     string `json:"name"`
+	Value    string `json:"value"`
 	ValueRef string `json:"valueRef"`
 }
 
@@ -141,8 +144,8 @@ type PreRunDetail struct {
 }
 
 type PreRunStages struct {
-	Name string	`json:"name"`
-	Command string	`json:"command"`
+	Name    string `json:"name"`
+	Command string `json:"command"`
 }
 
 type TileDependency struct {
@@ -159,20 +162,20 @@ type TileInput struct {
 	DefaultValue  string                `json:"defaultValue"`
 	DefaultValues []string              `json:"defaultValues"`
 	InputValue    string                `json:"inputValue"`
-	InputValues   []string                `json:"inputValues"`
-	Require       bool                `json:"require"` // true/false
-	Override TileInputOverride `json:"override"`
+	InputValues   []string              `json:"inputValues"`
+	Require       bool                  `json:"require"` // true/false
+	Override      TileInputOverride     `json:"override"`
 }
 
 type TileInputOverride struct {
-	Name  string `json:"name"`
-	Field string `json:"field"`
-	InputName string
+	Name          string `json:"name"`
+	Field         string `json:"field"`
+	InputName     string
 	OverrideValue string
 }
 type TileManifest struct {
 	ManifestType string   `json:"manifestType"`
-	Namespace string `json:"namespace"`
+	Namespace    string   `json:"namespace"`
 	Files        []string `json:"files"`
 	Folders      []string `json:"folders"`
 }
@@ -196,9 +199,7 @@ type ParserCore interface {
 	ParseDeployment(ctx context.Context) (*Deployment, error)
 	ValidateTile(ctx context.Context, tile *Tile) error
 	ValidateDeployment(ctx context.Context, deployment *Deployment) error
-
 }
-
 
 // ParseTile parse Tile
 func (d *Data) ParseTile(ctx context.Context) (*Tile, error) {
@@ -211,7 +212,6 @@ func (d *Data) ParseTile(ctx context.Context) (*Tile, error) {
 
 	return &tile, d.ValidateTile(ctx, &tile)
 }
-
 
 // ParseDeployment parse Deployment
 func (d *Data) ParseDeployment(ctx context.Context) (*Deployment, error) {
@@ -228,7 +228,7 @@ func (d *Data) ParseDeployment(ctx context.Context) (*Deployment, error) {
 func (d *Data) ValidateTile(ctx context.Context, tile *Tile) error {
 	//TODO implementing ValidateTile
 	//	such as: name='folder' version='version_folder'
-	_,err := valid.ValidateStruct(tile)
+	_, err := valid.ValidateStruct(tile)
 	return err
 }
 
@@ -236,6 +236,6 @@ func (d *Data) ValidateTile(ctx context.Context, tile *Tile) error {
 func (d *Data) ValidateDeployment(ctx context.Context, deployment *Deployment) error {
 	//TODO implementing ValidateDeployment
 	//	such as: Are inputs covered all required inputs?
-	_,err := valid.ValidateStruct(deployment)
+	_, err := valid.ValidateStruct(deployment)
 	return err
 }

@@ -21,32 +21,34 @@ import (
 
 // ExecutionPlan represents complete plan.
 type ExecutionPlan struct {
-	Name string `json:"name"`
-	CurrentStage *ExecutionStage `json:"currentStage"`
-	Plan       *list.List                `json:"plan"`
-	PlanMirror map[string]*ExecutionStage `json:"planMirror"`
-	originDeployment *Deployment `json:"originDeployment"`
+	Name             string                     `json:"name"`
+	CurrentStage     *ExecutionStage            `json:"currentStage"`
+	Plan             *list.List                 `json:"plan"`
+	PlanMirror       map[string]*ExecutionStage `json:"planMirror"`
+	OriginDeployment *Deployment                `json:"originDeployment"`
 }
 
 // ExecutionStage represents an unit of execution plan.
 type ExecutionStage struct {
 	// Name
-	Name          string            `json:"name"`
+	Name string `json:"name"`
 	// Stage type
 	Kind          string            `json:"kind"`     //CDK/Command
 	WorkHome      string            `json:"workHome"` //root folder for execution
 	Preparation   []string          `json:"preparation"`
 	Command       *list.List        `json:"command"`
 	CommandMirror map[string]string `json:"commandMirror"`
-	TileName string	`json:"tileName"`
-	TileVersion string `json:"tileVersion"`
+	TileName      string            `json:"tileName"`
+	TileVersion   string            `json:"tileVersion"`
 }
 
 type StageKind int
+
 const (
 	CDK StageKind = iota
 	Command
 )
+
 func (sk StageKind) SKString() string {
 	return [...]string{"CDK", "Command", "FromCommand"}[sk]
 }
@@ -75,7 +77,7 @@ func (ep *ExecutionPlan) ExecutePlan(ctx context.Context, dryRun bool, out *webs
 			if err := ep.CommandExecutor(ctx, stage, []byte(cmd), out); err != nil {
 				return err
 			}
-			buf, err := ioutil.ReadFile(s3Config.WorkHome+"/super/"+stage.Name+"-output.log")
+			buf, err := ioutil.ReadFile(s3Config.WorkHome + "/super/" + stage.Name + "-output.log")
 			if err != nil {
 				return err
 			}
@@ -94,16 +96,16 @@ func (ep *ExecutionPlan) GenerateSummary(ctx context.Context, out *websocket.Con
 	SR(out, []byte("============================Summary===================================="))
 	dSid := ctx.Value("d-sid").(string)
 	if at, ok := AllTs[dSid]; ok {
-		if ep.originDeployment.Spec.Summary.Description != "" {
-			SR(out, []byte(ep.originDeployment.Spec.Summary.Description+"\n"))
+		if ep.OriginDeployment.Spec.Summary.Description != "" {
+			SR(out, []byte(ep.OriginDeployment.Spec.Summary.Description+"\n"))
 		}
 		SR(out, []byte("\n"))
-		for _, ot := range ep.originDeployment.Spec.Summary.Outputs {
-			SR(out, []byte(fmt.Sprintf("%s = %s\n", ot.Name, getValueByRef(ot.TileReference, ot.OutputValueRef, at.AllOutputs) )))
+		for _, ot := range ep.OriginDeployment.Spec.Summary.Outputs {
+			SR(out, []byte(fmt.Sprintf("%s = %s\n", ot.Name, getValueByRef(ot.TileReference, ot.OutputValueRef, at.AllOutputs))))
 		}
 		SR(out, []byte("\n"))
-		for _, n := range ep.originDeployment.Spec.Summary.Notes {
-			SR(out, []byte(n +"\n"))
+		for _, n := range ep.OriginDeployment.Spec.Summary.Notes {
+			SR(out, []byte(n+"\n"))
 		}
 	}
 	SR(out, []byte("======================================================================="))
@@ -125,17 +127,17 @@ func (ep *ExecutionPlan) CommandExecutor(ctx context.Context, stage *ExecutionSt
 	ct := string(cmdTxt)
 
 	var stageLog *log.Logger
-	if stage !=nil {
+	if stage != nil {
 		SR(out, []byte("Initializing stage log file ..."))
 		stageLog = log.New()
-		fileName := s3Config.WorkHome+"/super/"+stage.Name+"-output.log"
+		fileName := s3Config.WorkHome + "/super/" + stage.Name + "-output.log"
 		logFile, err := os.OpenFile(fileName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 		if err != nil {
-			SRf(out,"Failed to save stage log, using default stderr, %s\n", err)
+			SRf(out, "Failed to save stage log, using default stderr, %s\n", err)
 			return err
 		}
 		stageLog.SetOutput(logFile)
-		stageLog.SetFormatter(&log.JSONFormatter{DisableTimestamp:true})
+		stageLog.SetFormatter(&log.JSONFormatter{DisableTimestamp: true})
 		SR(out, []byte("Initializing stage log file with success"))
 	}
 
@@ -156,10 +158,10 @@ func (ep *ExecutionPlan) CommandExecutor(ctx context.Context, stage *ExecutionSt
 
 	go func() {
 		select {
-			case <-ctx.Done():
-				err := cmd.Process.Kill()
-				log.Printf("halted cmd with %s\n", err)
-			}
+		case <-ctx.Done():
+			err := cmd.Process.Kill()
+			log.Printf("halted cmd with %s\n", err)
+		}
 	}()
 
 	err = cmd.Wait()
@@ -321,10 +323,10 @@ func (ep *ExecutionPlan) ExtractValue(ctx context.Context, buf []byte, out *webs
 				} else {
 					// Extract key, value from CDK outputs
 					if stack, ok := ts.TsStacksMap[tileName]; ok {
-						regx = regexp.MustCompile("^\\{\"level\":\"info\"\\,\"msg\".*("+
-							stack.TileStackName+"."+
-							stack.TileName+
-							outputName+
+						regx = regexp.MustCompile("^\\{\"level\":\"info\"\\,\"msg\".*(" +
+							stack.TileStackName + "." +
+							stack.TileName +
+							outputName +
 							".*?)\"}$")
 
 					}
@@ -334,10 +336,10 @@ func (ep *ExecutionPlan) ExtractValue(ctx context.Context, buf []byte, out *webs
 				for scanner.Scan() {
 					txt := scanner.Text()
 					match := regx.FindStringSubmatch(txt)
-					if len(match) >0 {
-						kv := strings.Split(match[1],"=")
+					if len(match) > 0 {
+						kv := strings.Split(match[1], "=")
 						outputDetail.OutputValue = strings.TrimSpace(kv[1])
-						SRf(out,"Extract outputs: [%s] = [%s] ", outputName,strings.TrimSpace(kv[1]))
+						SRf(out, "Extract outputs: [%s] = [%s] ", outputName, strings.TrimSpace(kv[1]))
 						break
 					}
 				}
@@ -350,7 +352,6 @@ func (ep *ExecutionPlan) ExtractValue(ctx context.Context, buf []byte, out *webs
 
 	return nil
 }
-
 
 func randString(n int) string {
 	const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
