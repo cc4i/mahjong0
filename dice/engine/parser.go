@@ -99,6 +99,7 @@ type Metadata struct {
 	Name     string `json:"name"`
 	Category string `json:"category"`
 	VendorService string `json:"vendorService"`
+	DependentOnVendorService string `json:"dependentOnVendorService"`
 	Version  string `json:"version"`
 }
 

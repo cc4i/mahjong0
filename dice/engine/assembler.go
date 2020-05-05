@@ -414,11 +414,12 @@ func (d *Deployment) GenerateExecutePlan(ctx context.Context, out *websocket.Con
 			stage.Kind = CDK.SKString()
 		}
 		if ts.TileCategory == ContainerApplication.CString() {
-			//stage.Preparation
+			//stage.Preparation & inject environment variables
 			if ts.TsManifests.Namespace != "" && ts.TsManifests.Namespace != "default" {
 				stage.Preparation = append(stage.Preparation,"kubectl create ns "+ts.TsManifests.Namespace + " || true")
 				stage.Preparation = append(stage.Preparation,"export NAMESPACE="+ts.TsManifests.Namespace)
 			}
+			stage.Preparation = append(stage.Preparation,"export WORK_HOME="+s3Config.WorkHome+"/super")
 			switch ts.TsManifests.ManifestType {
 			case K8s.MTString():
 
@@ -459,7 +460,13 @@ func (d *Deployment) GenerateExecutePlan(ctx context.Context, out *websocket.Con
 						cmd := `echo "{\"`+o.Name+"=`"+o.DefaultValueCommand+"`"+`\"}" >>`+fileName
 						stage.Command.PushFront(cmd)
 						stage.CommandMirror[strconv.Itoa(stage.Command.Len()+1)] = cmd
+					} else if o.DefaultValue != ""{
+						cmd := `echo "{\"`+o.Name+"="+o.DefaultValue+`\"}" >>`+fileName
+						stage.Command.PushFront(cmd)
+						stage.CommandMirror[strconv.Itoa(stage.Command.Len()+1)] = cmd
+
 					}
+
 				}
 			}
 

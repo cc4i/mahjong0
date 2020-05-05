@@ -1,4 +1,5 @@
 # API version
+# Dice will inject environment variables, such as $WORK_HOME, $NAMESPACE, $TOKEN?!, etc.
 apiVersion: mahjong.io/v1alpha1
 # Kind of entity
 # - Options:  Tile, a construct component
@@ -28,6 +29,10 @@ metadata:
     #             Kops, ???
     #             Kubernetes, ???
     vendorService: 
+
+    # Dependent on what kind of vendor service, to determine what input parameters are required. 
+    # For example, dependentOnVendorService: EKS, that's required 'clusterName', 'masterRoleARN'
+    dependentOnVendorService: 
     
     # Version of entity
     version: 
@@ -85,6 +90,10 @@ spec:
     # manifest folder
     folders:
       - kustomization
+    # The manifests are dependent on what kind of Kubernetes Cluster.
+    dependencies:
+      # As a reference name, refer to .spec.dependencies
+      - name: eks
           
   # Ouptputs represnt output value after launched, for 'ContainerApplication' might need leverage specific command to retrive output.
   outputs:

@@ -1,58 +1,34 @@
-# API version
 apiVersion: mahjong.io/v1alpha1
-# Kind of entity
 kind: Tile
-# Metadata
 metadata:
-    # Name of entity
     name: Argocd0
-    # Category of entity
     category: ContainerApplication
-    # Version of entity
     version: 1.5.2
+    # Dependent on what kind of vendor service, to determine what input parameters are required. 
+    # For example, dependentOnVendorService: EKS, that's required 'clusterName', 'masterRoleARN'
+    dependentOnVendorService: EKS
 # Specification
 spec:
-  # Dependencies represent dependency with other Tile
-  dependencies:
-      # As a reference name 
-    - name: eks
-      # Tile name
-      tileReference: Eks0
-      # Tile version
-      tileVersion: 0.0.1
-      
-  # 
   inputs:
     # string
     - name: clusterName
       inputType: string
-      dependencies:
-        - name: eks
-          field: clusterName
-          override: true
       require: true
     # string
     - name: masterRoleARN
       inputType: string
-      dependencies:
-        - name: eks
-          field: masterRoleARN
       require: true
-    # number/ default: 2
     - name: namespace
       inputType: string
       require: false
-      defaultValue: argocd
+      defaultValue: argocd-existing
 
   manifests:
-    # Type of manifest
-    manifestType: k8s
-    # manifest list
+    manifestType: K8s
+    namespace: argocd 
     files:
       - k8s/install.yaml
-    # manifest folder
-    # folders:
-    #   - k8s
+
           
   # Ouptputs represnt output value after launched, for 'ContainerApplication' might need leverage specific command to retrive output.
   outputs:
@@ -64,7 +40,7 @@ spec:
     # FromCommand
     - name: password
       outputType: FromCommand
-      defaultValueCommand: kubectl get pods -n {{.namespace}} -l app.kubernetes.io/name=argocd-server -o name | cut -d'/' -f 2
+      defaultValueCommand: kubectl get pods -n $NAMESPACE -l app.kubernetes.io/name=argocd-server -o name | cut -d'/' -f 2
       description: Custom::Password        
 
   notes: []

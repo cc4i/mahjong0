@@ -170,31 +170,55 @@ echo $?
 `
 	key := ctx.Value(`d-sid`).(string)
 	if ts, ok := AllTs[key]; ok {
+
 		if t, ok := ts.TsStacksMap[stage.TileName]; ok {
+			// Looking for initial kube.config. For EKS, require clusterName, masterRoleARN ; For others, not implementing.
 			if t.TsManifests != nil {
+				var clusterName, masterRoleARN string
+				// Tile with dependency
 				if t.TsManifests.VendorService == EKS.VSString() {
 					if outputs, ok := ts.AllOutputs[t.TsManifests.DependentTile]; ok {
-						clusterName, ok := outputs.TsOutputs["clusterName"]
+						cn, ok := outputs.TsOutputs["clusterName"]
 						if !ok {
 							return script, errors.New("ContainerProvider with EKS didn't include output: clusterName.")
 						}
+						clusterName = cn.OutputValue
 
-						masterRoleARN, ok := outputs.TsOutputs["masterRoleARN"]
+						arn, ok := outputs.TsOutputs["masterRoleARN"]
 						if !ok {
 							return script, errors.New("ContainerProvider with EKS didn't include output: masterRoleARN.")
 						}
-						tContent4K8s = strings.ReplaceAll(tContent4K8s, "[kube.config]",
-							fmt.Sprintf("aws eks update-kubeconfig --name %s --role-arn %s --kubeconfig %s\nexport KUBECONFIG=%s",
-								clusterName.OutputValue,
-								masterRoleARN.OutputValue,
-								s3Config.WorkHome+"/super/kube.config",
-								s3Config.WorkHome+"/super/kube.config",
-							))
-						tContent = tContent4K8s
+						masterRoleARN = arn.OutputValue
+
 					}
 				}
+				// Tile without dependency but input parameters
+				if t, ok := ts.AllTiles[stage.TileName]; ok {
+					if t.Metadata.DependentOnVendorService == EKS.VSString() {
+						if s, ok := ts.TsStacksMap[stage.TileName]; ok {
+							clusterName, ok = s.InputParameters["clusterName"]
+							if !ok {
+								return script, errors.New("ContainerProvider with EKS didn't include output: clusterName.")
+							}
+
+							masterRoleARN, ok = s.InputParameters["masterRoleARN"]
+							if !ok {
+								return script, errors.New("ContainerProvider with EKS didn't include output: masterRoleARN.")
+							}
+						}
+					}
+				}
+				tContent4K8s = strings.ReplaceAll(tContent4K8s, "[kube.config]",
+					fmt.Sprintf("aws eks update-kubeconfig --name %s --role-arn %s --kubeconfig %s\nexport KUBECONFIG=%s",
+						clusterName,
+						masterRoleARN,
+						s3Config.WorkHome+"/super/kube.config",
+						s3Config.WorkHome+"/super/kube.config",
+					))
+				tContent = tContent4K8s
 			}
 		}
+
 	}
 
 	tp := template.New("script")

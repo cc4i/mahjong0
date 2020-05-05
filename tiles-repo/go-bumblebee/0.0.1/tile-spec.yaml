@@ -1,0 +1,38 @@
+apiVersion: mahjong.io/v1alpha1
+kind: Tile
+metadata:
+    name: Go-Bumblebee
+    category: ContainerApplication
+    version: 0.0.1
+    dependentOnVendorService: EKS
+spec:
+  prerun:
+    stages:
+      - name:
+        command:
+      - name:
+        command:
+  inputs:
+    - name: clusterName
+      inputType: String
+      require: true
+    - name: masterRoleARN
+      inputType: String
+      require: true
+
+  manifests:
+    manifestType: kustomize
+    namespace: go-bumblebee 
+    folders:
+      - kustomize
+          
+  # Ouptputs represnt output value after launched, for 'ContainerApplication' might need leverage specific command to retrive output.
+  outputs:
+    # FromCommand
+    - name: GateUrl
+      outputType: FromCommand
+      defaultValueCommand: kubectl get svc -n $NAMESPACE
+      description: Custom::Url        
+
+  notes: []
+
