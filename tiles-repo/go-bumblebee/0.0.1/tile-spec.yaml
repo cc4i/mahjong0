@@ -2,16 +2,33 @@ apiVersion: mahjong.io/v1alpha1
 kind: Tile
 metadata:
     name: Go-Bumblebee
-    category: ContainerApplication
+    category: Application
     version: 0.0.1
     dependentOnVendorService: EKS
 spec:
-  prerun:
+  global:
+    env:
+      - name: GITHUB_USER
+        value: cc4i
+      - name: REPO_NAME
+        value: go-bumblebee-demo
+      - name: ACCESS_TOKEN
+        valueRef: accessToken
+  preRun:
     stages:
-      - name:
-        command:
-      - name:
-        command:
+      - name: CreateRepository
+        command: |
+          curl -H "Authorization: token $ACCESS_TOKEN" --data '{"name":"$REPO_NAME"}' https://api.github.com/user/repos
+      - name: SyncConttent2Repository
+        command: |
+          mkdir $WORK_HOME/$REPO_NAME
+          cp -R $TILE_HOME/apps/* $WORK_HOME/$REPO_NAME
+          cd $WORK_HOME/$REPO_NAME
+          git init
+          git add -A
+          git commit -m "first commit"
+          git remote add origin git@github.com:$GITHUB_USER/$REPO_NAME.git
+          git push -u origin master
   inputs:
     - name: clusterName
       inputType: String
@@ -19,12 +36,15 @@ spec:
     - name: masterRoleARN
       inputType: String
       require: true
+    - name: accessToken
+      inputType: String
+      require: true
 
   manifests:
     manifestType: kustomize
     namespace: go-bumblebee 
     folders:
-      - kustomize
+      - apps/kustomize
           
   # Ouptputs represnt output value after launched, for 'ContainerApplication' might need leverage specific command to retrive output.
   outputs:

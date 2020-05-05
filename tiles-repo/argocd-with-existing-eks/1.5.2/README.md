@@ -1,12 +1,9 @@
-# Welcome to your CDK TypeScript Construct Library project!
+# Argocd-With-Existing-EKS
 
-You should explore the contents of this project. It demonstrates a CDK Construct Library that includes a construct (`Argocd0`)
-which contains an Amazon SQS queue that is subscribed to an Amazon SNS topic.
+The Argocd-With-Existing-EKS is basic component to help build up GitOps based CI/CD capability, which doesn't have dependency but needs to be deploy into Kubernetes cluster. In this case, the Tile requires EKS as the onboarding Kubernetes cluster.
 
-The construct defines an interface (`Argocd0Props`) to configure the visibility timeout of the queue.
+## Input paramters
 
-## Useful commands
+## Output parameters
 
- * `npm run build`   compile typescript to js
- * `npm run watch`   watch for changes and compile
- * `npm run test`    perform the jest unit tests
+## Notes

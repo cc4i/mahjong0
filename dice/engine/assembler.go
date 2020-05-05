@@ -4,6 +4,7 @@ import (
 	"container/list"
 	"context"
 	"dice/utils"
+	"fmt"
 	"github.com/gorilla/websocket"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
@@ -12,7 +13,6 @@ import (
 	"strings"
 	"text/template"
 )
-
 
 
 // AssemblerCore represents a group of functions to assemble CDK App.
@@ -413,13 +413,35 @@ func (d *Deployment) GenerateExecutePlan(ctx context.Context, out *websocket.Con
 		} else {
 			stage.Kind = CDK.SKString()
 		}
-		if ts.TileCategory == ContainerApplication.CString() {
-			//stage.Preparation & inject environment variables
+		if ts.TileCategory == ContainerApplication.CString() || ts.TileCategory == Application.CString() {
+			// Reserved stage.Preparation & inject reserved environment variables
 			if ts.TsManifests.Namespace != "" && ts.TsManifests.Namespace != "default" {
 				stage.Preparation = append(stage.Preparation,"kubectl create ns "+ts.TsManifests.Namespace + " || true")
 				stage.Preparation = append(stage.Preparation,"export NAMESPACE="+ts.TsManifests.Namespace)
 			}
 			stage.Preparation = append(stage.Preparation,"export WORK_HOME="+s3Config.WorkHome+"/super")
+			stage.Preparation = append(stage.Preparation,"export TILE_HOME="+s3Config.WorkHome+"/super/lib/"+strings.ToLower(ts.TileName))
+
+			// Inject Global environment variables & Adding PreRun...Commands into stage.Preparation
+			dSid := ctx.Value("d-sid").(string)
+			if at, ok := AllTs[dSid]; ok {
+				if tile, ok := at.AllTiles[ts.TileCategory+"-"+ts.TileName]; ok {
+					for _, e := range tile.Spec.Global.Env  {
+						if e.Value != "" {
+							stage.Preparation = append(stage.Preparation,fmt.Sprintf("export %s=%s", e.Name, e.Value))
+						} else if e.Value == "" && e.ValueRef != "" {
+							if v, ok := ts.InputParameters[e.ValueRef]; ok {
+								stage.Preparation = append(stage.Preparation,fmt.Sprintf("export %s=%s", e.Name, v))
+							}
+						}
+
+					}
+					for _, s := range tile.Spec.PreRun.Stages  {
+						stage.Preparation = append(stage.Preparation,s.Command)
+					}
+				}
+			}
+
 			switch ts.TsManifests.ManifestType {
 			case K8s.MTString():
 
@@ -464,17 +486,10 @@ func (d *Deployment) GenerateExecutePlan(ctx context.Context, out *websocket.Con
 						cmd := `echo "{\"`+o.Name+"="+o.DefaultValue+`\"}" >>`+fileName
 						stage.Command.PushFront(cmd)
 						stage.CommandMirror[strconv.Itoa(stage.Command.Len()+1)] = cmd
-
 					}
-
 				}
 			}
-
-
-		} else if ts.TileCategory == Application.CString() {
-			//TODO: What to do with application?
 		} else {
-
 			stage.Preparation = append(stage.Preparation, "npm install")
 			stage.Preparation = append(stage.Preparation, "npm run build")
 			stage.Preparation = append(stage.Preparation, "cdk list")

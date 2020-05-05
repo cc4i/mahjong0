@@ -1,5 +1,5 @@
 # API version
-# Dice will inject environment variables, such as $WORK_HOME, $NAMESPACE, $TOKEN?!, etc.
+# Dice will inject environment variables, such as $WORK_HOME, $NAMESPACE, $TILE_HOME..., etc.
 apiVersion: mahjong.io/v1alpha1
 # Kind of entity
 # - Options:  Tile, a construct component

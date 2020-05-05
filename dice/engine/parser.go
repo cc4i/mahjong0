@@ -104,11 +104,31 @@ type Metadata struct {
 }
 
 type TileSpec struct {
+	Global GlobalDetail `json:"global"`
+	PreRun PreRunDetail `json:"preRun"`
 	Dependencies []TileDependency `json:"dependencies"`
 	Inputs       []TileInput      `json:"inputs"`
 	Manifests    TileManifest     `json:"manifests"`
 	Outputs      []TileOutput     `json:"outputs"`
 	Notes        []string         `json:"notes"`
+}
+
+type GlobalDetail struct {
+	Env []GlobalDetailEnv `json:"env"`
+}
+type GlobalDetailEnv struct {
+	Name string	`json:"name"`
+	Value string	`json:"value"`
+	ValueRef string `json:"valueRef"`
+}
+
+type PreRunDetail struct {
+	Stages []PreRunStages `json:"stages"`
+}
+
+type PreRunStages struct {
+	Name string	`json:"name"`
+	Command string	`json:"command"`
 }
 
 type TileDependency struct {

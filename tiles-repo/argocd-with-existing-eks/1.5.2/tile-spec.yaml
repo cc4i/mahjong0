@@ -1,7 +1,7 @@
 apiVersion: mahjong.io/v1alpha1
 kind: Tile
 metadata:
-    name: Argocd0
+    name: Argocd-With-Existing-EKS
     category: ContainerApplication
     version: 1.5.2
     # Dependent on what kind of vendor service, to determine what input parameters are required. 
