@@ -1,9 +1,14 @@
-# Welcome to your CDK TypeScript Construct Library project!
+# Network0
+The Tile repreents a classic network pattern on AWS , which's designed for cross AZ with best practice.
 
-You should explore the contents of this project. It demonstrates a CDK Construct Library that includes a construct (`Network0`)
-which contains an Amazon SQS queue that is subscribed to an Amazon SNS topic.
+## Input parameters
 
-The construct defines an interface (`Network0Props`) to configure the visibility timeout of the queue.
+## Output parameters 
+
+## Change logs
+
+
+## Notes
 
 ## Useful commands
 

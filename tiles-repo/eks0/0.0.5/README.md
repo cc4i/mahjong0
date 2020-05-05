@@ -1,9 +1,15 @@
-# Welcome to your CDK TypeScript Construct Library project!
+# Eks0
+The Tile repreents a basic EKS cluster, which uses EKS 1.15 as default and depends on Tile - Network0.
 
-You should explore the contents of this project. It demonstrates a CDK Construct Library that includes a construct (`Eks0`)
-which contains an Amazon SQS queue that is subscribed to an Amazon SNS topic.
+## Input parameters
 
-The construct defines an interface (`Eks0Props`) to configure the visibility timeout of the queue.
+## Output parameters 
+
+## Change logs
+- Update EKS default version to 1.16
+- Expose more options 
+
+## Notes
 
 ## Useful commands
 

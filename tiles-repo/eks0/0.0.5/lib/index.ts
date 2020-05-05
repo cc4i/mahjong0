@@ -75,7 +75,7 @@ export class Eks0 extends cdk.Construct {
       clusterName: props.clusterName,
       defaultCapacity: props.capacity,
       defaultCapacityInstance: capacityInstance,
-      version: props.version || '1.15',
+      version: props.version || '1.16',
       // Master role as initial permission to run Kubectl
       mastersRole: eksRole,
     })

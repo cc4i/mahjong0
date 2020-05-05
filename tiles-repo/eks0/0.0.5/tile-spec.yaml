@@ -78,7 +78,7 @@ spec:
     - name: version
       inputType: String
       description: ''
-      defaultValue: '1.15'
+      defaultValue: '1.16'
       require: false
   # Ouptputs represnt output value after launched, for 'ContainerApplication' might need leverage specific command to retrive output.
   outputs:

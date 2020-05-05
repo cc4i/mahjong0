@@ -17,4 +17,23 @@ spec:
             inputValue: m5.large
           - name: version
             inputValue: 1.15
-    
+  summary:
+    description: 
+    outputs:
+      - name: [ EKS Cluster Name ]
+        tileReference: Eks0
+        outputValueRef: clusterName
+      - name: [ Master role arn for EKS Cluster ]
+        tileReference: Eks0
+        outputValueRef: masterRoleARN
+      - name: [ The API endpoint EKS Cluster ]
+        tileReference: Eks0
+        outputValueRef: clusterEndpoint
+      - name: [ Instance type of worker node ]
+        tileReference: Eks0
+        outputValueRef: capacityInstance
+      - name: [ Default capacity of worker node ]
+        tileReference: Eks0
+        outputValueRef: capacityInstance
+
+    notes: []
