@@ -393,6 +393,7 @@ func (d *Deployment) GenerateExecutePlan(ctx context.Context, out *websocket.Con
 	var p = ExecutionPlan{
 		Plan:       list.New(),
 		PlanMirror: make(map[string]*ExecutionStage),
+		originDeployment: d,
 	}
 	for _, ts := range aTs.TsStacks {
 		workHome := s3Config.WorkHome + "/super"

@@ -72,11 +72,25 @@ type Deployment struct {
 
 type DeploymentSpec struct {
 	Template DeploymentTemplate `json:"template"`
+	Summary DeploymentSummary `json:"summary"`
 }
 
 type DeploymentTemplate struct {
 	Category string `json:"category" valid:"in(Network|Compute|ContainerProvider|Storage|Database|Application|ContainerApplication|Analysis|ML)"`
 	Tiles []DeploymentTemplateDetail `json:"tiles"`
+}
+
+type DeploymentSummary struct {
+	Description string `json:"description"`
+	Outputs []DeploymentSummaryOutput `json:"outputs"`
+	Notes []string `json:"notes"`
+}
+
+type DeploymentSummaryOutput struct {
+	Name string `json:"name"`
+	TileReference string `json:"tileReference"`
+	OutputValueRef string `json:"outputValueRef"`
+
 }
 
 

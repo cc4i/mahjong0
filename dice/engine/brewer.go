@@ -25,6 +25,7 @@ type ExecutionPlan struct {
 	CurrentStage *ExecutionStage `json:"currentStage"`
 	Plan       *list.List                `json:"plan"`
 	PlanMirror map[string]*ExecutionStage `json:"planMirror"`
+	originDeployment *Deployment `json:"originDeployment"`
 }
 
 // ExecutionStage represents an unit of execution plan.
@@ -57,7 +58,8 @@ type BrewerCore interface {
 	CommandExecutor(ctx context.Context, stage *ExecutionStage, cmd []byte, out *websocket.Conn) error
 	CommandWrapperExecutor(ctx context.Context, stage *ExecutionStage, out *websocket.Conn) (string, error)
 	WsTail(ctx context.Context, reader io.ReadCloser, stageLog *log.Logger, out *websocket.Conn)
-	ExtractValue(ctx context.Context, buf []byte, out *websocket.Conn) (*TsOutput, error)
+	ExtractValue(ctx context.Context, buf []byte, out *websocket.Conn) error
+	GenerateSummary(ctx context.Context, out *websocket.Conn) error
 }
 
 //ExecutePlan is a orchestrator to run execution plan.
@@ -77,12 +79,45 @@ func (ep *ExecutionPlan) ExecutePlan(ctx context.Context, dryRun bool, out *webs
 			if err != nil {
 				return err
 			}
+			// Caching output values
 			ep.ExtractValue(ctx, buf, out)
-
 			//
 		}
 	}
+	ep.GenerateSummary(ctx, out)
 	return nil
+}
+
+// GenerateSummary generate summary after running execution plan.
+func (ep *ExecutionPlan) GenerateSummary(ctx context.Context, out *websocket.Conn) error {
+	SR(out, []byte("\n"))
+	SR(out, []byte("============================Summary===================================="))
+	dSid := ctx.Value("d-sid").(string)
+	if at, ok := AllTs[dSid]; ok {
+		if ep.originDeployment.Spec.Summary.Description != "" {
+			SR(out, []byte(ep.originDeployment.Spec.Summary.Description+"\n"))
+		}
+		SR(out, []byte("\n"))
+		for _, ot := range ep.originDeployment.Spec.Summary.Outputs {
+			SR(out, []byte(fmt.Sprintf("%s = %s\n", ot.Name, getValueByRef(ot.TileReference, ot.OutputValueRef, at.AllOutputs) )))
+		}
+		SR(out, []byte("\n"))
+		for _, n := range ep.originDeployment.Spec.Summary.Notes {
+			SR(out, []byte(n +"\n"))
+		}
+	}
+	SR(out, []byte("======================================================================="))
+	return nil
+}
+
+// Retrieve output value from cache
+func getValueByRef(tile string, outputName string, all map[string]*TsOutput) string {
+	if ts, ok := all[tile]; ok {
+		if output, ok := ts.TsOutputs[outputName]; ok {
+			return output.OutputValue
+		}
+	}
+	return ""
 }
 
 // CommandExecutor exec command and return output.
