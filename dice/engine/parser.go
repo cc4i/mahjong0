@@ -81,7 +81,7 @@ type DeploymentSpec struct {
 }
 
 type DeploymentTemplate struct {
-	Category string                     `json:"category" valid:"in(Network|Compute|ContainerProvider|Storage|Database|Application|ContainerApplication|Analysis|ML)"`
+	//Category string                     `json:"category" valid:"in(Network|Compute|ContainerProvider|Storage|Database|Application|ContainerApplication|Analysis|ML)"`
 	Tiles    []DeploymentTemplateDetail `json:"tiles"`
 }
 

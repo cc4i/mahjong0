@@ -38,6 +38,17 @@ metadata:
     version: 
 # Specification
 spec:
+  global:
+    env:
+      - name: 
+        value:
+        valueRef: 
+  preRun:
+    stages:
+      - name: 
+        command: 
+
+
   # Dependencies represent dependency with other Tile
   dependencies:
       # As a reference name 

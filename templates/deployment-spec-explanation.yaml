@@ -30,6 +30,13 @@ spec:
               - ...
         manifests:
           namespace: 
+  summary:
+    description: 
+    outputs:
+      - name: 
+        tileReference: 
+        outputValueRef: 
+   notes: []        
     # Nework:
     #       # {{ vpc/ cidr / subnet / internet gateway / NAT / ... }}
     

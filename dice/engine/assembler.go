@@ -35,9 +35,9 @@ func init() {
 	// TODO: load from config
 	s3Config = &utils.S3Config{
 		WorkHome:   "/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace",
-		Region:     "",
-		BucketName: "",
-		Mode:       "dev",
+		Region:     "ap-southeast-1",
+		BucketName: "cc-mahjong-0",
+		Mode:       "prod",
 		LocalRepo:  "/Users/chuancc/mywork/mylabs/csdc/mahjong-0/tiles-repo",
 	}
 }
@@ -57,13 +57,9 @@ func (d *Deployment) GenerateCdkApp(ctx context.Context, out *websocket.Conn) (*
 	}
 	SR(out, []byte("Loading Super ... from RePO with success."))
 
-	switch d.Spec.Template.Category {
-	case Network.CString(), Compute.CString(), ContainerProvider.CString(), Storage.CString(), Database.CString(),
-		Application.CString(), ContainerApplication.CString(), Analysis.CString(), ML.CString():
-		for _, t := range d.Spec.Template.Tiles {
-			if err := d.PullTile(ctx, t.TileReference, t.TileVersion, out, aTs, override); err != nil {
-				return ep, err
-			}
+	for _, t := range d.Spec.Template.Tiles {
+		if err := d.PullTile(ctx, t.TileReference, t.TileVersion, out, aTs, override); err != nil {
+			return ep, err
 		}
 	}
 

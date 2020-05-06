@@ -69,57 +69,79 @@ func Unzip(src string, dest string) ([]string, error) {
 	return filenames, nil
 }
 
-func Untargz(srcFile string, num int) {
-	f, err := os.Open(srcFile)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	defer f.Close()
+func UnTarGz(dst string, r io.Reader) error {
 
-	gzf, err := gzip.NewReader(f)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+	if _, err := os.Stat(dst); err != nil {
+		if err := os.MkdirAll(dst, 0755); err != nil {
+			return err
+		}
 	}
 
-	tarReader := tar.NewReader(gzf)
+	gzr, err := gzip.NewReader(r)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if e := gzr.Close(); e != nil {
+			return
+		}
+	}()
 
-	i := 0
+	tr := tar.NewReader(gzr)
+
 	for {
-		header, err := tarReader.Next()
+		header, err := tr.Next()
 
-		if err == io.EOF {
-			break
-		}
+		switch {
 
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
+		// if no more files are found return
+		case err == io.EOF:
+			return nil
 
-		name := header.Name
+		// return any other error
+		case err != nil:
+			return err
 
-		switch header.Typeflag {
-		case tar.TypeDir:
+		// if the header is nil, just skip it (not sure how this happens)
+		case header == nil:
 			continue
-		case tar.TypeReg:
-			fmt.Println("(", i, ")", "Name: ", name)
-			if i == num {
-				fmt.Println(" --- ")
-				io.Copy(os.Stdout, tarReader)
-				fmt.Println(" --- ")
-				os.Exit(0)
-			}
-		default:
-			fmt.Printf("%s : %c %s %s\n",
-				"Yikes! Unable to figure out type",
-				header.Typeflag,
-				"in file",
-				name,
-			)
 		}
 
-		i++
+		// the target location where the dir/file should be created
+		target := filepath.Join(dst, header.Name)
+
+		// the following switch could also be done using fi.Mode(), not sure if there
+		// a benefit of using one vs. the other.
+		// fi := header.FileInfo()
+
+		// check the file type
+		switch header.Typeflag {
+
+		// if its a dir and it doesn't exist create it
+		case tar.TypeDir:
+			if _, err := os.Stat(target); err != nil {
+				if err := os.MkdirAll(target, 0755); err != nil {
+					return err
+				}
+			}
+
+		// if it's a file create it
+		case tar.TypeReg:
+			f, err := os.OpenFile(target, os.O_CREATE|os.O_RDWR, os.FileMode(header.Mode))
+			if err != nil {
+				return err
+			}
+
+			// copy over contents
+			if _, err = io.Copy(f, tr); err != nil {
+				return err
+			}
+
+			// manually close here after each file operation; defering would cause each file close
+			// to wait until all operations have completed.
+			if err = f.Close(); err != nil {
+				return err
+			}
+		}
 	}
 }

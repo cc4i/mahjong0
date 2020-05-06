@@ -4,7 +4,6 @@ metadata:
   name: mahjong
 spec:
   template:
-    category: Application
     tiles:
       - tileReference: Go-Bumblebee
         tileVersion: 0.0.1

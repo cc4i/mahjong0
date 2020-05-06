@@ -4,7 +4,6 @@ metadata:
   name: mahjong
 spec:
   template:
-    category: ContainerApplication
     tiles:
       - tileReference: Argocd0
         tileVersion: 1.5.2
@@ -19,8 +18,29 @@ spec:
             inputValue: m5.large
           - name: version
             inputValue: 1.15
-
         manifests:
           namespace: argocd-new
+          
+summary:
+    description: 
+    outputs:
+      - name: EKS Cluster Name
+        tileReference: Eks0
+        outputValueRef: clusterName
+      - name: Master role arn for EKS Cluster
+        tileReference: Eks0
+        outputValueRef: masterRoleARN
+      - name: The API endpoint EKS Cluster
+        tileReference: Eks0
+        outputValueRef: clusterEndpoint
+      - name: ArgoCD admin
+        tileReference: Argocd0
+        outputValueRef: user
+      - name: ArgoCD password
+        tileReference: Argocd0
+        outputValueRef: password
+      
 
+    notes: 
+      - kubectl port-forward svc/argocd-server -n $NAMESPACE 8080:443
     

@@ -1,0 +1,102 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+
+    "description": "The schema is a definition for Deployment as v1aplha.",
+    "definitions": {
+        "metadata": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "category": {
+                    "type": "string"
+                },
+                "vendorService": {
+                    "type": "string"
+                },
+                "dependentOnVendorService": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "name",
+                "category",
+                "version"
+            ]
+        },
+        "spec": {
+            "type": "object",
+            "properties": {
+                "template": {
+                    "type": "object",
+                    "properties": {
+                        "tiles": {
+                            "type":"array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "tileReference":{ "type": "string" },
+                                    "tileVersion": { "type": "string" },
+                                    "inputs": {
+                                        "type": "object",
+                                        "properties": {
+                                            "name": { "type": "string" },
+                                            "inputValue": { "type": "string" },
+                                            "inputValues": {
+                                                "type": "array",
+                                                "items": { "type": "string" }
+                                            }
+                                        }
+                                    },
+                                    "manifests": {}
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": {
+                    "type": "object",
+                    "properties": {
+                        "description": { "type": "string" },
+                        "outputs": {
+                            "type": "object",
+                            "properties": {
+                                "name": {"type": "string"},
+                                "tileReference": {"type": "string"},
+                                "outputValueRef": {"type": "string"}
+                            }
+                        },
+                        "notes": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+
+            },
+            "required":["template"]
+        }
+    },
+    "type": "object",
+    "properties": {
+        "apiVersion": {
+            "type": "string",
+            "pattern": "^mahjong.io/v1.*$"
+        },
+        "kind": {
+            "const": "Tile"
+        },
+        "metadata": {
+            "$ref": "#/definitions/metadata"
+        },
+        "spec": {
+            "$ref": "#/definitions/spec"
+        }
+    }
+}
