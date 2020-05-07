@@ -302,10 +302,10 @@ func (d *Deployment) PullTile(ctx context.Context, tile string, version string, 
 		TsManifests:       tm,
 	}
 	if aTs.TsStacksMap == nil {
-		aTs.TsStacksMap = make(map[string]TsStack)
+		aTs.TsStacksMap = make(map[string]*TsStack)
 	}
 	if _, ok := aTs.TsStacksMap[parsedTile.Metadata.Name]; !ok {
-		aTs.TsStacksMap[parsedTile.Metadata.Name] = *ts
+		aTs.TsStacksMap[parsedTile.Metadata.Name] = ts
 		if aTs.TsStacksOrder == nil {
 			aTs.TsStacksOrder = list.New()
 		}
@@ -431,14 +431,23 @@ func (d *Deployment) GenerateExecutePlan(ctx context.Context, out *websocket.Con
 		} else {
 			stage.Kind = CDK.SKString()
 		}
+		// Caching env
+		if ts.EnvList == nil { ts.EnvList = make(map[string]string) }
+
 		if ts.TileCategory == ContainerApplication.CString() || ts.TileCategory == Application.CString() {
 			// Reserved stage.Preparation & inject reserved environment variables
 			if ts.TsManifests.Namespace != "" && ts.TsManifests.Namespace != "default" {
 				stage.Preparation = append(stage.Preparation, "kubectl create ns "+ts.TsManifests.Namespace+" || true")
 				stage.Preparation = append(stage.Preparation, "export NAMESPACE="+ts.TsManifests.Namespace)
+				ts.EnvList["NAMESPACE"]=ts.TsManifests.Namespace
+			} else {
+				ts.TsManifests.Namespace="default"
+				ts.EnvList["NAMESPACE"]="default"
 			}
 			stage.Preparation = append(stage.Preparation, "export WORK_HOME="+s3Config.WorkHome+"/super")
+			ts.EnvList["WORK_HOME"]=s3Config.WorkHome+"/super"
 			stage.Preparation = append(stage.Preparation, "export TILE_HOME="+s3Config.WorkHome+"/super/lib/"+strings.ToLower(ts.TileName))
+			ts.EnvList["TILE_HOME"]=s3Config.WorkHome+"/super/lib/"+strings.ToLower(ts.TileName)
 
 			// Inject Global environment variables & Adding PreRun...Commands into stage.Preparation
 			dSid := ctx.Value("d-sid").(string)
@@ -447,12 +456,13 @@ func (d *Deployment) GenerateExecutePlan(ctx context.Context, out *websocket.Con
 					for _, e := range tile.Spec.Global.Env {
 						if e.Value != "" {
 							stage.Preparation = append(stage.Preparation, fmt.Sprintf("export %s=%s", e.Name, e.Value))
+							ts.EnvList[e.Name]=e.Value
 						} else if e.Value == "" && e.ValueRef != "" {
 							if v, ok := ts.InputParameters[e.ValueRef]; ok {
 								stage.Preparation = append(stage.Preparation, fmt.Sprintf("export %s=%s", e.Name, v))
+								ts.EnvList[e.Name]=v
 							}
 						}
-
 					}
 					for _, s := range tile.Spec.PreRun.Stages {
 						stage.Preparation = append(stage.Preparation, s.Command)
@@ -465,11 +475,7 @@ func (d *Deployment) GenerateExecutePlan(ctx context.Context, out *websocket.Con
 
 				for j, f := range ts.TsManifests.Files {
 					var cmd string
-					if ts.TsManifests.Namespace == "" {
-						cmd = "kubectl apply -f ./lib/" + strings.ToLower(ts.TileName) + "/lib/" + f + " -n default"
-					} else {
-						cmd = "kubectl apply -f ./lib/" + strings.ToLower(ts.TileName) + "/lib/" + f + " -n " + ts.TsManifests.Namespace
-					}
+					cmd = "kubectl apply -f ./lib/" + strings.ToLower(ts.TileName) + "/lib/" + f + " -n " + ts.TsManifests.Namespace
 					stage.Command.PushFront(cmd)
 					stage.CommandMirror[strconv.Itoa(j)] = cmd
 				}

@@ -97,7 +97,7 @@ func (ep *ExecutionPlan) GenerateSummary(ctx context.Context, out *websocket.Con
 	dSid := ctx.Value("d-sid").(string)
 	if at, ok := AllTs[dSid]; ok {
 		if ep.OriginDeployment.Spec.Summary.Description != "" {
-			SR(out, []byte(ep.OriginDeployment.Spec.Summary.Description+"\n"))
+			SR(out, []byte(replaceByValue(ep.OriginDeployment.Spec.Summary.Description, at)+"\n"))
 		}
 		SR(out, []byte("\n"))
 		for _, ot := range ep.OriginDeployment.Spec.Summary.Outputs {
@@ -105,11 +105,29 @@ func (ep *ExecutionPlan) GenerateSummary(ctx context.Context, out *websocket.Con
 		}
 		SR(out, []byte("\n"))
 		for _, n := range ep.OriginDeployment.Spec.Summary.Notes {
-			SR(out, []byte(n+"\n"))
+			SR(out, []byte(replaceByValue(n,at)+"\n"))
 		}
 	}
 	SR(out, []byte("======================================================================="))
 	return nil
+}
+
+// Replace env & var by values
+func replaceByValue(str string, at Ts) string {
+	for _, ts := range at.TsStacks {
+		//replace by env value
+		for k,v := range ts.EnvList {
+			str=strings.ReplaceAll(str, "$"+k, v)
+
+		}
+		//replace by output value
+		if output, ok := at.AllOutputs[ts.TileName]; ok {
+			for k1, v1 := range output.TsOutputs {
+				str=strings.ReplaceAll(str, "$"+k1, v1.OutputValue)
+			}
+		}
+	}
+	return str
 }
 
 // Retrieve output value from cache
@@ -205,12 +223,12 @@ set -xe
 {{end}}
 echo $?
 `
-	key := ctx.Value(`d-sid`).(string)
-	if ts, ok := AllTs[key]; ok {
+	dSid := ctx.Value(`d-sid`).(string)
+	if ts, ok := AllTs[dSid]; ok {
 
 		if t, ok := ts.TsStacksMap[stage.TileName]; ok {
 			// Looking for initial kube.config. For EKS, require clusterName, masterRoleARN ; For others, not implementing.
-			if t.TsManifests != nil {
+			if t.TsManifests.ManifestType != "" {
 				var clusterName, masterRoleARN string
 				// Tile with dependency
 				if t.TsManifests.VendorService == EKS.VSString() {
@@ -230,21 +248,25 @@ echo $?
 					}
 				}
 				// Tile without dependency but input parameters
-				if t, ok := ts.AllTiles[stage.TileName]; ok {
-					if t.Metadata.DependentOnVendorService == EKS.VSString() {
-						if s, ok := ts.TsStacksMap[stage.TileName]; ok {
-							clusterName, ok = s.InputParameters["clusterName"]
-							if !ok {
-								return script, errors.New("ContainerProvider with EKS didn't include output: clusterName.")
-							}
+				if stack, ok := ts.TsStacksMap[stage.TileName]; ok {
+					category := stack.TileCategory
+					if t, ok := ts.AllTiles[category + "-" + stage.TileName]; ok {
+						if t.Metadata.DependentOnVendorService == EKS.VSString() {
+							if s, ok := ts.TsStacksMap[stage.TileName]; ok {
+								clusterName, ok = s.InputParameters["clusterName"]
+								if !ok {
+									return script, errors.New("ContainerProvider with EKS didn't include output: clusterName.")
+								}
 
-							masterRoleARN, ok = s.InputParameters["masterRoleARN"]
-							if !ok {
-								return script, errors.New("ContainerProvider with EKS didn't include output: masterRoleARN.")
+								masterRoleARN, ok = s.InputParameters["masterRoleARN"]
+								if !ok {
+									return script, errors.New("ContainerProvider with EKS didn't include output: masterRoleARN.")
+								}
 							}
 						}
 					}
 				}
+
 				tContent4K8s = strings.ReplaceAll(tContent4K8s, "[kube.config]",
 					fmt.Sprintf("aws eks update-kubeconfig --name %s --role-arn %s --kubeconfig %s\nexport KUBECONFIG=%s",
 						clusterName,
@@ -305,9 +327,8 @@ func (ep *ExecutionPlan) ExtractValue(ctx context.Context, buf []byte, out *webs
 		tileName := ep.CurrentStage.TileName
 		var tileCategory string
 		//var vendorService string
-		if tile, ok := ts.AllTiles[tileName]; ok {
-			tileCategory = tile.Metadata.Category
-			//vendorService = tile.Metadata.VendorService
+		if stack, ok := ts.TsStacksMap[tileName]; ok {
+			tileCategory = stack.TileCategory
 		}
 
 		if outputs, ok := ts.AllOutputs[tileName]; ok {

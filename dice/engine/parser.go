@@ -236,6 +236,7 @@ func (d *Data) ValidateTile(ctx context.Context, tile *Tile) error {
 func (d *Data) ValidateDeployment(ctx context.Context, deployment *Deployment) error {
 	//TODO implementing ValidateDeployment
 	//	such as: Are inputs covered all required inputs?
+
 	_, err := valid.ValidateStruct(deployment)
 	return err
 }

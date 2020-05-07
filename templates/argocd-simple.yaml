@@ -1,7 +1,7 @@
 apiVersion: mahjong.io/v1alpha1
 kind: Deployment 
 metadata:
-  name: mahjong
+  name: argocd-simple
 spec:
   template:
     tiles:
@@ -20,27 +20,27 @@ spec:
             inputValue: 1.15
         manifests:
           namespace: argocd-new
-          
-summary:
-    description: 
-    outputs:
-      - name: EKS Cluster Name
-        tileReference: Eks0
-        outputValueRef: clusterName
-      - name: Master role arn for EKS Cluster
-        tileReference: Eks0
-        outputValueRef: masterRoleARN
-      - name: The API endpoint EKS Cluster
-        tileReference: Eks0
-        outputValueRef: clusterEndpoint
-      - name: ArgoCD admin
-        tileReference: Argocd0
-        outputValueRef: user
-      - name: ArgoCD password
-        tileReference: Argocd0
-        outputValueRef: password
-      
 
-    notes: 
-      - kubectl port-forward svc/argocd-server -n $NAMESPACE 8080:443
+  summary:
+      description: Argo CD has been installed in $clusterName with success and checking out following notes to get started.
+      outputs:
+        - name: EKS Cluster Name
+          tileReference: Eks0
+          outputValueRef: clusterName
+        - name: Master role arn for EKS Cluster
+          tileReference: Eks0
+          outputValueRef: masterRoleARN
+        - name: The API endpoint EKS Cluster
+          tileReference: Eks0
+          outputValueRef: clusterEndpoint
+        - name: ArgoCD admin
+          tileReference: Argocd0
+          outputValueRef: user
+        - name: ArgoCD password
+          tileReference: Argocd0
+          outputValueRef: password
+        
+
+      notes: 
+        - kubectl port-forward svc/argocd-server -n $NAMESPACE 8080:443
     

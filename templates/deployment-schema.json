@@ -1,7 +1,7 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
 
-    "description": "The schema is a definition for Deployment as v1aplha.",
+    "$comment": "The schema is a definition for Deployment as v1aplha.",
     "definitions": {
         "metadata": {
             "type": "object",
@@ -23,9 +23,7 @@
                 }
             },
             "required": [
-                "name",
-                "category",
-                "version"
+                "name"
             ]
         },
         "spec": {
@@ -42,17 +40,39 @@
                                     "tileReference":{ "type": "string" },
                                     "tileVersion": { "type": "string" },
                                     "inputs": {
-                                        "type": "object",
-                                        "properties": {
-                                            "name": { "type": "string" },
-                                            "inputValue": { "type": "string" },
-                                            "inputValues": {
-                                                "type": "array",
-                                                "items": { "type": "string" }
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "name": { "type": "string" },
+                                                "inputValue": { "type": "string" },
+                                                "inputValues": {
+                                                    "type": "array",
+                                                    "items": { "type": "string" }
+                                                }
                                             }
                                         }
+                                        
                                     },
-                                    "manifests": {}
+                                    "manifests": {
+                                        "type": "object",
+                                        "properties": {
+                                            "manifestType": {"type": "string"},
+                                            "namespace": {"type": "string"},
+                                            "files": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "folders": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -63,11 +83,14 @@
                     "properties": {
                         "description": { "type": "string" },
                         "outputs": {
-                            "type": "object",
-                            "properties": {
-                                "name": {"type": "string"},
-                                "tileReference": {"type": "string"},
-                                "outputValueRef": {"type": "string"}
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {"type": "string"},
+                                    "tileReference": {"type": "string"},
+                                    "outputValueRef": {"type": "string"}
+                                }
                             }
                         },
                         "notes": {
@@ -86,11 +109,10 @@
     "type": "object",
     "properties": {
         "apiVersion": {
-            "type": "string",
-            "pattern": "^mahjong.io/v1.*$"
+            "const": "mahjong.io/v1alpha1"
         },
         "kind": {
-            "const": "Tile"
+            "const": "Deployment"
         },
         "metadata": {
             "$ref": "#/definitions/metadata"

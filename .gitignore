@@ -77,3 +77,8 @@ testem.log
 # System Files
 .DS_Store
 Thumbs.db
+
+dice/testdata/
+dice/testdata/*
+mctl/m
+mctl/mctl

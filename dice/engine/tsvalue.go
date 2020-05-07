@@ -9,9 +9,9 @@ type Ts struct {
 	// TsLibsMap : TileName -> TsLib
 	TsLibsMap map[string]TsLib
 	// TsStacks
-	TsStacks []TsStack
+	TsStacks []*TsStack
 	// TsStacksMap : TileName -> TsStack
-	TsStacksMap map[string]TsStack
+	TsStacksMap map[string]*TsStack
 	// TsStacksOrder is an order of execution./ tileName ...> ....>
 	TsStacksOrder *list.List
 
@@ -37,6 +37,8 @@ type TsStack struct {
 	TileCategory      string
 	InputParameters   map[string]string //[]TsInputParameter
 	TsManifests       *TsManifests
+	EnvList map[string]string //caching all env
+
 }
 
 type TsInputParameter struct {
