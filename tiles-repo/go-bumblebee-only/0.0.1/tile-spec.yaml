@@ -1,10 +1,9 @@
 apiVersion: mahjong.io/v1alpha1
 kind: Tile
 metadata:
-    name: Go-Bumblebee
+    name: Go-Bumblebee-ONLY
     category: Application
     version: 0.0.1
-    dependentOnVendorService: EKS
 spec:
   global:
     env:
@@ -14,6 +13,8 @@ spec:
         value: go-bumblebee-tile
       - name: ACCESS_TOKEN
         valueRef: accessToken
+      - name: APP_NAMESPACE
+        valueRef: go-bumblebee
   preRun:
     stages:
       - name: CreateRepository
@@ -30,29 +31,18 @@ spec:
           git remote add origin git@github.com:$GITHUB_USER/$REPO_NAME.git
           git push -u origin master
   inputs:
-    - name: clusterName
-      inputType: String
-      require: true
-    - name: masterRoleARN
-      inputType: String
-      require: true
     - name: accessToken
       inputType: String
       require: true
 
-  manifests:
-    manifestType: kustomize
-    namespace: go-bumblebee 
-    folders:
-      - kustomize
           
   # Ouptputs represnt output value after launched, for 'ContainerApplication' might need leverage specific command to retrive output.
   outputs:
     # FromCommand
-    - name: GateUrl
-      outputType: FromCommand
-      defaultValueCommand: kubectl get svc -n $NAMESPACE
-      description: Custom::Url        
+    - name: appRepo
+      outputType: String
+      defaultValue: https://github.com:$GITHUB_USER/$REPO_NAME.git
+      description: Custom::Repo        
 
   notes: []
 

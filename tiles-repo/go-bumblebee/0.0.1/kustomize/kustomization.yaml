@@ -1,0 +1,23 @@
+# kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# namespace to deploy all resources to
+# namespace: go-bumblebee
+
+resources:
+- gate
+- air
+- spy
+- bee
+
+# all with following *kustomization*
+images:
+  - name: herochinese/go-bumblebee-gate
+    newTag: front-end-site-v1
+  - name: herochinese/go-bumblebee-air
+    newTag: front-end-site-v1
+  - name: herochinese/go-bumblebee-spy
+    newTag: front-end-site-v1
+  - name: herochinese/go-bumblebee-bee
+    newTag: front-end-site-v1

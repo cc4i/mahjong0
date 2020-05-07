@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Simple Dice WebUI - </title>
+    <link rel="stylesheet" type="text/css" href="toy/css/reset.css"/>
+    <link rel="stylesheet" type="text/css" href="toy/css/style.css"/>
+</head>
+<body>
+<div id="content">
+    <fieldset>
+        <legend>Server Location</legend>
+        <div>
+            <label>URL:</label>
+            <input type="text" id="serverUrl" value="ws://127.0.0.1:9090/v1alpha1/"/>
+            <button id="connectButton">Open</button>
+            <button id="disconnectButton">Close</button>
+
+            <label>Status:</label>
+            <span id="connectionStatus">CLOSED</span>
+        </div>
+    </fieldset>
+    <fieldset id="requestArea">
+        <legend>Request</legend>
+        <div>
+            <textarea id="sendMessage" disabled="disabled"></textarea>
+        </div>
+        <div>
+            <button id="sendButton" disabled="disabled">Send</button>
+            <label> [Shortcut] Ctr + Enter </label>
+        </div>
+    </fieldset>
+    <fieldset id="messageArea">
+        <legend>Message Log <button id="clearMessage">Clear</button></legend>
+        <div id="messages"></div>
+    </fieldset>
+</div>
+<script type="text/javascript" src="toy/jquery-1.4.3.min.js"></script>
+<script type="text/javascript" src="toy/index.js"></script>
+</body>
+</html>

@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
+	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -49,6 +50,8 @@ func Router(ctx context.Context) *gin.Engine {
 	r.POST("/v1alpha1/deployment", func(c *gin.Context) {
 		Deployment(ctx, c)
 	})
+
+	r.Use(static.Serve("/toy", static.LocalFile("./toy", true)))
 
 	return r
 }

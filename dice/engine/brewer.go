@@ -142,7 +142,7 @@ func getValueByRef(tile string, outputName string, all map[string]*TsOutput) str
 
 // CommandExecutor exec command and return output.
 func (ep *ExecutionPlan) CommandExecutor(ctx context.Context, stage *ExecutionStage, cmdTxt []byte, out *websocket.Conn) error {
-	ct := string(cmdTxt)
+	ct := strings.TrimSpace(string(cmdTxt))
 
 	var stageLog *log.Logger
 	if stage != nil {

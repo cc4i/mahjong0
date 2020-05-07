@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment 
+metadata:
+  name: gateservice
+spec:
+  selector:
+    matchLabels:
+      app: gateservice 
+  template:
+    metadata:
+      labels: 
+        app: gateservice 
+    spec:
+      terminationGracePeriodSeconds: 5
+      containers:
+      - name: gate-go-bumblebee
+        image:  herochinese/go-bumblebee-gate:master
+        livenessProbe:
+          failureThreshold: 5
+          httpGet:
+            path: /ping
+            port: 9010
+            scheme: HTTP
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5        
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /ping
+            port: 9010
+            scheme: HTTP
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        env:
+          - name: AIR_SERVICE_ENDPOINT
+            value: airservice:9011
+          - name: SPY_SERVICE_ENDPOINT
+            value: spyservice:9041
+        ports:
+          - name: http
+            containerPort: 9010
+          - name: grpc
+            containerPort: 9020
+          - name: graphql
+            containerPort: 9030
+          - name: websocket
+            containerPort: 9040
+          - name: tcp
+            containerPort: 9050
+        resources:
+          requests: 
+            cpu: 100m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 128Mi

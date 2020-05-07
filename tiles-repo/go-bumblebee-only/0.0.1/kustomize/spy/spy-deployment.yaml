@@ -1,0 +1,42 @@
+# Deployment
+apiVersion: apps/v1
+kind: Deployment 
+metadata:
+  name: spyservice
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: spyservice 
+  template:
+    metadata:
+      labels: 
+        app: spyservice 
+    spec:
+      serviceAccountName: spyservice-account
+      terminationGracePeriodSeconds: 5
+      volumes:
+        - name: spyservice-account-secret
+          secret:
+            defaultMode: 420
+            secretName: spyservice-account-secret
+      containers:
+      - name: spy-go-bumblebee
+        image:  herochinese/go-bumblebee-spy:master
+        env:
+          - name: IN_CLUSTER_CONFIG
+            value:  "true"
+        ports:
+          - name: http
+            containerPort: 9041
+        resources:
+          requests: 
+            cpu: 100m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 128Mi
+        volumeMounts:
+          - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+            name: spyservice-account-secret
+            readOnly: true

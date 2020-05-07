@@ -1,0 +1,71 @@
+body {
+    width: 100%;
+    font-family: Helvetica, Meiryo, "Courier New", sans-serif;
+    color: #000;
+    background-color: #eee;
+    font-size: 10pt;
+}
+
+fieldset {
+    margin-bottom: 10px;
+    padding: 5px 10px;
+    border: 1px solid #777;
+}
+
+legend {
+    padding: 0 5px;
+    color: #777;
+    font-size: 11pt;
+    font-weight: bold;
+}
+
+label {
+    color: #777;
+    font-weight: bold;
+}
+
+#connectionStatus {
+    font-weight: bold;
+}
+
+#content {
+    padding: 10px;
+    width: auto;
+}
+
+#serverUrl {
+    width: 600px;
+    padding: 1px 3px;
+    border: 1px solid #999;
+}
+
+#disconnectButton {
+    display: none;
+}
+
+#requestArea textarea {
+    width: 100%;
+    height: 10em;
+    padding: 0 3px;
+    line-height: 150%;
+    font-size: 12px;
+}
+
+#messages {
+    height: 400px;
+    margin: 5px 0;
+    padding: 0 5px;
+    overflow: auto;
+    border: 1px dotted #777;
+    background-color: #fff;
+    line-height: 150%;
+}
+
+#messages pre {
+    width: 100%;
+    color: #000;
+}
+
+#messages pre.sent {
+    color: #f63;
+}
