@@ -37,7 +37,7 @@ func init() {
 		WorkHome:   "/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace",
 		Region:     "ap-southeast-1",
 		BucketName: "cc-mahjong-0",
-		Mode:       "prod",
+		Mode:       "dev",
 		LocalRepo:  "/Users/chuancc/mywork/mylabs/csdc/mahjong-0/tiles-repo",
 	}
 }
@@ -77,6 +77,8 @@ func (d *Deployment) GenerateCdkApp(ctx context.Context, out *websocket.Conn) (*
 }
 
 func (d *Deployment) PullTile(ctx context.Context, tile string, version string, out *websocket.Conn, aTs *Ts, override map[string]*TileInputOverride) error {
+
+	var rStack = "Stack"//+ctx.Value("d-sid").(string)[0:8]
 
 	// 1. Loading Tile from s3 & unzip
 	tileSpecFile, err := s3Config.LoadTile(tile, version)
@@ -162,26 +164,36 @@ func (d *Deployment) PullTile(ctx context.Context, tile string, version string, 
 	inputs := make(map[string]string)
 	for _, in := range parsedTile.Spec.Inputs {
 		input := TsInputParameter{}
-		// For value dependent on other Tile
 		if in.Dependencies != nil {
-			if len(in.Dependencies) == 1 {
-				// single dependency
-				input.InputName = in.Name
-				stile := strings.ToLower(dependenciesMap[in.Dependencies[0].Name])
-				input.InputValue = stile + "stack" + "var." + stile + "var." + in.Dependencies[0].Field
-			} else {
-				// multiple dependencies will be organized as an array
-				input.InputName = in.Name
-				v := "[ "
-				for _, d := range in.Dependencies {
-					stile := strings.ToLower(dependenciesMap[d.Name])
-					val := stile + "stack" + "var." + stile + "var." + d.Field
-					v = v + val + ","
+			// For value dependent on other Tile
+			if parsedTile.Metadata.Category != ContainerApplication.CString() &&
+				parsedTile.Metadata.Category != Application.CString() {
+				if len(in.Dependencies) == 1 {
+					// single dependency
+					input.InputName = in.Name
+					stile := strings.ToLower(dependenciesMap[in.Dependencies[0].Name])
+					input.InputValue = stile + rStack + "var." + stile + "var." + in.Dependencies[0].Field
+				} else {
+					// multiple dependencies will be organized as an array
+					input.InputName = in.Name
+					v := "[ "
+					for _, d := range in.Dependencies {
+						stile := strings.ToLower(dependenciesMap[d.Name])
+						val := stile + rStack + "var." + stile + "var." + d.Field
+						v = v + val + ","
+					}
+					input.InputValue = strings.TrimSuffix(v, ",") + " ]"
 				}
-				input.InputValue = strings.TrimSuffix(v, ",") + " ]"
+			} else {
+				// output value can be retrieved after execution: $D-TBD_TileName.Output-Name
+				// !!!Now support non-CDK tile can reference value from dependent Tile by injecting ENV!!!
+				input.InputName = in.Name
+				input.InputValue = strings.ToUpper("$D_TBD_"+
+					strings.ReplaceAll(parsedTile.Metadata.Name,"-","_")+
+					"_"+in.Dependencies[0].Field)
 			}
-			// For independent value
 		} else {
+			// For independent value
 			input.InputName = in.Name
 			// Overwrite values as per Deployment
 			if val, ok := deploymentInputs[parsedTile.Metadata.Name+"-"+in.Name]; ok {
@@ -294,9 +306,9 @@ func (d *Deployment) PullTile(ctx context.Context, tile string, version string, 
 	ts := &TsStack{
 		TileName:          parsedTile.Metadata.Name,
 		TileVersion:       parsedTile.Metadata.Version,
-		TileVariable:      strings.ToLower(parsedTile.Metadata.Name + "var"),
-		TileStackName:     parsedTile.Metadata.Name + "Stack",
-		TileStackVariable: strings.ToLower(parsedTile.Metadata.Name + "stack" + "var"),
+		TileVariable:      strings.ToLower(parsedTile.Metadata.Name) + "var",
+		TileStackName:     parsedTile.Metadata.Name + rStack,
+		TileStackVariable: strings.ToLower(parsedTile.Metadata.Name) + rStack + "var",
 		InputParameters:   inputs,
 		TileCategory:      parsedTile.Metadata.Category,
 		TsManifests:       tm,
@@ -377,11 +389,21 @@ func (d *Deployment) ApplyMainTs(ctx context.Context, out *websocket.Conn, aTs *
 	//	opp := len(aTs.TsStacks) - 1 - i
 	//	aTs.TsStacks[i], aTs.TsStacks[opp] = aTs.TsStacks[opp], aTs.TsStacks[i]
 	//}
-	for e := aTs.TsStacksOrder.Front(); e != nil; e = e.Next() {
-		n := e.Value.(string)
-		aTs.TsLibs = append(aTs.TsLibs, aTs.TsLibsMap[n])
-		aTs.TsStacks = append(aTs.TsStacks, aTs.TsStacksMap[n])
+	if d.Spec.Template.ForceOrder != nil {
+		// forced order
+		for _,t := range d.Spec.Template.ForceOrder {
+			aTs.TsLibs = append(aTs.TsLibs, aTs.TsLibsMap[t])
+			aTs.TsStacks = append(aTs.TsStacks, aTs.TsStacksMap[t])
+		}
+	} else {
+		// natural reversed order
+		for e := aTs.TsStacksOrder.Front(); e != nil; e = e.Next() {
+			n := e.Value.(string)
+			aTs.TsLibs = append(aTs.TsLibs, aTs.TsLibsMap[n])
+			aTs.TsStacks = append(aTs.TsStacks, aTs.TsStacksMap[n])
+		}
 	}
+
 	err = tp.Execute(file, aTs)
 	if err != nil {
 		SR(out, []byte(err.Error()))

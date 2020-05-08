@@ -10,6 +10,6 @@ var Version = &cobra.Command{
 	Short: "\tPrint the version number of Dice",
 	Long:  "\tAll software has versions. This is Dice's",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Mahjong Client v0.1")
+		fmt.Printf("Mahjong Server %s. \nMahjong Client %s.\n", "v0.1.0", "v0.1.0")
 	},
 }

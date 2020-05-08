@@ -11,7 +11,7 @@ spec:
           - name: cidr
             inputValue: 192.0.0.0/16        
           - name: clusterName
-            inputValue: mahjong-cluster0
+            inputValue: argocd-app-cluster1
           - name: capacity
             inputValue: 3
           - name: capacityInstance
@@ -24,9 +24,15 @@ spec:
         tileVersion: 0.0.1
         inputs:
           - name: accessToken
-            inputValue: <token>
+            inputValue: ce2a08298d1e0898ad64a981a65c8e1762d7799f
+          - name: argocdNamespace
+            inputValue: argocd-new
+    forceOrder:
+      - Network0
+      - Eks0
+      - Argocd0
+      - Go-Bumblebee-ONLY
           
-
   summary:
       description: Argo CD has been installed in $clusterName with success and checking out following notes to get started.
       outputs:
@@ -49,8 +55,6 @@ spec:
           tileReference: Go-Bumblebee-ONLY
           outputValueRef: appRepo
         
-        
-
       notes: 
         - kubectl port-forward svc/argocd-server -n $NAMESPACE 8080:443
         - kubectl port-forward svc/gateservice-external -n $APP_NAMESPACE 8080:443

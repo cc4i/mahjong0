@@ -4,7 +4,13 @@ metadata:
     name: Go-Bumblebee-ONLY
     category: Application
     version: 0.0.1
+    dependentOnVendorService: EKS
 spec:
+  dependencies:
+    - name: argocd0
+      tileReference: Argocd0
+      tileVersion: 1.5.2
+
   global:
     env:
       - name: GITHUB_USER
@@ -14,26 +20,60 @@ spec:
       - name: ACCESS_TOKEN
         valueRef: accessToken
       - name: APP_NAMESPACE
-        valueRef: go-bumblebee
+        value: go-bumblebee
+      - name: ARGOCD_NAMESPACE
+        valueRef: argocdNamespace
+      - name: ARGOCD_USER
+        valueRef: argocdUser
+      - name: ARGOCD_PASSWORD
+        valueRef: argocdPassword
+
   preRun:
     stages:
       - name: CreateRepository
         command: |
-          curl -H "Authorization: token $ACCESS_TOKEN" --data '{"name":"$REPO_NAME"}' https://api.github.com/user/repos
+          curl -H "Authorization: token $ACCESS_TOKEN" --data '{"name":"'$REPO_NAME'"}' https://api.github.com/user/repos
       - name: SyncConttent2Repository
         command: |
           mkdir $WORK_HOME/$REPO_NAME
-          cp -R $TILE_HOME/apps/* $WORK_HOME/$REPO_NAME
+          cp -R $TILE_HOME/* $WORK_HOME/$REPO_NAME
           cd $WORK_HOME/$REPO_NAME
           git init
           git add -A
           git commit -m "first commit"
           git remote add origin git@github.com:$GITHUB_USER/$REPO_NAME.git
           git push -u origin master
+      - name: RegisterWithArgoCD
+        command: |
+          export PATH=$TILE_HOME/apps:$PATH
+          export KUBECONFIG=$WORK_HOME/kube.config
+          nohup kubectl port-forward svc/argocd-server -n $ARGOCD_NAMESPACE 8080:443 &
+          sleep 10
+          cd $TILE_HOME/apps
+          sed -i -e 's/x_user_x/'$ARGOCD_USER'/g' ./login-argocd.sh
+          sed -i -e 's/x_password_x/'$ARGOCD_PASSWORD'/g' ./login-argocd.sh
+          ./login-argocd.sh
+          ./create-app.sh
+
   inputs:
     - name: accessToken
       inputType: String
       require: true
+    - name: argocdNamespace
+      inputType: String
+      require: true
+    - name: argocdUser
+      inputType: String
+      require: false
+      dependencies:
+        - name: argocd0
+          field: user
+    - name: argocdPassword
+      inputType: String
+      require: false
+      dependencies:
+        - name: argocd0
+          field: password
 
           
   # Ouptputs represnt output value after launched, for 'ContainerApplication' might need leverage specific command to retrive output.

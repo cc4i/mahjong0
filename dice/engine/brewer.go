@@ -35,6 +35,7 @@ type ExecutionStage struct {
 	// Stage type
 	Kind          string            `json:"kind"`     //CDK/Command
 	WorkHome      string            `json:"workHome"` //root folder for execution
+	InjectedEnv	[]string `json:"injectedEnv"`
 	Preparation   []string          `json:"preparation"`
 	Command       *list.List        `json:"command"`
 	CommandMirror map[string]string `json:"commandMirror"`
@@ -195,10 +196,12 @@ func (ep *ExecutionPlan) CommandExecutor(ctx context.Context, stage *ExecutionSt
 // CommandWrapperExecutor wrap commands as a unix script in order to execute.
 func (ep *ExecutionPlan) CommandWrapperExecutor(ctx context.Context, stage *ExecutionStage, out *websocket.Conn) (string, error) {
 	//stage.WorkHome
-	script := stage.WorkHome + "/script-" + stage.Name + "-" + randString(8) + ".sh"
+	script := stage.WorkHome + "/script-" + stage.Name + "-" + RandString(8) + ".sh"
 	tContent := `#!/bin/bash
 set -xe
-
+{{range .InjectedEnv}}
+{{.}}
+{{end}}
 {{range .Preparation}}
 {{.}}
 {{end}}
@@ -213,6 +216,9 @@ echo $?
 	tContent4K8s := `#!/bin/bash
 set -xe
 [kube.config]
+{{range .InjectedEnv}}
+{{.}}
+{{end}}
 {{range .Preparation}}
 {{.}}
 {{end}}
@@ -223,44 +229,44 @@ set -xe
 {{end}}
 echo $?
 `
+	//Insert kube.config if need to
 	dSid := ctx.Value(`d-sid`).(string)
-	if ts, ok := AllTs[dSid]; ok {
-
-		if t, ok := ts.TsStacksMap[stage.TileName]; ok {
+	if at, ok := AllTs[dSid]; ok {
+		if stack, ok := at.TsStacksMap[stage.TileName]; ok {
 			// Looking for initial kube.config. For EKS, require clusterName, masterRoleARN ; For others, not implementing.
-			if t.TsManifests.ManifestType != "" {
+			if stack.TsManifests.ManifestType != "" {
 				var clusterName, masterRoleARN string
 				// Tile with dependency
-				if t.TsManifests.VendorService == EKS.VSString() {
-					if outputs, ok := ts.AllOutputs[t.TsManifests.DependentTile]; ok {
+				if stack.TsManifests.VendorService == EKS.VSString() {
+					if outputs, ok := at.AllOutputs[stack.TsManifests.DependentTile]; ok {
 						cn, ok := outputs.TsOutputs["clusterName"]
 						if !ok {
-							return script, errors.New("ContainerProvider with EKS didn't include output: clusterName.")
+							return script, errors.New("ContainerProvider with EKS didn'stack include output: clusterName.")
 						}
 						clusterName = cn.OutputValue
 
 						arn, ok := outputs.TsOutputs["masterRoleARN"]
 						if !ok {
-							return script, errors.New("ContainerProvider with EKS didn't include output: masterRoleARN.")
+							return script, errors.New("ContainerProvider with EKS didn'stack include output: masterRoleARN.")
 						}
 						masterRoleARN = arn.OutputValue
 
 					}
 				}
 				// Tile without dependency but input parameters
-				if stack, ok := ts.TsStacksMap[stage.TileName]; ok {
+				if stack, ok := at.TsStacksMap[stage.TileName]; ok {
 					category := stack.TileCategory
-					if t, ok := ts.AllTiles[category + "-" + stage.TileName]; ok {
+					if t, ok := at.AllTiles[category + "-" + stage.TileName]; ok {
 						if t.Metadata.DependentOnVendorService == EKS.VSString() {
-							if s, ok := ts.TsStacksMap[stage.TileName]; ok {
+							if s, ok := at.TsStacksMap[stage.TileName]; ok {
 								clusterName, ok = s.InputParameters["clusterName"]
 								if !ok {
-									return script, errors.New("ContainerProvider with EKS didn't include output: clusterName.")
+									return script, errors.New("ContainerProvider with EKS didn'stack include output: clusterName.")
 								}
 
 								masterRoleARN, ok = s.InputParameters["masterRoleARN"]
 								if !ok {
-									return script, errors.New("ContainerProvider with EKS didn't include output: masterRoleARN.")
+									return script, errors.New("ContainerProvider with EKS didn'stack include output: masterRoleARN.")
 								}
 							}
 						}
@@ -276,9 +282,31 @@ echo $?
 					))
 				tContent = tContent4K8s
 			}
+			////
+
+			// Inject values as env which can be retrieved only after execution
+			if tile, ok := at.AllTiles[stack.TileCategory+"-"+stage.TileName]; ok {
+				for _, td := range tile.Spec.Dependencies {
+					if to, ok := at.AllOutputs[td.TileReference]; ok {
+						for k,v := range to.TsOutputs {
+							//$D-TBD_TileName.Output-Name
+							if v.OutputValue != "" {
+								stage.InjectedEnv = append(stage.InjectedEnv, fmt.Sprintf("export D_TBD_%s_%s=%s",
+									strings.ReplaceAll(strings.ToUpper(stage.TileName),"-","_"),
+									strings.ToUpper(k),
+									v.OutputValue))
+							}
+
+						}
+					}
+				}
+			}
+			////
 		}
 
 	}
+
+
 
 	tp := template.New("script")
 	tp, err := tp.Parse(tContent)
@@ -374,7 +402,7 @@ func (ep *ExecutionPlan) ExtractValue(ctx context.Context, buf []byte, out *webs
 	return nil
 }
 
-func randString(n int) string {
+func RandString(n int) string {
 	const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	b := make([]byte, n)
 	for i := range b {
