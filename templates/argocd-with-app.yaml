@@ -11,22 +11,22 @@ spec:
           - name: cidr
             inputValue: 192.0.0.0/16        
           - name: clusterName
-            inputValue: argocd-app-cluster1
+            inputValue: argocd-app-cluster2
           - name: capacity
-            inputValue: 3
+            inputValue: 2
           - name: capacityInstance
             inputValue: m5.large
           - name: version
-            inputValue: 1.15
+            inputValue: 1.16
         manifests:
-          namespace: argocd-new
+          namespace: argocd
       - tileReference: Go-Bumblebee-ONLY
         tileVersion: 0.0.1
         inputs:
           - name: accessToken
-            inputValue: ce2a08298d1e0898ad64a981a65c8e1762d7799f
+            inputValue: <GITHUB TOKEN>
           - name: argocdNamespace
-            inputValue: argocd-new
+            inputValue: argocd
     forceOrder:
       - Network0
       - Eks0
@@ -55,8 +55,15 @@ spec:
           tileReference: Go-Bumblebee-ONLY
           outputValueRef: appRepo
         
-      notes: 
-        - kubectl port-forward svc/argocd-server -n $NAMESPACE 8080:443
-        - kubectl port-forward svc/gateservice-external -n $APP_NAMESPACE 8080:443
-        - Push changes to https://github.com:$GITHUB_USER/$REPO_NAME.git to trigger automnated deployment. 
+      notes:
+        - 1.Get all services information, 
+        - |
+          kubectl port-forward svc/argocd-server -n $NAMESPACE 8080:443
+          kubectl port-forward svc/gateservice-external -n $APP_NAMESPACE 8080:443
+        - 2. Push changes to GitRepo (https://github.com:$GITHUB_USER/$REPO_NAME.git) to to trigger automnated deployment
+        - 3. Execute following commands to quick start,
+        - |
+          cd $WORK_HOME/lib/go-bumblebee-only/apps;./start-argocd.sh
+        - |
+          cd $WORK_HOME/lib/go-bumblebee-only/apps;./login-argocd.sh;create-app.sh
     
