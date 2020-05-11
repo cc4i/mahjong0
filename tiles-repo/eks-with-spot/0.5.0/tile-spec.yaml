@@ -1,0 +1,119 @@
+apiVersion: mahjong.io/v1alpha1
+kind: Tile
+metadata:
+    name: Eks-with-Spot
+    category: ContainerProvider
+    vendorService: EKS
+    version: 0.5.0
+# Specification
+spec:
+  dependencies:
+    - name: network
+      tileReference: Network0
+      tileVersion: 0.0.1
+  inputs:
+    # String
+    - name: cidr
+      inputType: String
+      require: true
+      override: 
+        name: network
+        field: cidr
+    # CDKObject
+    - name: vpc
+      inputType: CDKObject
+      description: 'Refer to VPC object on Tile - Network0'
+      dependencies:
+        - name: network
+          field: baseVpc
+      require: false
+    # CDKObject[]
+    - name: vpcSubnets
+      inputType: CDKObject[]
+      description: ''
+      dependencies:
+        - name: network
+          field: publicSubnet1
+        - name: network
+          field: publicSubnet2
+        - name: network
+          field: privateSubnet1
+        - name: network
+          field: privateSubnet2
+      require: false
+    # String
+    - name: clusterName
+      inputType: String
+      description: 'EKS Cluster Name'
+      defaultValue: default-eks-cluster
+      require: true
+    # String
+    - name: clusterVersion
+      inputType: String
+      description: 'EKS version'
+      defaultValue: '1.16'
+      require: false
+    # String
+    - name: keyPair4EC2
+      inputType: String
+      description: 'Key Pair for EC2'
+      require: true
+    # String[]
+    - name: capacityInstance
+      inputType: String[]
+      description: 'Instance type for Auto Scaling Group'
+      defaultValues: 
+        - c5.large
+        - m5.large
+        - r5.large
+      require: false
+    - name: maxSizeASG
+      inputType: String
+      description: 'Maximum instances'
+      defaultValue: '4'
+      require: false
+    - name: minSizeASG
+      inputType: String
+      description: 'Minimun instances'
+      defaultValue: '2'
+      require: false
+    - name: desiredCapacityASG
+      inputType: String
+      description: 'Desired instances'
+      defaultValue: '2'
+      require: false
+    - name: cooldownASG
+      inputType: String
+      description: 'Cooldown period'
+      defaultValue: '180'
+      require: false
+    - name: onDemandPercentage
+      inputType: Number
+      description: 'Percentage of on-demand instances'
+      defaultValue: 25
+      require: false
+
+  # Ouptputs represnt output value after launched, for 'ContainerApplication' might need leverage specific command to retrive output.
+  outputs:
+    # String
+    - name: clusterName
+      outputType: String
+      description: AWS::EKS::Cluster.Name
+    # String
+    - name: clusterArn
+      outputType: String
+      description: AWS::EKS::Cluster.ARN          
+    # String
+    - name: clusterEndpoint
+      outputType: String
+      description: AWS::EKS::Cluster.Endpoint
+    # String
+    - name: masterRoleARN
+      outputType: String
+      description: AWS::IAM::Role.ARN
+
+  # Notes are description list for addtional information.
+  notes:
+    - "Tag public subnets with 'kubernetes.io/role/elb=1'"
+    - "Tag priavte subnets with 'kubernetes.io/role/internal-elb=1'"
+

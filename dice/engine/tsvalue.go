@@ -24,6 +24,7 @@ type Ts struct {
 type TsLib struct {
 	TileName     string
 	TileVersion  string
+	TileConstructName string
 	TileFolder   string
 	TileCategory string
 }
@@ -31,11 +32,13 @@ type TsLib struct {
 type TsStack struct {
 	TileName          string
 	TileVersion       string
+	TileConstructName string
 	TileVariable      string
 	TileStackName     string
 	TileStackVariable string
 	TileCategory      string
-	InputParameters   map[string]string //[]TsInputParameter
+	// inputName -> TsInputParameter
+	InputParameters   map[string]TsInputParameter
 	TsManifests       *TsManifests
 	EnvList map[string]string //caching all env
 
@@ -44,6 +47,7 @@ type TsStack struct {
 type TsInputParameter struct {
 	InputName  string
 	InputValue string
+	IsOverrideField string
 }
 
 type TsManifests struct {

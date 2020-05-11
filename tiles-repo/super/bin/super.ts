@@ -8,7 +8,7 @@ import ec2 = require('@aws-cdk/aws-ec2');
 //
 {{range .TsLibs}}
 {{if and (ne .TileCategory "ContainerApplication") (ne .TileCategory "Application")}}
-import { {{.TileName}} } from '../lib/{{.TileFolder}}/lib/index'
+import { {{.TileConstructName}} } from '../lib/{{.TileFolder}}/lib/index'
 {{end}}
 {{end}}
 //
@@ -24,16 +24,18 @@ const app = new cdk.App();
 {{range .TsStacks}}
 {{if and (ne .TileCategory "ContainerApplication") (ne .TileCategory "Application")}}
 export class {{.TileStackName}} extends cdk.Stack {
-    public readonly {{.TileVariable}}: {{.TileName}};
+    public readonly {{.TileVariable}}: {{.TileConstructName}};
 
     constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
       super(scope, id, props);
   
-      this.{{.TileVariable}} = new {{.TileName}}(this, '{{ .TileName }}', {
+      this.{{.TileVariable}} = new {{.TileConstructName}}(this, '{{.TileConstructName}}', {
           {{ $map := .InputParameters }}
           {{ range $key, $value := $map }}
-          {{ $key }}: {{ $value }},
-          {{end}}
+          {{ if (ne $value.IsOverrideField "yes") }}
+          {{ $key }}: {{ $value.InputValue }},
+          {{ end }}
+          {{ end }}
       })
     }
 }

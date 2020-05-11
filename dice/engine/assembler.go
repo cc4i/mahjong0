@@ -148,6 +148,7 @@ func (d *Deployment) PullTile(ctx context.Context, tile string, version string, 
 	newTsLib := TsLib{
 		TileName:     parsedTile.Metadata.Name,
 		TileVersion:  parsedTile.Metadata.Version,
+		TileConstructName: strings.ReplaceAll(parsedTile.Metadata.Name, "-",""),
 		TileFolder:   strings.ToLower(parsedTile.Metadata.Name),
 		TileCategory: parsedTile.Metadata.Category,
 	}
@@ -161,8 +162,9 @@ func (d *Deployment) PullTile(ctx context.Context, tile string, version string, 
 
 	// Step 5. Caching inputs <key, value> for further process
 	// inputs: inputName -> inputValue
-	inputs := make(map[string]string)
+	inputs := make(map[string]TsInputParameter)
 	for _, in := range parsedTile.Spec.Inputs {
+
 		input := TsInputParameter{}
 		if in.Dependencies != nil {
 			// For value dependent on other Tile
@@ -171,14 +173,14 @@ func (d *Deployment) PullTile(ctx context.Context, tile string, version string, 
 				if len(in.Dependencies) == 1 {
 					// single dependency
 					input.InputName = in.Name
-					stile := strings.ToLower(dependenciesMap[in.Dependencies[0].Name])
+					stile := strings.ReplaceAll(strings.ToLower(dependenciesMap[in.Dependencies[0].Name]),"-","")
 					input.InputValue = stile + rStack + "var." + stile + "var." + in.Dependencies[0].Field
 				} else {
 					// multiple dependencies will be organized as an array
 					input.InputName = in.Name
 					v := "[ "
 					for _, d := range in.Dependencies {
-						stile := strings.ToLower(dependenciesMap[d.Name])
+						stile := strings.ReplaceAll(strings.ToLower(dependenciesMap[d.Name]),"-","")
 						val := stile + rStack + "var." + stile + "var." + d.Field
 						v = v + val + ","
 					}
@@ -247,14 +249,15 @@ func (d *Deployment) PullTile(ctx context.Context, tile string, version string, 
 				input.InputValue = or.OverrideValue
 			}
 		}
-		inputs[input.InputName] = input.InputValue
+		if in.Override.Name != "" { input.IsOverrideField = "yes" }
+		inputs[input.InputName] = input
 	}
 	////
 
 	// Step 6.Setup values for cached override, depend on Step 5
 	for _, v := range override {
-		if val, ok := inputs[v.InputName]; ok {
-			v.OverrideValue = val
+		if input, ok := inputs[v.InputName]; ok {
+			v.OverrideValue = input.InputValue
 		}
 	}
 	////
@@ -306,9 +309,10 @@ func (d *Deployment) PullTile(ctx context.Context, tile string, version string, 
 	ts := &TsStack{
 		TileName:          parsedTile.Metadata.Name,
 		TileVersion:       parsedTile.Metadata.Version,
-		TileVariable:      strings.ToLower(parsedTile.Metadata.Name) + "var",
-		TileStackName:     parsedTile.Metadata.Name + rStack,
-		TileStackVariable: strings.ToLower(parsedTile.Metadata.Name) + rStack + "var",
+		TileConstructName: strings.ReplaceAll(parsedTile.Metadata.Name, "-",""),
+		TileVariable:      strings.ReplaceAll(strings.ToLower(parsedTile.Metadata.Name),"-","") + "var",
+		TileStackName:     strings.ReplaceAll(parsedTile.Metadata.Name,"-","") + rStack,
+		TileStackVariable: strings.ReplaceAll(strings.ToLower(parsedTile.Metadata.Name),"-","") + rStack + "var",
 		InputParameters:   inputs,
 		TileCategory:      parsedTile.Metadata.Category,
 		TsManifests:       tm,
@@ -482,7 +486,7 @@ func (d *Deployment) GenerateExecutePlan(ctx context.Context, out *websocket.Con
 						} else if e.Value == "" && e.ValueRef != "" {
 							if v, ok := ts.InputParameters[e.ValueRef]; ok {
 								stage.Preparation = append(stage.Preparation, fmt.Sprintf("export %s=%s", e.Name, v))
-								ts.EnvList[e.Name]=v
+								ts.EnvList[e.Name]=v.InputValue
 							}
 						}
 					}

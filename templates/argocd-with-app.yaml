@@ -60,7 +60,7 @@ spec:
         - |
           kubectl port-forward svc/argocd-server -n $NAMESPACE 8080:443
           kubectl port-forward svc/gateservice-external -n $APP_NAMESPACE 8080:443
-        - 2. Push changes to GitRepo (https://github.com:$GITHUB_USER/$REPO_NAME.git) to to trigger automnated deployment
+        - 2. Push changes to GitRepo (https://github.com/$GITHUB_USER/$REPO_NAME.git) to to trigger automnated deployment
         - 3. Execute following commands to quick start,
         - |
           cd $WORK_HOME/lib/go-bumblebee-only/apps;./start-argocd.sh

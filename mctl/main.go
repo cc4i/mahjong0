@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 	"mctl/cmd/deploy"
 	"mctl/cmd/initial"
+	"mctl/cmd/list"
 	"mctl/cmd/validate"
 	"mctl/cmd/version"
 )
@@ -23,7 +24,8 @@ func main() {
 	cmd.AddCommand(initial.Init,
 		validate.Validate,
 		deploy.Deploy,
-		version.Version)
+		version.Version,
+		list.ListRepo)
 	cmd.TraverseChildren = true
 
 	// Running mctl

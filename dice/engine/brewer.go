@@ -259,15 +259,17 @@ echo $?
 					if t, ok := at.AllTiles[category + "-" + stage.TileName]; ok {
 						if t.Metadata.DependentOnVendorService == EKS.VSString() {
 							if s, ok := at.TsStacksMap[stage.TileName]; ok {
-								clusterName, ok = s.InputParameters["clusterName"]
+								inputParameters, ok := s.InputParameters["clusterName"]
 								if !ok {
 									return script, errors.New("ContainerProvider with EKS didn'stack include output: clusterName.")
 								}
+								clusterName = inputParameters.InputValue
 
-								masterRoleARN, ok = s.InputParameters["masterRoleARN"]
+								inputParameters, ok = s.InputParameters["masterRoleARN"]
 								if !ok {
 									return script, errors.New("ContainerProvider with EKS didn'stack include output: masterRoleARN.")
 								}
+								masterRoleARN = inputParameters.InputValue
 							}
 						}
 					}
