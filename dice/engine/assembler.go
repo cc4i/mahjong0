@@ -9,7 +9,6 @@ import (
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
-	"strconv"
 	"strings"
 	"text/template"
 )
@@ -442,14 +441,12 @@ func (d *Deployment) GenerateExecutePlan(ctx context.Context, out *websocket.Con
 	for _, ts := range aTs.TsStacks {
 		workHome := s3Config.WorkHome + "/super"
 		stage := ExecutionStage{
-			Name:          ts.TileName,
-			Command:       list.New(),
-			CommandMirror: make(map[string]string),
-			Kind:          ts.TileCategory,
-			WorkHome:      workHome,
-			Preparation:   []string{"cd " + workHome},
-			TileName:      ts.TileName,
-			TileVersion:   ts.TileVersion,
+			Name:        ts.TileName,
+			Kind:        ts.TileCategory,
+			WorkHome:    workHome,
+			Preparation: []string{"cd " + workHome},
+			TileName:    ts.TileName,
+			TileVersion: ts.TileVersion,
 		}
 		// Define Kind of Stage
 		if ts.TileCategory == ContainerApplication.CString() || ts.TileCategory == Application.CString() {
@@ -457,96 +454,102 @@ func (d *Deployment) GenerateExecutePlan(ctx context.Context, out *websocket.Con
 		} else {
 			stage.Kind = CDK.SKString()
 		}
-		// Caching env
-		if ts.EnvList == nil { ts.EnvList = make(map[string]string) }
+		// Caching & injected work_home & tile_home
+		if ts.PredefinedEnv == nil { ts.PredefinedEnv = make(map[string]string) }
+		stage.InjectedEnv = append(stage.InjectedEnv, "export WORK_HOME="+s3Config.WorkHome+"/super")
+		ts.PredefinedEnv["WORK_HOME"]=s3Config.WorkHome+"/super"
+		stage.InjectedEnv = append(stage.InjectedEnv, "export TILE_HOME="+s3Config.WorkHome+"/super/lib/"+strings.ToLower(ts.TileName))
+		ts.PredefinedEnv["TILE_HOME"]=s3Config.WorkHome+"/super/lib/"+strings.ToLower(ts.TileName)
+
 
 		if ts.TileCategory == ContainerApplication.CString() || ts.TileCategory == Application.CString() {
-			// Reserved stage.Preparation & inject reserved environment variables
+			// ContainerApplication & Application
+			// Inject namespace as environment or using default as namespace
 			if ts.TsManifests.Namespace != "" && ts.TsManifests.Namespace != "default" {
 				stage.Preparation = append(stage.Preparation, "kubectl create ns "+ts.TsManifests.Namespace+" || true")
-				stage.Preparation = append(stage.Preparation, "export NAMESPACE="+ts.TsManifests.Namespace)
-				ts.EnvList["NAMESPACE"]=ts.TsManifests.Namespace
+				stage.InjectedEnv = append(stage.InjectedEnv, "export NAMESPACE="+ts.TsManifests.Namespace)
+				ts.PredefinedEnv["NAMESPACE"]=ts.TsManifests.Namespace
 			} else {
 				ts.TsManifests.Namespace="default"
-				ts.EnvList["NAMESPACE"]="default"
-			}
-			stage.Preparation = append(stage.Preparation, "export WORK_HOME="+s3Config.WorkHome+"/super")
-			ts.EnvList["WORK_HOME"]=s3Config.WorkHome+"/super"
-			stage.Preparation = append(stage.Preparation, "export TILE_HOME="+s3Config.WorkHome+"/super/lib/"+strings.ToLower(ts.TileName))
-			ts.EnvList["TILE_HOME"]=s3Config.WorkHome+"/super/lib/"+strings.ToLower(ts.TileName)
-
-			// Inject Global environment variables & Adding PreRun...Commands into stage.Preparation
-			dSid := ctx.Value("d-sid").(string)
-			if at, ok := AllTs[dSid]; ok {
-				if tile, ok := at.AllTiles[ts.TileCategory+"-"+ts.TileName]; ok {
-					for _, e := range tile.Spec.Global.Env {
-						if e.Value != "" {
-							stage.Preparation = append(stage.Preparation, fmt.Sprintf("export %s=%s", e.Name, e.Value))
-							ts.EnvList[e.Name]=e.Value
-						} else if e.Value == "" && e.ValueRef != "" {
-							if v, ok := ts.InputParameters[e.ValueRef]; ok {
-								stage.Preparation = append(stage.Preparation, fmt.Sprintf("export %s=%s", e.Name, v))
-								ts.EnvList[e.Name]=v.InputValue
-							}
-						}
-					}
-					for _, s := range tile.Spec.PreRun.Stages {
-						stage.Preparation = append(stage.Preparation, s.Command)
-					}
-				}
+				ts.PredefinedEnv["NAMESPACE"]="default"
 			}
 
+			// Process different manifests
 			switch ts.TsManifests.ManifestType {
 			case K8s.MTString():
 
-				for j, f := range ts.TsManifests.Files {
+				for _, f := range ts.TsManifests.Files {
 					var cmd string
 					cmd = "kubectl apply -f ./lib/" + strings.ToLower(ts.TileName) + "/lib/" + f + " -n " + ts.TsManifests.Namespace
-					stage.Command.PushFront(cmd)
-					stage.CommandMirror[strconv.Itoa(j)] = cmd
+					stage.Commands=append(stage.Commands, cmd)
 				}
 			case Helm.MTString():
 				// TODO: not quite yet to support Helm
-				for j, f := range ts.TsManifests.Folders {
+				for _, f := range ts.TsManifests.Folders {
 					cmd := "helm install " + ts.TileName + " ./lib/" + strings.ToLower(ts.TileName) + "/lib/" + f + " -n " + ts.TsManifests.Namespace
-					stage.Command.PushFront(cmd)
-					stage.CommandMirror[strconv.Itoa(j)] = cmd
+					stage.Commands=append(stage.Commands, cmd)
 				}
 
 			case Kustomize.MTString():
 				// TODO: not quite yet to support Kustomize
-				for j, f := range ts.TsManifests.Folders {
+				for _, f := range ts.TsManifests.Folders {
 					cmd := "kustomize build -f ./lib/" + strings.ToLower(ts.TileName) + "/lib/" + f + "|kubectl -f - " + " -n " + ts.TsManifests.Namespace
-					stage.Command.PushFront(cmd)
-					stage.CommandMirror[strconv.Itoa(j)] = cmd
+					stage.Commands=append(stage.Commands, cmd)
 				}
 			}
-			//Post commands, output values to output.log
+
+			// Commands & output values to output.log
 			fileName := s3Config.WorkHome + "/super/" + stage.Name + "-output.log"
 			//Sleep 5 seconds to waiting pod's ready
-			stage.Command.PushFront("sleep 10")
-			stage.CommandMirror[strconv.Itoa(stage.Command.Len()+1)] = "sleep 10"
+			stage.Commands=append(stage.Commands, "sleep 10")
 			if tile, ok := aTs.AllTiles[ts.TileCategory+"-"+ts.TileName]; ok {
 				for _, o := range tile.Spec.Outputs {
 					if o.DefaultValueCommand != "" {
 						cmd := `echo "{\"` + o.Name + "=`" + o.DefaultValueCommand + "`" + `\"}" >>` + fileName
-						stage.Command.PushFront(cmd)
-						stage.CommandMirror[strconv.Itoa(stage.Command.Len()+1)] = cmd
+						stage.Commands=append(stage.Commands, cmd)
 					} else if o.DefaultValue != "" {
 						cmd := `echo "{\"` + o.Name + "=" + o.DefaultValue + `\"}" >>` + fileName
-						stage.Command.PushFront(cmd)
-						stage.CommandMirror[strconv.Itoa(stage.Command.Len()+1)] = cmd
+						stage.Commands=append(stage.Commands, cmd)
 					}
 				}
 			}
 		} else {
+			// CDK based Tiles
 			stage.Preparation = append(stage.Preparation, "npm install")
 			stage.Preparation = append(stage.Preparation, "npm run build")
 			stage.Preparation = append(stage.Preparation, "cdk list")
 			cmd := "cdk deploy " + ts.TileStackName + " --require-approval never"
-			stage.Command.PushFront(cmd)
-			stage.CommandMirror[strconv.Itoa(1)] = cmd
+			stage.Commands=append(stage.Commands, cmd)
 		}
+
+		dSid := ctx.Value("d-sid").(string)
+		if at, ok := AllTs[dSid]; ok {
+			if tile, ok := at.AllTiles[ts.TileCategory+"-"+ts.TileName]; ok {
+				// Inject Global environment variables
+				for _, e := range tile.Spec.Global.Env {
+					if e.Value != "" {
+						stage.InjectedEnv = append(stage.InjectedEnv, fmt.Sprintf("export %s=%s", e.Name, e.Value))
+						ts.PredefinedEnv[e.Name]=e.Value
+					} else if e.Value == "" && e.ValueRef != "" {
+						if v, ok := ts.InputParameters[e.ValueRef]; ok {
+							stage.InjectedEnv = append(stage.InjectedEnv, fmt.Sprintf("export %s=%s", e.Name, v))
+							ts.PredefinedEnv[e.Name]=v.InputValue
+						}
+					}
+				}
+				// Adding PreRun's commands into stage.Preparation
+				for _, s := range tile.Spec.PreRun.Stages {
+					stage.Preparation = append(stage.Preparation, s.Command)
+				}
+
+				// Adding PostRun's commands into stage.PostRunCommands
+				for _, s := range tile.Spec.PostRun.Stages {
+					stage.PostRunCommands = append(stage.PostRunCommands, s.Command)
+				}
+			}
+		}
+
+
 		p.Plan.PushFront(&stage)
 		p.PlanMirror[ts.TileName] = &stage
 	}

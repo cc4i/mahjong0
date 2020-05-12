@@ -129,6 +129,7 @@ type TileSpec struct {
 	Inputs       []TileInput      `json:"inputs"`
 	Manifests    TileManifest     `json:"manifests"`
 	Outputs      []TileOutput     `json:"outputs"`
+	PostRun PostRunDetail `json:"PostRun"`
 	Notes        []string         `json:"notes"`
 }
 
@@ -193,6 +194,15 @@ type TileOutput struct {
 	DefaultValue        string `json:"defaultValue"`
 	DefaultValueCommand string `json:"defaultValueCommand"`
 	Description         string `json:"description"`
+}
+
+type PostRunDetail struct {
+	Stages []PostRunStages `json:"stages"`
+}
+
+type PostRunStages struct {
+	Name    string `json:"name"`
+	Command string `json:"command"`
 }
 
 // Parsing functions

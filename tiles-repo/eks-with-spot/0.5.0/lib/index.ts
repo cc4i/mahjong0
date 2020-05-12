@@ -26,14 +26,17 @@ export interface EksSpotProps {
 export class EkswithSpot extends cdk.Construct {
   
   /** Directly exposed to other stack */
+  public readonly regionOfCluster: string
   public readonly clusterName: string;
   public readonly clusterEndpoint: string;
   public readonly masterRoleARN: string;
   public readonly clusterArn: string;
-  public readonly autoScalingGroupName: string
-  public readonly autoScalingGroupMaxSize: string
-  public readonly autoScalingGroupMinSize: string
-  public readonly autoScalingGroupDesiredCapacity: string
+  public readonly autoScalingGroupName: string;
+  public readonly autoScalingGroupMaxSize: string;
+  public readonly autoScalingGroupMinSize: string;
+  public readonly autoScalingGroupDesiredCapacity: string;
+  public readonly nodesRoleARN: string;
+  public capacityInstance: string;
 
   constructor(scope: cdk.Construct, id: string, props: EksSpotProps) {
     super(scope, id);
@@ -68,6 +71,7 @@ export class EkswithSpot extends cdk.Construct {
 
     const spotNodeGroup = new EksNodesSpot(scope, "SpotNodeGroup", {
       clusterName: props.clusterName,
+      clusterVersion: props.clusterVersion || '1.16',
       vpc: props.vpc,
       publicSubnetId1: props.vpc.publicSubnets[0].subnetId,
       publicSubnetId2: props.vpc.publicSubnets[1].subnetId,
@@ -103,10 +107,14 @@ export class EkswithSpot extends cdk.Construct {
       securityGroup: spotNodeGroup.controlPlaneSG,
     })
 
-
-
+    this.capacityInstance=""
+    props.capacityInstance?.forEach(c => {
+      this.capacityInstance = c + "/" + this.capacityInstance
+    })
+    this.capacityInstance=this.capacityInstance.substring(0,this.capacityInstance.length-1)
 
     /** Added CF Output */
+    new cdk.CfnOutput(scope,"regionOfCluster", {value: process.env.CDK_DEFAULT_REGION || ""})
     new cdk.CfnOutput(scope,"clusterName", {value: cluster.clusterName})
     new cdk.CfnOutput(scope,"masterRoleARN", {value: eksRole.roleArn})
     new cdk.CfnOutput(scope,"clusterEndpoint", {value: cluster.clusterEndpoint})
@@ -115,8 +123,10 @@ export class EkswithSpot extends cdk.Construct {
     new cdk.CfnOutput(scope,"autoScalingGroupMaxSize", {value: spotNodeGroup.autoScalingGroup.maxSize })
     new cdk.CfnOutput(scope,"autoScalingGroupMinSize", {value: spotNodeGroup.autoScalingGroup.minSize })
     new cdk.CfnOutput(scope,"autoScalingGroupDesiredCapacity", {value: spotNodeGroup.autoScalingGroup.desiredCapacity || "" })
+    new cdk.CfnOutput(scope,"nodesRoleARN", {value: spotNodeGroup.nodesRole.roleArn})
+    new cdk.CfnOutput(scope,"capacityInstance", {value: this.capacityInstance})
     
-    
+    this.regionOfCluster = process.env.CDK_DEFAULT_REGION || "";
     this.clusterName = cluster.clusterName;
     this.masterRoleARN = eksRole.roleArn;
     this.clusterEndpoint = cluster.clusterEndpoint;
@@ -125,6 +135,8 @@ export class EkswithSpot extends cdk.Construct {
     this.autoScalingGroupMaxSize = spotNodeGroup.autoScalingGroup.maxSize;
     this.autoScalingGroupMinSize = spotNodeGroup.autoScalingGroup.minSize;
     this.autoScalingGroupDesiredCapacity = spotNodeGroup.autoScalingGroup.desiredCapacity || "";
+    this.nodesRoleARN = spotNodeGroup.nodesRole.roleArn;
+    
 
   }
 

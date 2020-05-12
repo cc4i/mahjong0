@@ -7,6 +7,7 @@ import iam = require('@aws-cdk/aws-iam');
 
 export interface EksNodesProps {
     clusterName: string,
+    clusterVersion: string,
     vpc: ec2.Vpc,
     publicSubnetId1: string,
     publicSubnetId2: string,
@@ -78,7 +79,10 @@ export class EksNodesSpot extends cdk.Construct {
             launchTemplateName: "NodesLaunchTemplate",
             launchTemplateData: {
                 instanceType: "c5.large",
-                imageId: new eks.EksOptimizedImage({}).getImage(scope).imageId,
+                imageId: new eks.EksOptimizedImage({
+                    nodeType: eks.NodeType.STANDARD,
+                    kubernetesVersion: props.clusterVersion
+                }).getImage(scope).imageId,
                 keyName: props.keyPair4EC2,
                 iamInstanceProfile: {arn: ec2Profile.attrArn},
                 securityGroupIds: [this.nodesSG.securityGroupId, this.nodesSharedSG.securityGroupId],

@@ -37,10 +37,11 @@ type ExecutionStage struct {
 	WorkHome      string            `json:"workHome"` //root folder for execution
 	InjectedEnv	[]string `json:"injectedEnv"`
 	Preparation   []string          `json:"preparation"`
-	Command       *list.List        `json:"command"`
-	CommandMirror map[string]string `json:"commandMirror"`
-	TileName      string            `json:"tileName"`
-	TileVersion   string            `json:"tileVersion"`
+	//Command       *list.List        `json:"command"`
+	Commands        []string `json:"commands"`
+	TileName        string   `json:"tileName"`
+	TileVersion     string   `json:"tileVersion"`
+	PostRunCommands []string `json:"postRunCommands"`
 }
 
 type StageKind int
@@ -62,6 +63,7 @@ type BrewerCore interface {
 	CommandWrapperExecutor(ctx context.Context, stage *ExecutionStage, out *websocket.Conn) (string, error)
 	WsTail(ctx context.Context, reader io.ReadCloser, stageLog *log.Logger, out *websocket.Conn)
 	ExtractValue(ctx context.Context, buf []byte, out *websocket.Conn) error
+	PostRun(ctx context.Context, buf []byte, out *websocket.Conn) error
 	GenerateSummary(ctx context.Context, out *websocket.Conn) error
 }
 
@@ -85,6 +87,11 @@ func (ep *ExecutionPlan) ExecutePlan(ctx context.Context, dryRun bool, out *webs
 			// Caching output values
 			ep.ExtractValue(ctx, buf, out)
 			//
+			// Post run with commands
+			if err := ep.PostRun(ctx, buf, out); err != nil {
+				return err
+			}
+
 		}
 	}
 	ep.GenerateSummary(ctx, out)
@@ -117,7 +124,7 @@ func (ep *ExecutionPlan) GenerateSummary(ctx context.Context, out *websocket.Con
 func replaceByValue(str string, at Ts) string {
 	for _, ts := range at.TsStacks {
 		//replace by env value
-		for k,v := range ts.EnvList {
+		for k,v := range ts.PredefinedEnv {
 			str=strings.ReplaceAll(str, "$"+k, v)
 
 		}
@@ -206,9 +213,8 @@ set -xe
 {{.}}
 {{end}}
 
-{{$map := .CommandMirror}}
-{{range $key, $value := $map }}
-{{$value}}
+{{range .Commands}}
+{{.}}
 {{end}}
 echo $?
 `
@@ -223,9 +229,8 @@ set -xe
 {{.}}
 {{end}}
 
-{{$map := .CommandMirror}}
-{{range $key, $value := $map }}
-{{$value}}
+{{range .Commands}}
+{{.}}
 {{end}}
 echo $?
 `
@@ -286,7 +291,7 @@ echo $?
 			}
 			////
 
-			// Inject values as env which can be retrieved only after execution
+			// Inject output values as env which can be retrieved only after execution
 			if tile, ok := at.AllTiles[stack.TileCategory+"-"+stage.TileName]; ok {
 				for _, td := range tile.Spec.Dependencies {
 					if to, ok := at.AllOutputs[td.TileReference]; ok {
@@ -374,9 +379,9 @@ func (ep *ExecutionPlan) ExtractValue(ctx context.Context, buf []byte, out *webs
 				} else {
 					// Extract key, value from CDK outputs
 					if stack, ok := ts.TsStacksMap[tileName]; ok {
-						regx = regexp.MustCompile("^\\{\"level\":\"info\"\\,\"msg\".*(" +
+						regx = regexp.MustCompile("^\\{\"level\":\"info\"\\,\"msg\":\"(" +
 							stack.TileStackName + "." +
-							stack.TileName +
+							".*" +
 							outputName +
 							".*?)\"}$")
 
@@ -402,6 +407,71 @@ func (ep *ExecutionPlan) ExtractValue(ctx context.Context, buf []byte, out *webs
 	}
 
 	return nil
+}
+
+func (ep *ExecutionPlan) PostRun(ctx context.Context, buf []byte, out *websocket.Conn) error {
+	stage := ep.CurrentStage
+	script := stage.WorkHome + "/script-" + stage.Name + "-Post-" + RandString(8) + ".sh"
+	file, err := os.OpenFile(script, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755) //Create(script)
+	if err != nil {
+		SR(out, []byte(err.Error()))
+		return err
+	}
+	defer file.Close()
+
+	tContent := `#!/bin/bash
+set -xe
+{{range .InjectedEnv}}
+{{.}}
+{{end}}
+
+
+{{range .PostRunCommands}}
+{{.}}
+{{end}}
+echo $?
+`
+	// Injected output values of current Tile as env
+	dSid := ctx.Value(`d-sid`).(string)
+	if at, ok := AllTs[dSid]; ok {
+		if stack, ok := at.TsStacksMap[stage.TileName]; ok {
+			if tile, ok := at.AllTiles[stack.TileCategory+"-"+stage.TileName]; ok {
+				if to, ok := at.AllOutputs[tile.Metadata.Name]; ok {
+					for k,v := range to.TsOutputs {
+						//$D-TBD_TileName.Output-Name
+						if v.OutputValue != "" {
+							stage.InjectedEnv = append(stage.InjectedEnv, fmt.Sprintf("export D_TBD_%s_%s=%s",
+								strings.ReplaceAll(strings.ToUpper(stage.TileName),"-","_"),
+								strings.ToUpper(k),
+								v.OutputValue))
+						}
+					}
+				}
+			}
+		}
+	}
+
+
+	tp := template.New("script")
+	tp, err = tp.Parse(tContent)
+	if err != nil {
+		return err
+	}
+
+	err = tp.Execute(file, stage)
+	if err != nil {
+		SR(out, []byte(err.Error()))
+		return err
+	}
+	// Show script
+	cnt, err := ioutil.ReadFile(script)
+	SRf(out, "Generated script -  %s with content: \n", script)
+	SR(out, []byte("--BO:-------------------------------------------------"))
+	SR(out, cnt)
+	SR(out, []byte("--EO:-------------------------------------------------"))
+
+	return ep.CommandExecutor(ctx, stage, []byte(script), out)
+
 }
 
 func RandString(n int) string {

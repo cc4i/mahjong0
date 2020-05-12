@@ -37,10 +37,10 @@ type TsStack struct {
 	TileStackName     string
 	TileStackVariable string
 	TileCategory      string
-	// inputName -> TsInputParameter
-	InputParameters   map[string]TsInputParameter
-	TsManifests       *TsManifests
-	EnvList map[string]string //caching all env
+	InputParameters map[string]TsInputParameter
+	TsManifests     *TsManifests
+	// Caching predefined & default ENV
+	PredefinedEnv   map[string]string
 
 }
 

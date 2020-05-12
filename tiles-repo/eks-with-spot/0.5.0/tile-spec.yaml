@@ -70,17 +70,17 @@ spec:
     - name: maxSizeASG
       inputType: String
       description: 'Maximum instances'
-      defaultValue: '4'
+      defaultValue: '6'
       require: false
     - name: minSizeASG
       inputType: String
       description: 'Minimun instances'
-      defaultValue: '2'
+      defaultValue: '3'
       require: false
     - name: desiredCapacityASG
       inputType: String
       description: 'Desired instances'
-      defaultValue: '2'
+      defaultValue: '3'
       require: false
     - name: cooldownASG
       inputType: String
@@ -96,13 +96,17 @@ spec:
   # Ouptputs represnt output value after launched, for 'ContainerApplication' might need leverage specific command to retrive output.
   outputs:
     # String
+    - name: regionOfCluster
+      outputType: String
+      description: AWS::Region
+    # String
     - name: clusterName
       outputType: String
       description: AWS::EKS::Cluster.Name
     # String
     - name: clusterArn
       outputType: String
-      description: AWS::EKS::Cluster.ARN          
+      description: AWS::IAM::Role.ARN          
     # String
     - name: clusterEndpoint
       outputType: String
@@ -111,7 +115,45 @@ spec:
     - name: masterRoleARN
       outputType: String
       description: AWS::IAM::Role.ARN
+    # String
+    - name: autoScalingGroupName
+      outputType: String
+      description: AWS::AutoScaling::AutoScalingGroup.Name
+    # String
+    - name: autoScalingGroupMaxSize
+      outputType: String
+      description: AWS::AutoScaling::AutoScalingGroup.MaxSize
+    # String
+    - name: autoScalingGroupMinSize
+      outputType: String
+      description: AWS::AutoScaling::AutoScalingGroup.MinSize
+    # String
+    - name: autoScalingGroupDesiredCapacity
+      outputType: String
+      description: AWS::AutoScaling::AutoScalingGroup
+    # String
+    - name: nodesRoleARN
+      outputType: String
+      description: AWS::IAM::Role.ARN
+    # String
+    - name: capacityInstance
+      outputType: String
+      description: AWS::Instance.Type
 
+  postRun:
+    stages:
+      - name: UpdateConfigMap
+        command: |
+          cd $TILE_HOME
+          VALUE=$(echo ${D_TBD_EKS_WITH_SPOT_MASTERROLEARN} | sed -e "s#/#\\\/#g")
+          sed -i -e 's/X_EKSClusterMasterRoleARN_X/'$VALUE'/g' lib/aws-auth-cm.yaml
+          VALUE=$(echo ${D_TBD_EKS_WITH_SPOT_NODESROLEARN} | sed -e "s#/#\\\/#g")
+          sed -i -e 's/X_NodeGroupRoleARN_X/'$VALUE'/g' lib/aws-auth-cm.yaml
+          aws eks update-kubeconfig --name $D_TBD_EKS_WITH_SPOT_CLUSTERNAME --region $D_TBD_EKS_WITH_SPOT_REGIONOFCLUSTER --role-arn $D_TBD_EKS_WITH_SPOT_MASTERROLEARN --kubeconfig $TILE_HOME/kube.config
+          export KUBECONFIG=$TILE_HOME/kube.config
+          kubectl apply -f lib/aws-auth-cm.yaml
+          
+ 
   # Notes are description list for addtional information.
   notes:
     - "Tag public subnets with 'kubernetes.io/role/elb=1'"
