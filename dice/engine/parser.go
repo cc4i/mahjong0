@@ -82,7 +82,7 @@ type DeploymentSpec struct {
 
 type DeploymentTemplate struct {
 	//Category string                     `json:"category" valid:"in(Network|Compute|ContainerProvider|Storage|Database|Application|ContainerApplication|Analysis|ML)"`
-	Tiles    []DeploymentTemplateDetail `json:"tiles"`
+	Tiles []DeploymentTemplateDetail `json:"tiles"`
 	// Order for execution plan
 	ForceOrder []string `json:"forceOrder"`
 }
@@ -129,7 +129,7 @@ type TileSpec struct {
 	Inputs       []TileInput      `json:"inputs"`
 	Manifests    TileManifest     `json:"manifests"`
 	Outputs      []TileOutput     `json:"outputs"`
-	PostRun PostRunDetail `json:"PostRun"`
+	PostRun      PostRunDetail    `json:"PostRun"`
 	Notes        []string         `json:"notes"`
 }
 

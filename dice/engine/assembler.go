@@ -34,30 +34,30 @@ var DiceConfig *utils.DiceConfig
 
 func init() {
 	// Must
-	workHome,ok := os.LookupEnv("M_WORK_HOME")
+	workHome, ok := os.LookupEnv("M_WORK_HOME")
 	if !ok {
 		log.Fatal("Failed to lookup M_WORK_HOME.")
 	}
 	// Must
-	mode,ok := os.LookupEnv("M_MODE")
+	mode, ok := os.LookupEnv("M_MODE")
 	if !ok {
 		// Using prod mode and pulling tiles from S3 repo.
 		log.Fatal("!!!Failed to lookup M_MODE and setup to 'prod' mode.!!!")
 		mode = "prod"
 	}
 	// Must when 'prod' mode
-	region,ok := os.LookupEnv("M_S3_BUCKET_REGION")
-	if !ok && mode=="prod" {
+	region, ok := os.LookupEnv("M_S3_BUCKET_REGION")
+	if !ok && mode == "prod" {
 		log.Fatal("Failed to lookup M_S3_BUCKET_REGION  on 'prod' mode.")
 	}
 	// Must when 'prod' mode
-	bucketName,ok := os.LookupEnv("M_S3_BUCKET")
-	if !ok && mode=="prod" {
+	bucketName, ok := os.LookupEnv("M_S3_BUCKET")
+	if !ok && mode == "prod" {
 		log.Fatal("Failed to lookup M_S3_BUCKET  on 'prod' mode.")
 	}
 	// Must when 'dev' mode
-	localRepo,ok := os.LookupEnv("M_LOCAL_TILE_REPO")
-	if !ok && mode=="dev" {
+	localRepo, ok := os.LookupEnv("M_LOCAL_TILE_REPO")
+	if !ok && mode == "dev" {
 		log.Fatal("Failed to lookup M_LOCAL_TILE_REPO on 'dev' mode.")
 	}
 
@@ -68,7 +68,7 @@ func init() {
 		Mode:       mode,
 		LocalRepo:  localRepo,
 	}
-	c,_ := yaml.Marshal(DiceConfig)
+	c, _ := yaml.Marshal(DiceConfig)
 	log.Printf("Loaded configuration: \n%s\n", c)
 }
 
@@ -108,7 +108,7 @@ func (d *Deployment) GenerateCdkApp(ctx context.Context, out *websocket.Conn) (*
 
 func (d *Deployment) PullTile(ctx context.Context, tile string, version string, out *websocket.Conn, aTs *Ts, override map[string]*TileInputOverride) error {
 
-	var rStack = "Stack"//+ctx.Value("d-sid").(string)[0:8]
+	var rStack = "Stack" //+ctx.Value("d-sid").(string)[0:8]
 
 	// 1. Loading Tile from s3 & unzip
 	tileSpecFile, err := DiceConfig.LoadTile(tile, version)
@@ -176,11 +176,11 @@ func (d *Deployment) PullTile(ctx context.Context, tile string, version string, 
 	////
 	// Step 4. Store import libs && avoid to add repeated one
 	newTsLib := TsLib{
-		TileName:     parsedTile.Metadata.Name,
-		TileVersion:  parsedTile.Metadata.Version,
-		TileConstructName: strings.ReplaceAll(parsedTile.Metadata.Name, "-",""),
-		TileFolder:   strings.ToLower(parsedTile.Metadata.Name),
-		TileCategory: parsedTile.Metadata.Category,
+		TileName:          parsedTile.Metadata.Name,
+		TileVersion:       parsedTile.Metadata.Version,
+		TileConstructName: strings.ReplaceAll(parsedTile.Metadata.Name, "-", ""),
+		TileFolder:        strings.ToLower(parsedTile.Metadata.Name),
+		TileCategory:      parsedTile.Metadata.Category,
 	}
 	if aTs.TsLibsMap == nil {
 		aTs.TsLibsMap = make(map[string]TsLib)
@@ -203,14 +203,14 @@ func (d *Deployment) PullTile(ctx context.Context, tile string, version string, 
 				if len(in.Dependencies) == 1 {
 					// single dependency
 					input.InputName = in.Name
-					stile := strings.ReplaceAll(strings.ToLower(dependenciesMap[in.Dependencies[0].Name]),"-","")
+					stile := strings.ReplaceAll(strings.ToLower(dependenciesMap[in.Dependencies[0].Name]), "-", "")
 					input.InputValue = stile + rStack + "var." + stile + "var." + in.Dependencies[0].Field
 				} else {
 					// multiple dependencies will be organized as an array
 					input.InputName = in.Name
 					v := "[ "
 					for _, d := range in.Dependencies {
-						stile := strings.ReplaceAll(strings.ToLower(dependenciesMap[d.Name]),"-","")
+						stile := strings.ReplaceAll(strings.ToLower(dependenciesMap[d.Name]), "-", "")
 						val := stile + rStack + "var." + stile + "var." + d.Field
 						v = v + val + ","
 					}
@@ -220,9 +220,9 @@ func (d *Deployment) PullTile(ctx context.Context, tile string, version string, 
 				// output value can be retrieved after execution: $D-TBD_TileName.Output-Name
 				// !!!Now support non-CDK tile can reference value from dependent Tile by injecting ENV!!!
 				input.InputName = in.Name
-				input.InputValue = strings.ToUpper("$D_TBD_"+
-					strings.ReplaceAll(parsedTile.Metadata.Name,"-","_")+
-					"_"+in.Dependencies[0].Field)
+				input.InputValue = strings.ToUpper("$D_TBD_" +
+					strings.ReplaceAll(parsedTile.Metadata.Name, "-", "_") +
+					"_" + in.Dependencies[0].Field)
 			}
 		} else {
 			// For independent value
@@ -279,7 +279,9 @@ func (d *Deployment) PullTile(ctx context.Context, tile string, version string, 
 				input.InputValue = or.OverrideValue
 			}
 		}
-		if in.Override.Name != "" { input.IsOverrideField = "yes" }
+		if in.Override.Name != "" {
+			input.IsOverrideField = "yes"
+		}
 		inputs[input.InputName] = input
 	}
 	////
@@ -339,10 +341,10 @@ func (d *Deployment) PullTile(ctx context.Context, tile string, version string, 
 	ts := &TsStack{
 		TileName:          parsedTile.Metadata.Name,
 		TileVersion:       parsedTile.Metadata.Version,
-		TileConstructName: strings.ReplaceAll(parsedTile.Metadata.Name, "-",""),
-		TileVariable:      strings.ReplaceAll(strings.ToLower(parsedTile.Metadata.Name),"-","") + "var",
-		TileStackName:     strings.ReplaceAll(parsedTile.Metadata.Name,"-","") + rStack,
-		TileStackVariable: strings.ReplaceAll(strings.ToLower(parsedTile.Metadata.Name),"-","") + rStack + "var",
+		TileConstructName: strings.ReplaceAll(parsedTile.Metadata.Name, "-", ""),
+		TileVariable:      strings.ReplaceAll(strings.ToLower(parsedTile.Metadata.Name), "-", "") + "var",
+		TileStackName:     strings.ReplaceAll(parsedTile.Metadata.Name, "-", "") + rStack,
+		TileStackVariable: strings.ReplaceAll(strings.ToLower(parsedTile.Metadata.Name), "-", "") + rStack + "var",
 		InputParameters:   inputs,
 		TileCategory:      parsedTile.Metadata.Category,
 		TsManifests:       tm,
@@ -425,7 +427,7 @@ func (d *Deployment) ApplyMainTs(ctx context.Context, out *websocket.Conn, aTs *
 	//}
 	if d.Spec.Template.ForceOrder != nil {
 		// forced order
-		for _,t := range d.Spec.Template.ForceOrder {
+		for _, t := range d.Spec.Template.ForceOrder {
 			aTs.TsLibs = append(aTs.TsLibs, aTs.TsLibsMap[t])
 			aTs.TsStacks = append(aTs.TsStacks, aTs.TsStacksMap[t])
 		}
@@ -486,12 +488,13 @@ func (d *Deployment) GenerateExecutePlan(ctx context.Context, out *websocket.Con
 			stage.Kind = CDK.SKString()
 		}
 		// Caching & injected work_home & tile_home
-		if ts.PredefinedEnv == nil { ts.PredefinedEnv = make(map[string]string) }
+		if ts.PredefinedEnv == nil {
+			ts.PredefinedEnv = make(map[string]string)
+		}
 		stage.InjectedEnv = append(stage.InjectedEnv, "export WORK_HOME="+DiceConfig.WorkHome+"/super")
-		ts.PredefinedEnv["WORK_HOME"]= DiceConfig.WorkHome+"/super"
+		ts.PredefinedEnv["WORK_HOME"] = DiceConfig.WorkHome + "/super"
 		stage.InjectedEnv = append(stage.InjectedEnv, "export TILE_HOME="+DiceConfig.WorkHome+"/super/lib/"+strings.ToLower(ts.TileName))
-		ts.PredefinedEnv["TILE_HOME"]= DiceConfig.WorkHome+"/super/lib/"+strings.ToLower(ts.TileName)
-
+		ts.PredefinedEnv["TILE_HOME"] = DiceConfig.WorkHome + "/super/lib/" + strings.ToLower(ts.TileName)
 
 		if ts.TileCategory == ContainerApplication.CString() || ts.TileCategory == Application.CString() {
 			// ContainerApplication & Application
@@ -499,10 +502,10 @@ func (d *Deployment) GenerateExecutePlan(ctx context.Context, out *websocket.Con
 			if ts.TsManifests.Namespace != "" && ts.TsManifests.Namespace != "default" {
 				stage.Preparation = append(stage.Preparation, "kubectl create ns "+ts.TsManifests.Namespace+" || true")
 				stage.InjectedEnv = append(stage.InjectedEnv, "export NAMESPACE="+ts.TsManifests.Namespace)
-				ts.PredefinedEnv["NAMESPACE"]=ts.TsManifests.Namespace
+				ts.PredefinedEnv["NAMESPACE"] = ts.TsManifests.Namespace
 			} else {
-				ts.TsManifests.Namespace="default"
-				ts.PredefinedEnv["NAMESPACE"]="default"
+				ts.TsManifests.Namespace = "default"
+				ts.PredefinedEnv["NAMESPACE"] = "default"
 			}
 
 			// Process different manifests
@@ -512,35 +515,35 @@ func (d *Deployment) GenerateExecutePlan(ctx context.Context, out *websocket.Con
 				for _, f := range ts.TsManifests.Files {
 					var cmd string
 					cmd = "kubectl apply -f ./lib/" + strings.ToLower(ts.TileName) + "/lib/" + f + " -n " + ts.TsManifests.Namespace
-					stage.Commands=append(stage.Commands, cmd)
+					stage.Commands = append(stage.Commands, cmd)
 				}
 			case Helm.MTString():
 				// TODO: not quite yet to support Helm
 				for _, f := range ts.TsManifests.Folders {
 					cmd := "helm install " + ts.TileName + " ./lib/" + strings.ToLower(ts.TileName) + "/lib/" + f + " -n " + ts.TsManifests.Namespace
-					stage.Commands=append(stage.Commands, cmd)
+					stage.Commands = append(stage.Commands, cmd)
 				}
 
 			case Kustomize.MTString():
 				// TODO: not quite yet to support Kustomize
 				for _, f := range ts.TsManifests.Folders {
 					cmd := "kustomize build -f ./lib/" + strings.ToLower(ts.TileName) + "/lib/" + f + "|kubectl -f - " + " -n " + ts.TsManifests.Namespace
-					stage.Commands=append(stage.Commands, cmd)
+					stage.Commands = append(stage.Commands, cmd)
 				}
 			}
 
 			// Commands & output values to output.log
 			fileName := DiceConfig.WorkHome + "/super/" + stage.Name + "-output.log"
 			//Sleep 5 seconds to waiting pod's ready
-			stage.Commands=append(stage.Commands, "sleep 10")
+			stage.Commands = append(stage.Commands, "sleep 10")
 			if tile, ok := aTs.AllTiles[ts.TileCategory+"-"+ts.TileName]; ok {
 				for _, o := range tile.Spec.Outputs {
 					if o.DefaultValueCommand != "" {
 						cmd := `echo "{\"` + o.Name + "=`" + o.DefaultValueCommand + "`" + `\"}" >>` + fileName
-						stage.Commands=append(stage.Commands, cmd)
+						stage.Commands = append(stage.Commands, cmd)
 					} else if o.DefaultValue != "" {
 						cmd := `echo "{\"` + o.Name + "=" + o.DefaultValue + `\"}" >>` + fileName
-						stage.Commands=append(stage.Commands, cmd)
+						stage.Commands = append(stage.Commands, cmd)
 					}
 				}
 			}
@@ -550,7 +553,7 @@ func (d *Deployment) GenerateExecutePlan(ctx context.Context, out *websocket.Con
 			stage.Preparation = append(stage.Preparation, "npm run build")
 			stage.Preparation = append(stage.Preparation, "cdk list")
 			cmd := "cdk deploy " + ts.TileStackName + " --require-approval never"
-			stage.Commands=append(stage.Commands, cmd)
+			stage.Commands = append(stage.Commands, cmd)
 		}
 
 		dSid := ctx.Value("d-sid").(string)
@@ -560,11 +563,11 @@ func (d *Deployment) GenerateExecutePlan(ctx context.Context, out *websocket.Con
 				for _, e := range tile.Spec.Global.Env {
 					if e.Value != "" {
 						stage.InjectedEnv = append(stage.InjectedEnv, fmt.Sprintf("export %s=%s", e.Name, e.Value))
-						ts.PredefinedEnv[e.Name]=e.Value
+						ts.PredefinedEnv[e.Name] = e.Value
 					} else if e.Value == "" && e.ValueRef != "" {
 						if v, ok := ts.InputParameters[e.ValueRef]; ok {
 							stage.InjectedEnv = append(stage.InjectedEnv, fmt.Sprintf("export %s=%s", e.Name, v))
-							ts.PredefinedEnv[e.Name]=v.InputValue
+							ts.PredefinedEnv[e.Name] = v.InputValue
 						}
 					}
 				}
@@ -579,7 +582,6 @@ func (d *Deployment) GenerateExecutePlan(ctx context.Context, out *websocket.Con
 				}
 			}
 		}
-
 
 		p.Plan.PushFront(&stage)
 		p.PlanMirror[ts.TileName] = &stage

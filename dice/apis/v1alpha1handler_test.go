@@ -11,6 +11,7 @@ import (
 )
 
 func TestPing(t *testing.T) {
+
 	tests := []struct {
 		name   string
 		input  string

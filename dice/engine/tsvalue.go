@@ -28,11 +28,11 @@ type Ts struct {
 }
 
 type TsLib struct {
-	TileName     string
-	TileVersion  string
+	TileName          string
+	TileVersion       string
 	TileConstructName string
-	TileFolder   string
-	TileCategory string
+	TileFolder        string
+	TileCategory      string
 }
 
 type TsStack struct {
@@ -43,16 +43,15 @@ type TsStack struct {
 	TileStackName     string
 	TileStackVariable string
 	TileCategory      string
-	InputParameters map[string]TsInputParameter
-	TsManifests     *TsManifests
+	InputParameters   map[string]TsInputParameter
+	TsManifests       *TsManifests
 	// Caching predefined & default ENV
-	PredefinedEnv   map[string]string
-
+	PredefinedEnv map[string]string
 }
 
 type TsInputParameter struct {
-	InputName  string
-	InputValue string
+	InputName       string
+	InputValue      string
 	IsOverrideField string
 }
 

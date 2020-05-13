@@ -33,10 +33,10 @@ type ExecutionStage struct {
 	// Name
 	Name string `json:"name"`
 	// Stage type
-	Kind          string            `json:"kind"`     //CDK/Command
-	WorkHome      string            `json:"workHome"` //root folder for execution
-	InjectedEnv	[]string `json:"injectedEnv"`
-	Preparation   []string          `json:"preparation"`
+	Kind        string   `json:"kind"`     //CDK/Command
+	WorkHome    string   `json:"workHome"` //root folder for execution
+	InjectedEnv []string `json:"injectedEnv"`
+	Preparation []string `json:"preparation"`
 	//Command       *list.List        `json:"command"`
 	Commands        []string `json:"commands"`
 	TileName        string   `json:"tileName"`
@@ -113,7 +113,7 @@ func (ep *ExecutionPlan) GenerateSummary(ctx context.Context, out *websocket.Con
 		}
 		SR(out, []byte("\n"))
 		for _, n := range ep.OriginDeployment.Spec.Summary.Notes {
-			SR(out, []byte(replaceByValue(n,at)+"\n"))
+			SR(out, []byte(replaceByValue(n, at)+"\n"))
 		}
 	}
 	SR(out, []byte("======================================================================="))
@@ -124,14 +124,14 @@ func (ep *ExecutionPlan) GenerateSummary(ctx context.Context, out *websocket.Con
 func replaceByValue(str string, at Ts) string {
 	for _, ts := range at.TsStacks {
 		//replace by env value
-		for k,v := range ts.PredefinedEnv {
-			str=strings.ReplaceAll(str, "$"+k, v)
+		for k, v := range ts.PredefinedEnv {
+			str = strings.ReplaceAll(str, "$"+k, v)
 
 		}
 		//replace by output value
 		if output, ok := at.AllOutputs[ts.TileName]; ok {
 			for k1, v1 := range output.TsOutputs {
-				str=strings.ReplaceAll(str, "$"+k1, v1.OutputValue)
+				str = strings.ReplaceAll(str, "$"+k1, v1.OutputValue)
 			}
 		}
 	}
@@ -261,7 +261,7 @@ echo $?
 				// Tile without dependency but input parameters
 				if stack, ok := at.TsStacksMap[stage.TileName]; ok {
 					category := stack.TileCategory
-					if t, ok := at.AllTiles[category + "-" + stage.TileName]; ok {
+					if t, ok := at.AllTiles[category+"-"+stage.TileName]; ok {
 						if t.Metadata.DependentOnVendorService == EKS.VSString() {
 							if s, ok := at.TsStacksMap[stage.TileName]; ok {
 								inputParameters, ok := s.InputParameters["clusterName"]
@@ -295,11 +295,11 @@ echo $?
 			if tile, ok := at.AllTiles[stack.TileCategory+"-"+stage.TileName]; ok {
 				for _, td := range tile.Spec.Dependencies {
 					if to, ok := at.AllOutputs[td.TileReference]; ok {
-						for k,v := range to.TsOutputs {
+						for k, v := range to.TsOutputs {
 							//$D-TBD_TileName.Output-Name
 							if v.OutputValue != "" {
 								stage.InjectedEnv = append(stage.InjectedEnv, fmt.Sprintf("export D_TBD_%s_%s=%s",
-									strings.ReplaceAll(strings.ToUpper(stage.TileName),"-","_"),
+									strings.ReplaceAll(strings.ToUpper(stage.TileName), "-", "_"),
 									strings.ToUpper(k),
 									v.OutputValue))
 							}
@@ -312,8 +312,6 @@ echo $?
 		}
 
 	}
-
-
 
 	tp := template.New("script")
 	tp, err := tp.Parse(tContent)
@@ -437,11 +435,11 @@ echo $?
 		if stack, ok := at.TsStacksMap[stage.TileName]; ok {
 			if tile, ok := at.AllTiles[stack.TileCategory+"-"+stage.TileName]; ok {
 				if to, ok := at.AllOutputs[tile.Metadata.Name]; ok {
-					for k,v := range to.TsOutputs {
+					for k, v := range to.TsOutputs {
 						//$D-TBD_TileName.Output-Name
 						if v.OutputValue != "" {
 							stage.InjectedEnv = append(stage.InjectedEnv, fmt.Sprintf("export D_TBD_%s_%s=%s",
-								strings.ReplaceAll(strings.ToUpper(stage.TileName),"-","_"),
+								strings.ReplaceAll(strings.ToUpper(stage.TileName), "-", "_"),
 								strings.ToUpper(k),
 								v.OutputValue))
 						}
@@ -450,7 +448,6 @@ echo $?
 			}
 		}
 	}
-
 
 	tp := template.New("script")
 	tp, err = tp.Parse(tContent)

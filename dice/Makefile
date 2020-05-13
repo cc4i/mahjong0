@@ -1,6 +1,6 @@
 
 # Image URL to use all building/pushing
-IMG ?= dice:latest
+DOCKER_IMAGE ?= herochinese/dice:latest
 # Docker Hub username / password
 DOCKER_PASS =
 DOCKER_USER =
@@ -8,7 +8,7 @@ DOCKER_USER =
 all: manager
 
 test: fmt vet
-	go test ./... -v -cover
+	M_WORK_HOME=./ M_MODE=dev M_LOCAL_TILE_REPO=./repo go test ./... -v -cover
 
 # Build manager binary
 manager: fmt vet
@@ -30,7 +30,9 @@ vet:
 
 # Build the docker image
 docker-build: test
-	docker build . -t ${IMG}
+	docker build \
+		--build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
+		-t ${DOCKER_IMAGE} .
 
 # Push the docker image
 docker-push:

@@ -9,7 +9,6 @@ import (
 	"strings"
 )
 
-
 type s3Functions interface {
 	LoadTile(tile string, version string) (string, error)
 	LoadTileDev(tile string, version string) (string, error)
@@ -22,7 +21,7 @@ type HttpClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
-var Client  HttpClient
+var Client HttpClient
 
 func (s3 *DiceConfig) LoadTile(tile string, version string) (string, error) {
 	if s3.Mode == "dev" {
@@ -49,7 +48,9 @@ func (s3 *DiceConfig) LoadTileS3(tile string, version string) (string, error) {
 		strings.ToLower(tile),
 		version,
 		strings.ToLower(tile))
-	if Client == nil { initHttpClient() }
+	if Client == nil {
+		initHttpClient()
+	}
 	destDir := s3.WorkHome + "/super/lib/" + strings.ToLower(tile)
 	tileSpecFile := destDir + "/tile-spec.yaml"
 
@@ -99,7 +100,9 @@ func (s3 *DiceConfig) LoadSuperS3() (string, error) {
 		s3.Region,
 		"super",
 		"super")
-	if Client == nil { initHttpClient() }
+	if Client == nil {
+		initHttpClient()
+	}
 	destDir := s3.WorkHome + "/super"
 
 	req, err := http.NewRequest(http.MethodGet, tileUrl, nil)
