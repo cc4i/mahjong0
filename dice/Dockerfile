@@ -17,34 +17,34 @@ RUN go get -d -v
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o /go/bin/dice
 
 
-#STEP 2 prepare awscli2
-FROM alpine:3.11 as awscli2installer
-
-ENV GLIBC_VER=2.31-r0
-
-# install glibc compatibility for alpine
-RUN apk --no-cache add \
-        binutils \
-        curl \
-        bash \
-    && curl -sL https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub -o /etc/apk/keys/sgerrand.rsa.pub \
-    && curl -sLO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VER}/glibc-${GLIBC_VER}.apk \
-    && curl -sLO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VER}/glibc-bin-${GLIBC_VER}.apk \
-    && apk add --no-cache \
-        glibc-${GLIBC_VER}.apk \
-        glibc-bin-${GLIBC_VER}.apk \
-    && curl -sL https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscliv2.zip \
-    && unzip awscliv2.zip \
-    && aws/install \
-    && rm -rf \
-        awscliv2.zip \
-        aws \
-        /usr/local/aws-cli/v2/*/dist/aws_completer \
-        /usr/local/aws-cli/v2/*/dist/awscli/data/ac.index \
-        /usr/local/aws-cli/v2/*/dist/awscli/examples \
-    && rm glibc-${GLIBC_VER}.apk \
-    && rm glibc-bin-${GLIBC_VER}.apk \
-    && rm -rf /var/cache/apk/*
+##STEP 2 prepare awscli2
+#FROM alpine:3.11 as awscli2installer
+#
+#ENV GLIBC_VER=2.31-r0
+#
+## install glibc compatibility for alpine
+#RUN apk --no-cache add \
+#        binutils \
+#        curl \
+#        bash \
+#    && curl -sL https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub -o /etc/apk/keys/sgerrand.rsa.pub \
+#    && curl -sLO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VER}/glibc-${GLIBC_VER}.apk \
+#    && curl -sLO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VER}/glibc-bin-${GLIBC_VER}.apk \
+#    && apk add --no-cache \
+#        glibc-${GLIBC_VER}.apk \
+#        glibc-bin-${GLIBC_VER}.apk \
+#    && curl -sL https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscliv2.zip \
+#    && unzip awscliv2.zip \
+#    && aws/install \
+#    && rm -rf \
+#        awscliv2.zip \
+#        aws \
+#        /usr/local/aws-cli/v2/*/dist/aws_completer \
+#        /usr/local/aws-cli/v2/*/dist/awscli/data/ac.index \
+#        /usr/local/aws-cli/v2/*/dist/awscli/examples \
+#    && rm glibc-${GLIBC_VER}.apk \
+#    && rm glibc-bin-${GLIBC_VER}.apk \
+#    && rm -rf /var/cache/apk/*
 
 
 # STEP 3 build package
@@ -81,15 +81,15 @@ RUN apk add --no-cache ca-certificates \
     && apk add --no-cache \
         glibc-${GLIBC_VER}.apk \
         glibc-bin-${GLIBC_VER}.apk \
-#    && curl -sL https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscliv2.zip \
-#    && unzip awscliv2.zip \
-#    && aws/install \
-#    && rm -rf \
-#        awscliv2.zip \
-#        aws \
-#        /usr/local/aws-cli/v2/*/dist/aws_completer \
-#        /usr/local/aws-cli/v2/*/dist/awscli/data/ac.index \
-#        /usr/local/aws-cli/v2/*/dist/awscli/examples \
+    && curl -sL https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscliv2.zip \
+    && unzip awscliv2.zip \
+    && aws/install \
+    && rm -rf \
+        awscliv2.zip \
+        aws \
+        /usr/local/aws-cli/v2/*/dist/aws_completer \
+        /usr/local/aws-cli/v2/*/dist/awscli/data/ac.index \
+        /usr/local/aws-cli/v2/*/dist/awscli/examples \
     && npm i -g aws-cdk \
     && rm glibc-${GLIBC_VER}.apk \
     && rm glibc-bin-${GLIBC_VER}.apk \
@@ -98,8 +98,8 @@ RUN apk add --no-cache ca-certificates \
     && rm -rf /root/.npm
 # Copy dice
 COPY --from=dicebuilder /go/bin/dice /usr/local/bin/dice
-COPY --from=awscli2installer /usr/local/aws-cli/ /usr/local/aws-cli/
-COPY --from=awscli2installer /usr/local/bin/ /usr/local/bin/
+#COPY --from=awscli2installer /usr/local/aws-cli/ /usr/local/aws-cli/
+#COPY --from=awscli2installer /usr/local/bin/ /usr/local/bin/
 
 WORKDIR /workspace
 
