@@ -34,7 +34,7 @@ vet:
 #	go run github.com/99designs/gqlgen generate ./...
 
 # Build the docker image
-docker-build: test
+docker-build:
 	docker build \
 		--build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
 		-t ${DOCKER_IMAGE}:${DOCKER_TAG} .

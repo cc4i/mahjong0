@@ -30,7 +30,7 @@ vet:
 #	go run github.com/99designs/gqlgen generate ./...
 
 # Build the docker image
-docker-build: test
+docker-build:
 	docker build . -t ${IMG}
 
 # Push the docker image
