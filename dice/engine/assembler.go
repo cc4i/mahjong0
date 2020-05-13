@@ -6,11 +6,13 @@ import (
 	"dice/utils"
 	"fmt"
 	"github.com/gorilla/websocket"
-	"gopkg.in/yaml.v2"
+	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
+	"sigs.k8s.io/yaml"
 	"strings"
 	"text/template"
+	"time"
 )
 
 // AssemblerCore represents a group of functions to assemble CDK App.
@@ -28,17 +30,46 @@ type AssemblerCore interface {
 	GenerateExecutePlan(ctx context.Context, out *websocket.Conn, aTs *Ts) (*ExecutionPlan, error)
 }
 
-var s3Config *utils.S3Config
+var DiceConfig *utils.DiceConfig
 
 func init() {
-	// TODO: load from config
-	s3Config = &utils.S3Config{
-		WorkHome:   "/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace",
-		Region:     "ap-southeast-1",
-		BucketName: "cc-mahjong-0",
-		Mode:       "dev",
-		LocalRepo:  "/Users/chuancc/mywork/mylabs/csdc/mahjong-0/tiles-repo",
+	// Must
+	workHome,ok := os.LookupEnv("M_WORK_HOME")
+	if !ok {
+		log.Fatal("Failed to lookup M_WORK_HOME.")
 	}
+	// Must
+	mode,ok := os.LookupEnv("M_MODE")
+	if !ok {
+		// Using prod mode and pulling tiles from S3 repo.
+		log.Fatal("!!!Failed to lookup M_MODE and setup to 'prod' mode.!!!")
+		mode = "prod"
+	}
+	// Must when 'prod' mode
+	region,ok := os.LookupEnv("M_S3_BUCKET_REGION")
+	if !ok && mode=="prod" {
+		log.Fatal("Failed to lookup M_S3_BUCKET_REGION  on 'prod' mode.")
+	}
+	// Must when 'prod' mode
+	bucketName,ok := os.LookupEnv("M_S3_BUCKET")
+	if !ok && mode=="prod" {
+		log.Fatal("Failed to lookup M_S3_BUCKET  on 'prod' mode.")
+	}
+	// Must when 'dev' mode
+	localRepo,ok := os.LookupEnv("M_LOCAL_TILE_REPO")
+	if !ok && mode=="dev" {
+		log.Fatal("Failed to lookup M_LOCAL_TILE_REPO on 'dev' mode.")
+	}
+
+	DiceConfig = &utils.DiceConfig{
+		WorkHome:   workHome,
+		Region:     region,
+		BucketName: bucketName,
+		Mode:       mode,
+		LocalRepo:  localRepo,
+	}
+	c,_ := yaml.Marshal(DiceConfig)
+	log.Printf("Loaded configuration: \n%s\n", c)
 }
 
 // GenerateCdkApp return path where the base CDK App was generated.
@@ -46,11 +77,11 @@ func (d *Deployment) GenerateCdkApp(ctx context.Context, out *websocket.Conn) (*
 
 	// 1. Loading Super from s3 & unzip
 	// 2. Loading Tiles from s3 & unzip
-	var aTs = &Ts{}
+	var aTs = &Ts{CreatedTime: time.Now()}
 	var override = make(map[string]*TileInputOverride) //TileName->TileInputOverride
 	var ep *ExecutionPlan
 	SR(out, []byte("Loading Super ... from RePO."))
-	_, err := s3Config.LoadSuper()
+	_, err := DiceConfig.LoadSuper()
 	if err != nil {
 		return ep, err
 	}
@@ -80,7 +111,7 @@ func (d *Deployment) PullTile(ctx context.Context, tile string, version string, 
 	var rStack = "Stack"//+ctx.Value("d-sid").(string)[0:8]
 
 	// 1. Loading Tile from s3 & unzip
-	tileSpecFile, err := s3Config.LoadTile(tile, version)
+	tileSpecFile, err := DiceConfig.LoadTile(tile, version)
 	if err != nil {
 		SRf(out, "Failed to pulling Tile < %s - %s > ... from RePO\n", tile, version)
 	} else {
@@ -376,7 +407,7 @@ func (d *Deployment) PullTile(ctx context.Context, tile string, version string, 
 
 // ApplyMainTs apply values with super.ts template
 func (d *Deployment) ApplyMainTs(ctx context.Context, out *websocket.Conn, aTs *Ts) error {
-	superts := s3Config.WorkHome + "/super/bin/super.ts"
+	superts := DiceConfig.WorkHome + "/super/bin/super.ts"
 	SR(out, []byte("Generating main.ts for Super ..."))
 
 	tp, _ := template.ParseFiles(superts)
@@ -439,7 +470,7 @@ func (d *Deployment) GenerateExecutePlan(ctx context.Context, out *websocket.Con
 		OriginDeployment: d,
 	}
 	for _, ts := range aTs.TsStacks {
-		workHome := s3Config.WorkHome + "/super"
+		workHome := DiceConfig.WorkHome + "/super"
 		stage := ExecutionStage{
 			Name:        ts.TileName,
 			Kind:        ts.TileCategory,
@@ -456,10 +487,10 @@ func (d *Deployment) GenerateExecutePlan(ctx context.Context, out *websocket.Con
 		}
 		// Caching & injected work_home & tile_home
 		if ts.PredefinedEnv == nil { ts.PredefinedEnv = make(map[string]string) }
-		stage.InjectedEnv = append(stage.InjectedEnv, "export WORK_HOME="+s3Config.WorkHome+"/super")
-		ts.PredefinedEnv["WORK_HOME"]=s3Config.WorkHome+"/super"
-		stage.InjectedEnv = append(stage.InjectedEnv, "export TILE_HOME="+s3Config.WorkHome+"/super/lib/"+strings.ToLower(ts.TileName))
-		ts.PredefinedEnv["TILE_HOME"]=s3Config.WorkHome+"/super/lib/"+strings.ToLower(ts.TileName)
+		stage.InjectedEnv = append(stage.InjectedEnv, "export WORK_HOME="+DiceConfig.WorkHome+"/super")
+		ts.PredefinedEnv["WORK_HOME"]= DiceConfig.WorkHome+"/super"
+		stage.InjectedEnv = append(stage.InjectedEnv, "export TILE_HOME="+DiceConfig.WorkHome+"/super/lib/"+strings.ToLower(ts.TileName))
+		ts.PredefinedEnv["TILE_HOME"]= DiceConfig.WorkHome+"/super/lib/"+strings.ToLower(ts.TileName)
 
 
 		if ts.TileCategory == ContainerApplication.CString() || ts.TileCategory == Application.CString() {
@@ -499,7 +530,7 @@ func (d *Deployment) GenerateExecutePlan(ctx context.Context, out *websocket.Con
 			}
 
 			// Commands & output values to output.log
-			fileName := s3Config.WorkHome + "/super/" + stage.Name + "-output.log"
+			fileName := DiceConfig.WorkHome + "/super/" + stage.Name + "-output.log"
 			//Sleep 5 seconds to waiting pod's ready
 			stage.Commands=append(stage.Commands, "sleep 10")
 			if tile, ok := aTs.AllTiles[ts.TileCategory+"-"+ts.TileName]; ok {

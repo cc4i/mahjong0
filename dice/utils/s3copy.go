@@ -9,13 +9,6 @@ import (
 	"strings"
 )
 
-type S3Config struct {
-	WorkHome   string
-	Region     string
-	BucketName string
-	Mode       string // mode for develop purpose: dev/prod
-	LocalRepo  string // folder to store Tiles on 'dev' mode
-}
 
 type s3Functions interface {
 	LoadTile(tile string, version string) (string, error)
@@ -31,7 +24,7 @@ type HttpClient interface {
 
 var Client  HttpClient
 
-func (s3 *S3Config) LoadTile(tile string, version string) (string, error) {
+func (s3 *DiceConfig) LoadTile(tile string, version string) (string, error) {
 	if s3.Mode == "dev" {
 		return s3.LoadTileDev(tile, version)
 	} else {
@@ -48,7 +41,7 @@ func initHttpClient() {
 
 }
 
-func (s3 *S3Config) LoadTileS3(tile string, version string) (string, error) {
+func (s3 *DiceConfig) LoadTileS3(tile string, version string) (string, error) {
 	//https://<bucket-name>.s3-<region>.amazonaws.com/tiles-repo/<tile name>/<tile version>/<tile name>.tgz
 	tileUrl := fmt.Sprintf("https://%s.s3-%s.amazonaws.com/tiles-repo/%s/%s/%s.tgz",
 		s3.BucketName,
@@ -71,7 +64,7 @@ func (s3 *S3Config) LoadTileS3(tile string, version string) (string, error) {
 
 }
 
-func (s3 *S3Config) LoadTileDev(tile string, version string) (string, error) {
+func (s3 *DiceConfig) LoadTileDev(tile string, version string) (string, error) {
 
 	repoDir := s3.LocalRepo
 	srcDir := repoDir + "/" + strings.ToLower(tile) + "/" + strings.ToLower(version)
@@ -91,7 +84,7 @@ func (s3 *S3Config) LoadTileDev(tile string, version string) (string, error) {
 
 }
 
-func (s3 *S3Config) LoadSuper() (string, error) {
+func (s3 *DiceConfig) LoadSuper() (string, error) {
 	if s3.Mode == "dev" {
 		return s3.LoadSuperDev()
 	} else {
@@ -99,7 +92,7 @@ func (s3 *S3Config) LoadSuper() (string, error) {
 	}
 }
 
-func (s3 *S3Config) LoadSuperS3() (string, error) {
+func (s3 *DiceConfig) LoadSuperS3() (string, error) {
 	//https://<bucket-name>.s3-<region>.amazonaws.com/tiles-repo/<tile name>/<tile version>/<tile name>.tgz
 	tileUrl := fmt.Sprintf("https://%s.s3-%s.amazonaws.com/tiles-repo/%s/%s.tgz",
 		s3.BucketName,
@@ -120,7 +113,7 @@ func (s3 *S3Config) LoadSuperS3() (string, error) {
 
 }
 
-func (s3 *S3Config) LoadSuperDev() (string, error) {
+func (s3 *DiceConfig) LoadSuperDev() (string, error) {
 	repoDir := s3.LocalRepo + "/super"
 	destDir := s3.WorkHome + "/super"
 	return destDir, Copy(repoDir, destDir)

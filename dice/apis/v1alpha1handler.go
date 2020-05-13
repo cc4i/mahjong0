@@ -68,7 +68,9 @@ func WsCloseHandler(cancel context.CancelFunc, code int, txt string) error {
 }
 
 func (wb *WsBox) Processor(ctx context.Context, messageType int, p []byte, dryRun bool) error {
-	ctx = context.WithValue(ctx, "d-sid", uuid.New().String())
+	sid := uuid.New().String()
+	ctx = context.WithValue(ctx, "d-sid", sid)
+	engine.SRf(wb.out, "Created a new session & d-sid = %s", sid)
 	var ep *engine.ExecutionPlan
 	//
 	// 1. parse yaml +

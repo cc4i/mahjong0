@@ -80,7 +80,7 @@ func (ep *ExecutionPlan) ExecutePlan(ctx context.Context, dryRun bool, out *webs
 			if err := ep.CommandExecutor(ctx, stage, []byte(cmd), out); err != nil {
 				return err
 			}
-			buf, err := ioutil.ReadFile(s3Config.WorkHome + "/super/" + stage.Name + "-output.log")
+			buf, err := ioutil.ReadFile(DiceConfig.WorkHome + "/super/" + stage.Name + "-output.log")
 			if err != nil {
 				return err
 			}
@@ -156,7 +156,7 @@ func (ep *ExecutionPlan) CommandExecutor(ctx context.Context, stage *ExecutionSt
 	if stage != nil {
 		SR(out, []byte("Initializing stage log file ..."))
 		stageLog = log.New()
-		fileName := s3Config.WorkHome + "/super/" + stage.Name + "-output.log"
+		fileName := DiceConfig.WorkHome + "/super/" + stage.Name + "-output.log"
 		logFile, err := os.OpenFile(fileName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 		if err != nil {
 			SRf(out, "Failed to save stage log, using default stderr, %s\n", err)
@@ -284,8 +284,8 @@ echo $?
 					fmt.Sprintf("aws eks update-kubeconfig --name %s --role-arn %s --kubeconfig %s\nexport KUBECONFIG=%s",
 						clusterName,
 						masterRoleARN,
-						s3Config.WorkHome+"/super/kube.config",
-						s3Config.WorkHome+"/super/kube.config",
+						DiceConfig.WorkHome+"/super/kube.config",
+						DiceConfig.WorkHome+"/super/kube.config",
 					))
 				tContent = tContent4K8s
 			}

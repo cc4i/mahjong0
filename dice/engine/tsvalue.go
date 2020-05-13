@@ -1,6 +1,9 @@
 package engine
 
-import "container/list"
+import (
+	"container/list"
+	"time"
+)
 
 // Ts is key struct to fulfil super.ts template and key element to generate execution plan.
 type Ts struct {
@@ -19,6 +22,9 @@ type Ts struct {
 	AllTiles map[string]Tile
 	// AllOutputs :  TileName -> TsOutput
 	AllOutputs map[string]*TsOutput
+
+	// Created time
+	CreatedTime time.Time
 }
 
 type TsLib struct {

@@ -158,4 +158,9 @@ spec:
   notes:
     - "Tag public subnets with 'kubernetes.io/role/elb=1'"
     - "Tag priavte subnets with 'kubernetes.io/role/internal-elb=1'"
+    - |
+      TODO for next relaese : 
+        1. install CSI driver for EBS/EFS
+        2. install spot instance handler
+        3. install Cluster autoscaler
 
