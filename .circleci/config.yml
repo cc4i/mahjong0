@@ -53,6 +53,34 @@ jobs:
             cd /go/src/github.com/cc4i/mahjong0/mctl
             make all
 
+  re-mctl:
+    docker:
+      # specify the version
+      - image: circleci/golang:1.14.1
+
+    working_directory: /go/src/github.com/cc4i/mahjong0
+    steps:
+      - checkout
+      - run: go get -u github.com/mitchellh/gox
+      - run: go get -u github.com/tcnksm/ghr
+      - run: go get -u github.com/stevenmatthewt/semantics
+
+      # specify any bash command here prefixed with `run: `
+      - add_ssh_keys
+      - run: 
+          name: building & release
+          command: |
+            which go
+            echo $PATH
+            cd /go/src/github.com/cc4i/mahjong0/mctl
+            make all
+            tag=$(semantics --output-tag)
+            if [ "$tag" ]; then
+              ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME --replace $tag dist/
+            else
+              echo "The commit message(s) did not indicate a major/minor/patch version."
+            fi
+
 workflows:
   version: 2
   build-workflow:
