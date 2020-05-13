@@ -52,8 +52,7 @@ jobs:
             echo $PATH
             cd /go/src/github.com/cc4i/mahjong0/mctl
             make all
-            
-  
+
 workflows:
   version: 2
   build-workflow:
