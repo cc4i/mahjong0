@@ -1,9 +1,8 @@
 
 # Image URL to use all building/pushing
 IMG ?= mctl:latest
-# Docker Hub username / password
-DOCKER_PASS =
-DOCKER_USER =
+GOX ?= $(shell go env GOPATH)/bin/gox
+
 
 all: manager
 
@@ -12,8 +11,9 @@ test: fmt vet
 
 # Build manager binary
 manager: fmt vet
-	go build -o mctl main.go
-	go build -o m main.go
+	GO111MODULE=off go get github.com/mitchellh/gox
+	${GOX} -osarch=linux/386 -osarch=linux/amd64 -osarch=darwin/386 -osarch=darwin/amd64 -osarch=windows/amd64 -output=dist/mctl_{{.OS}}_{{.Arch}}
+	cd dist/ && gzip *
 
 run: fmt vet
 	go run ./main.go
@@ -35,6 +35,6 @@ docker-build: test
 
 # Push the docker image
 docker-push:
-	echo $DOCKER_PASS | docker login --username $DOCKER_USER --password-stdin
+	#echo $DOCKER_PASS | docker login --username $DOCKER_USER --password-stdin
 	docker push ${IMG}
 

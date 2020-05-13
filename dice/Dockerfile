@@ -90,11 +90,12 @@ RUN apk add --no-cache ca-certificates \
 #        /usr/local/aws-cli/v2/*/dist/aws_completer \
 #        /usr/local/aws-cli/v2/*/dist/awscli/data/ac.index \
 #        /usr/local/aws-cli/v2/*/dist/awscli/examples \
+    && npm i -g aws-cdk \
     && rm glibc-${GLIBC_VER}.apk \
     && rm glibc-bin-${GLIBC_VER}.apk \
     && rm -rf /var/cache/apk/* \
-    && npm i -g aws-cdk
-
+    && rm -rf /root/.config \
+    && rm -rf /root/.npm
 # Copy dice
 COPY --from=dicebuilder /go/bin/dice /usr/local/bin/dice
 COPY --from=awscli2installer /usr/local/aws-cli/ /usr/local/aws-cli/
