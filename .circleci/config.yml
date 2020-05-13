@@ -35,25 +35,8 @@ jobs:
             make docker-build
             make docker-push
 
+
   build-mctl:
-    docker:
-      # specify the version
-      - image: circleci/golang:1.14.1
-
-    working_directory: /go/src/github.com/cc4i/mahjong0
-    steps:
-      - checkout
-
-      # specify any bash command here prefixed with `run: `
-      - run: 
-          name: building & package
-          command: |
-            which go
-            echo $PATH
-            cd /go/src/github.com/cc4i/mahjong0/mctl
-            make all
-
-  re-mctl:
     docker:
       # specify the version
       - image: circleci/golang:1.14.1
