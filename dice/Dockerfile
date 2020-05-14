@@ -1,3 +1,5 @@
+# Dice
+#
 # Step 1 prepare dice
 FROM golang:alpine as dicebuilder
 
@@ -9,45 +11,15 @@ RUN apk update && apk add git
 COPY . $GOPATH/src/mypackage/myapp/
 WORKDIR $GOPATH/src/mypackage/myapp/
 
-#get dependancies
-#you can also use dep
+# Get dependancies
 RUN go get -d -v
 
-#build the binary
+# Building the binary
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o /go/bin/dice
 
 
-##STEP 2 prepare awscli2
-#FROM alpine:3.11 as awscli2installer
-#
-#ENV GLIBC_VER=2.31-r0
-#
-## install glibc compatibility for alpine
-#RUN apk --no-cache add \
-#        binutils \
-#        curl \
-#        bash \
-#    && curl -sL https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub -o /etc/apk/keys/sgerrand.rsa.pub \
-#    && curl -sLO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VER}/glibc-${GLIBC_VER}.apk \
-#    && curl -sLO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VER}/glibc-bin-${GLIBC_VER}.apk \
-#    && apk add --no-cache \
-#        glibc-${GLIBC_VER}.apk \
-#        glibc-bin-${GLIBC_VER}.apk \
-#    && curl -sL https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscliv2.zip \
-#    && unzip awscliv2.zip \
-#    && aws/install \
-#    && rm -rf \
-#        awscliv2.zip \
-#        aws \
-#        /usr/local/aws-cli/v2/*/dist/aws_completer \
-#        /usr/local/aws-cli/v2/*/dist/awscli/data/ac.index \
-#        /usr/local/aws-cli/v2/*/dist/awscli/examples \
-#    && rm glibc-${GLIBC_VER}.apk \
-#    && rm glibc-bin-${GLIBC_VER}.apk \
-#    && rm -rf /var/cache/apk/*
 
-
-# STEP 3 build package
+# STEP 2 build release package
 FROM alpine:3.11
 
 ARG BUILD_DATE
@@ -56,11 +28,18 @@ LABEL org.label-schema.name="dice-all-in-one" \
       org.label-schema.git="https://github.com/cc4i/mahjong0.git" \
       org.label-schema.build-date=$BUILD_DATE
 
-
+# For installed packages
 ENV KUBE_LATEST_VERSION="v1.16.9"
 ENV AWS_IAM_AUTHENTICATOR="0.5.0"
 ENV HELM_VERSION="v3.2.1"
-ENV GLIBC_VER=2.31-r0
+ENV GLIBC_VER="2.31-r0"
+
+# For Dice
+ENV M_WORK_HOME="/workspace"
+ENV M_MODE="prod"
+ENV M_S3_BUCKET_REGION="ap-southeast-1"
+ENV M_S3_BUCKET="cc-mahjong-0"
+ENV M_LOCAL_TILE_REPO="/workspace/tiles-repo"
 
 RUN apk add --no-cache ca-certificates \
         bash \
@@ -95,12 +74,31 @@ RUN apk add --no-cache ca-certificates \
     && rm glibc-bin-${GLIBC_VER}.apk \
     && rm -rf /var/cache/apk/* \
     && rm -rf /root/.config \
-    && rm -rf /root/.npm
-# Copy dice
+    && rm -rf /root/.npm \
+    && echo export M_WORK_HOME=${M_WORK_HOME} >>/root/env \
+    && echo export M_MODE=${M_MODE} >>/root/env \
+    && echo export M_S3_BUCKET_REGION=${M_S3_BUCKET_REGION} >>/root/env \
+    && echo export M_S3_BUCKET=${M_S3_BUCKET} >>/root/env \
+    && echo export M_LOCAL_TILE_REPO=${M_LOCAL_TILE_REPO} >>/root/env
+
+# Copy dice from Step 1
 COPY --from=dicebuilder /go/bin/dice /usr/local/bin/dice
-#COPY --from=awscli2installer /usr/local/aws-cli/ /usr/local/aws-cli/
-#COPY --from=awscli2installer /usr/local/bin/ /usr/local/bin/
 
 WORKDIR /workspace
 
-CMD bash
+EXPOSE 9090
+ENTRYPOINT ["/usr/local/bin/dice"]
+CMD ["-c"]
+
+# Caommands example:
+#    docker run -it -v ~/mywork/mylabs/csdc/mahjong-0/tiles-repo:/workspace/tiles-repo \
+#        -v ~/.aws:/root/.aws \
+#        -e M_MODE=dev \
+#        herochinese/dice
+#
+#    docker run -it -v ~/mywork/mylabs/csdc/mahjong-0/tiles-repo:/workspace/tiles-repo \
+#        -v ~/.aws:/root/.aws \
+#        -e M_MODE=prod
+#        -e M_S3_BUCKET_REGION=ap-southeast-1
+#        -e M_S3_BUCKET=cc-mahjong-0
+#        herochinese/dice

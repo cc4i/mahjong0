@@ -38,9 +38,11 @@ docker-build:
 	docker build \
 		--build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
 		-t ${DOCKER_IMAGE}:${DOCKER_TAG} .
+	docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest
 
 # Push the docker image
 docker-push:
 	#echo $DOCKER_PASS | docker login --username $DOCKER_USER --password-stdin
 	docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
+	docker push ${DOCKER_IMAGE}:latest
 

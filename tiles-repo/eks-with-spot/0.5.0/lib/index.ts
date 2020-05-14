@@ -9,17 +9,17 @@ import { EksNodesSpot } from './spot'
 
 /** Input parameters */
 export interface EksSpotProps {
-  vpc: ec2.Vpc,
-  vpcSubnets?: ec2.ISubnet[],
-  clusterName: string,
-  clusterVersion?: string,
-  keyPair4EC2: string,
-  capacityInstance?: string[],
-  maxSizeASG?: string,
-  minSizeASG?: string,
-  desiredCapacityASG?: string,
-  cooldownASG?: string,
-  onDemandPercentage?: number,
+  vpc: ec2.Vpc;
+  vpcSubnets?: ec2.ISubnet[];
+  clusterName: string;
+  clusterVersion?: string;
+  keyPair4EC2: string;
+  capacityInstance?: string[];
+  maxSizeASG?: string;
+  minSizeASG?: string;
+  desiredCapacityASG?: string;
+  cooldownASG?: string;
+  onDemandPercentage?: number;
   
 }
 

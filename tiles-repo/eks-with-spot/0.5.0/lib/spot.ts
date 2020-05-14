@@ -6,21 +6,21 @@ import iam = require('@aws-cdk/aws-iam');
 
 
 export interface EksNodesProps {
-    clusterName: string,
-    clusterVersion: string,
-    vpc: ec2.Vpc,
-    publicSubnetId1: string,
-    publicSubnetId2: string,
-    privateSubnetId1: string,
-    privateSubnetId2: string,
-    capacityInstance?: string[],
-    capacity?: number,
-    keyPair4EC2: string,
-    maxSizeASG: string,
-    minSizeASG: string,
-    desiredCapacityASG: string,
-    cooldownASG: string,
-    onDemandPercentage: number,
+    clusterName: string;
+    clusterVersion: string;
+    vpc: ec2.Vpc;
+    publicSubnetId1: string;
+    publicSubnetId2: string;
+    privateSubnetId1: string;
+    privateSubnetId2: string;
+    capacityInstance?: string[];
+    capacity?: number;
+    keyPair4EC2: string;
+    maxSizeASG: string;
+    minSizeASG: string;
+    desiredCapacityASG: string;
+    cooldownASG: string;
+    onDemandPercentage: number;
 }
 
 export class EksNodesSpot extends cdk.Construct {
