@@ -2,13 +2,14 @@ package apis
 
 import (
 	"context"
-	"dice/engine"
+	"dice/utils"
+	"fmt"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"sigs.k8s.io/yaml"
+	"runtime"
 )
 
 func Router(ctx context.Context) *gin.Engine {
@@ -31,17 +32,11 @@ func Router(ctx context.Context) *gin.Engine {
 		WsHandler(ctx, c)
 	})
 
-	r.GET("/v1alpha1/template/tile", func(c *gin.Context) {
-		//TODO
-		// 1. CDK style/ Application style
-		// 2. Added tile-spec.yaml
-		c.String(http.StatusOK, "building...")
+	// Return url of basic templates as per request
+	r.GET("/v1alpha1/template/:name", func(c *gin.Context) {
+		RetrieveTemplate(ctx, c)
 	})
-	r.GET("/v1alpha1/template/deployment", func(c *gin.Context) {
-		//TODO
-		// 1. generate a deployment-spec
-		c.String(http.StatusOK, "building...")
-	})
+
 
 	// Validate Tile specification
 	r.POST("/v1alpha1/tile", func(c *gin.Context) {
@@ -53,18 +48,20 @@ func Router(ctx context.Context) *gin.Engine {
 		Deployment(ctx, c)
 	})
 
-	r.GET("/v1alpha1/session/:sid", func(c *gin.Context) {
-		sid := c.Param("sid")
-		if at, ok := engine.AllTs[sid]; ok {
-			if buf, err := yaml.Marshal(at); err != nil {
-				c.String(http.StatusInternalServerError, err.Error())
-			} else {
-				c.String(http.StatusOK, string(buf))
-			}
+	// AllTs content in memory
+	r.GET("/v1alpha1/ats/:sid", func(c *gin.Context) {
+		AtsContent(ctx, c)
+	})
 
-		} else {
-			c.String(http.StatusNotFound, "Session ID : %s is not existed and checked out with CC.", sid)
-		}
+	// Version
+	r.GET("/version", func(c *gin.Context) {
+		version := fmt.Sprintf("\tVersion:\t%s\n\tGo version:\t%s\n\tGit commit:\t%s\n\tBuilt:\t%s\n\tOS/Arch:\t%s/%s\n",
+			utils.ServerVersion,
+			runtime.Version(),
+			utils.GitCommit,
+			utils.Built,
+			runtime.GOOS, runtime.GOARCH)
+		c.String(http.StatusOK, version)
 	})
 
 	r.Use(static.Serve("/toy", static.LocalFile("./toy", true)))

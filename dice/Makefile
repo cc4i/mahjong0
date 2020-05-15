@@ -3,6 +3,10 @@
 DOCKER_IMAGE ?= herochinese/dice
 DOCKER_TAG ?= $(shell git rev-parse --abbrev-ref HEAD)
 GOX ?= $(shell go env GOPATH)/bin/gox
+VERSION ?= ${tag}
+GIT_COMMIT ?= $(shell git rev-list -1 HEAD)
+BUILT ?= $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
+
 # Docker Hub username / password
 DOCKER_PASS =
 DOCKER_USER =
@@ -16,7 +20,13 @@ test: fmt vet
 # Build manager binary
 manager: fmt vet
 	GO111MODULE=off go get github.com/mitchellh/gox
-	${GOX} -osarch=linux/386 -osarch=linux/amd64 -osarch=darwin/386 -osarch=darwin/amd64 -osarch=windows/amd64 -output=dist/dice_{{.OS}}_{{.Arch}}
+	${GOX} -osarch=linux/386 \
+		  -osarch=linux/amd64 \
+		  -osarch=darwin/386 \
+		  -osarch=darwin/amd64 \
+		  -osarch=windows/amd64
+		  -output=dist/mctl_{{.OS}}_{{.Arch}} \
+		  -ldflags="-X 'dice/utils.ServerVersion=${VERSION}' -X 'dice/utils.GitCommit=${GIT_COMMIT}' -X 'dice/utils.Built=${BUILT}'"
 	cd dist/ && gzip *
 
 run: fmt vet
@@ -36,6 +46,8 @@ vet:
 # Build the docker image
 docker-build:
 	docker build \
+		--build-arg VERSION=${VERSION} \
+		--build-arg GIT_COMMIT=`git rev-list -1 HEAD` \
 		--build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
 		-t ${DOCKER_IMAGE}:${DOCKER_TAG} .
 	docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest

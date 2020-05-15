@@ -3,6 +3,7 @@ package apis
 import (
 	"context"
 	"dice/engine"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
@@ -106,6 +107,40 @@ func (wb *WsBox) Processor(ctx context.Context, messageType int, p []byte, dryRu
 	// 3. execute cdk / manifest +
 	return ep.ExecutePlan(ctx, dryRun, wb.out)
 
+}
+
+func RetrieveTemplate(ctx context.Context, c *gin.Context) {
+	name := c.Param("name")
+	switch name {
+	case "tile":
+		tileUrl := fmt.Sprintf("https://%s.s3-%s.amazonaws.com/tiles-repo/%s/%s/%s.tgz",
+			engine.DiceConfig.BucketName,
+			engine.DiceConfig.Region,
+			"sample-tile",
+			"0.1.0",
+			"sample-tile")
+		c.String(http.StatusOK, tileUrl)
+	case "deployment":
+		c.String(http.StatusOK, "not ready yet")
+	case "hu":
+		c.String(http.StatusOK, "not ready yet")
+	case "super":
+		c.String(http.StatusOK, "not ready yet")
+	}
+}
+
+func AtsContent(ctx context.Context, c *gin.Context) {
+	sid := c.Param("sid")
+	if at, ok := engine.AllTs[sid]; ok {
+		if buf, err := yaml.Marshal(at); err != nil {
+			c.String(http.StatusInternalServerError, err.Error())
+		} else {
+			c.String(http.StatusOK, string(buf))
+		}
+
+	} else {
+		c.String(http.StatusNotFound, "Session ID : %s is not existed and checked out with CC.", sid)
+	}
 }
 
 func Deployment(ctx context.Context, c *gin.Context) {

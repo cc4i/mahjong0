@@ -18,7 +18,7 @@ People can use Hu to quickly spin up full solutions or resources on AWS with ind
 ```bash
 
 # Run dice as coantainer
-docker run -it -v ~/.aws:/root/.aws herochinese/dice
+docker run -d -v ~/.aws:/root/.aws -p 9090:9090 herochinese/dice
 
 # Kick start browser for first trial (On Darwin)
 open http://127.0.0.1:9090/toy
@@ -35,6 +35,7 @@ Check out following for an EKS quick start, and click [here](./docs/How-to-Build
 docker run -it -v ~/mywork/mylabs/csdc/mahjong-0/tiles-repo:/workspace/tiles-repo \
     -v ~/.aws:/root/.aws \
     -e M_MODE=dev \
+    -p 9090:9090 \
     herochinese/dice
 
 # Initial a Tile project with your favorite name

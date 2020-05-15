@@ -147,7 +147,6 @@ func (d *Deployment) PullTile(ctx context.Context, tile string, version string, 
 			} else {
 				deploymentInputs[tts.TileReference+"-"+n.Name] = []string{n.InputValue}
 			}
-
 		}
 	}
 	////

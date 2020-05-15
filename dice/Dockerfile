@@ -4,7 +4,9 @@
 FROM golang:alpine as dicebuilder
 
 ENV GO111MODULE=on
-ARG ver=0.0.0
+ARG VERSION
+ARG GIT_COMMIT
+ARG BUILT
 
 # Install git
 RUN apk update && apk add git
@@ -15,18 +17,21 @@ WORKDIR $GOPATH/src/mypackage/myapp/
 RUN go get -d -v
 
 # Building the binary
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o /go/bin/dice
+RUN CGO_ENABLED=0 GOOS=linux go build \
+        -ldflags="-X 'dice/utils.ServerVersion=$VERSION' -X 'dice/utils.GitCommit=$GIT_COMMIT' -X 'dice/utils.Built=$BUILT'" \
+        -a -installsuffix cgo \
+        -o /go/bin/dice
 
 
 
 # STEP 2 build release package
 FROM alpine:3.11
 
-ARG BUILD_DATE
+ARG BUILT
 
 LABEL org.label-schema.name="dice-all-in-one" \
       org.label-schema.git="https://github.com/cc4i/mahjong0.git" \
-      org.label-schema.build-date=$BUILD_DATE
+      org.label-schema.build-date=$BUILT
 
 # For installed packages
 ENV KUBE_LATEST_VERSION="v1.16.9"

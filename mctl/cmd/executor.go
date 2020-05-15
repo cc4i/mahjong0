@@ -4,12 +4,26 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/gorilla/websocket"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
 )
 
 var apiVersion = "v1alpha1"
+
+func RunGet(addr string, uri string) ([]byte, error) {
+	u := &url.URL{
+		Scheme: "http",
+		Host:   addr,
+		Path:   fmt.Sprintf("/%s", uri),
+	}
+	resp, err := http.Get(u.String())
+	if err != nil {
+		return nil, err
+	}
+	return ioutil.ReadAll(resp.Body)
+}
 
 func RunPost(addr string, uri string, body []byte) (int, error) {
 	u := &url.URL{

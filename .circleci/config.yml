@@ -56,11 +56,17 @@ jobs:
             which go
             echo $PATH
             cd /go/src/github.com/cc4i/mahjong0/mctl
-            make all
-            tag=$(semantics --output-tag)
-            echo $tag
-            if [ "$tag" ]; then
-              ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME --replace $tag dist/
+            newtag=$(semantics --output-tag)
+            if [ "$newtag" ]; then
+              tag=$newtag
+            else
+              tag=$(git describe --tags)
+            fi
+            tag=$tag make all
+            echo tag=$tag
+            echo newtag=$newtag
+            if [ "$newtag" ]; then
+              ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME --replace $newtag dist/
             else
               echo "The commit message(s) did not indicate a major/minor/patch version."
             fi

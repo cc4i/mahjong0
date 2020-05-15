@@ -83,4 +83,4 @@ dice/testdata/*
 mctl/m
 mctl/mctl
 .vscode
-dist
+**/dist
