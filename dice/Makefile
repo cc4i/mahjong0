@@ -48,7 +48,7 @@ docker-build:
 	docker build \
 		--build-arg VERSION=${VERSION} \
 		--build-arg GIT_COMMIT=`git rev-list -1 HEAD` \
-		--build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
+		--build-arg BUILT=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
 		-t ${DOCKER_IMAGE}:${DOCKER_TAG} .
 	docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest
 

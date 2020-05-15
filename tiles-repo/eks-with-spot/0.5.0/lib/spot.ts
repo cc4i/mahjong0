@@ -69,7 +69,26 @@ export class EksNodesSpot extends cdk.Construct {
                 {managedPolicyArn: "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"},
                 {managedPolicyArn: "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"},
                 {managedPolicyArn: "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"}
-            ]
+            ],
+            inlinePolicies: {
+                "autoscaler4eks": new iam.PolicyDocument({
+                    statements: [
+                        new iam.PolicyStatement({
+                            actions: [
+                                "autoscaling:DescribeAutoScalingGroups",
+                                "autoscaling:DescribeAutoScalingInstances",
+                                "autoscaling:DescribeLaunchConfigurations",
+                                "autoscaling:DescribeTags",
+                                "autoscaling:SetDesiredCapacity",
+                                "autoscaling:TerminateInstanceInAutoScalingGroup",
+                                "ec2:DescribeLaunchTemplateVersions"
+                            ],
+                            resources: ["*"],
+                            effect: iam.Effect.ALLOW
+                        }),
+                    ]
+                })
+            }
         });
         let ec2Profile = new iam.CfnInstanceProfile(this,"ec2Profile",{
             roles: [this.nodesRole.roleName]
@@ -152,7 +171,18 @@ export class EksNodesSpot extends cdk.Construct {
                     value: "owned",
                     propagateAtLaunch: true
                 },
-
+                {
+                    key: "k8s.io/cluster-autoscaler/enabled",
+                    value: "true",
+                    propagateAtLaunch: true
+                },
+                {
+                    key: " k8s.io/cluster-autoscaler/"+props.clusterName,
+                    value: "owned",
+                    propagateAtLaunch: true
+                }
+                k8s.io/cluster-autoscaler/knative-cluster-115     
+                owned   
             ]
         });
         

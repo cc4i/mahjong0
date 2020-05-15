@@ -39,7 +39,7 @@ docker run -it -v ~/mywork/mylabs/csdc/mahjong-0/tiles-repo:/workspace/tiles-rep
     herochinese/dice
 
 # Initial a Tile project with your favorite name
-mctl init tile sample-tile
+mctl init sample-tile
 
 # Deploy Tiles with your very first try. 
 cd sample-tile

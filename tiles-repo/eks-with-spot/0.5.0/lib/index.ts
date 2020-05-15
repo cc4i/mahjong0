@@ -28,6 +28,7 @@ export class EkswithSpot extends cdk.Construct {
   /** Directly exposed to other stack */
   public readonly regionOfCluster: string
   public readonly clusterName: string;
+  public readonly clusterVersion: string;
   public readonly clusterEndpoint: string;
   public readonly masterRoleARN: string;
   public readonly clusterArn: string;
@@ -116,6 +117,7 @@ export class EkswithSpot extends cdk.Construct {
     /** Added CF Output */
     new cdk.CfnOutput(scope,"regionOfCluster", {value: process.env.CDK_DEFAULT_REGION || ""})
     new cdk.CfnOutput(scope,"clusterName", {value: cluster.clusterName})
+    new cdk.CfnOutput(scope,"clusterVersion", {value: props.clusterVersion || '1.16'})
     new cdk.CfnOutput(scope,"masterRoleARN", {value: eksRole.roleArn})
     new cdk.CfnOutput(scope,"clusterEndpoint", {value: cluster.clusterEndpoint})
     new cdk.CfnOutput(scope,"clusterArn", {value: cluster.clusterArn})
@@ -128,6 +130,7 @@ export class EkswithSpot extends cdk.Construct {
     
     this.regionOfCluster = process.env.CDK_DEFAULT_REGION || "";
     this.clusterName = cluster.clusterName;
+    this.clusterVersion = props.clusterVersion || '1.16';
     this.masterRoleARN = eksRole.roleArn;
     this.clusterEndpoint = cluster.clusterEndpoint;
     this.clusterArn = cluster.clusterArn;
