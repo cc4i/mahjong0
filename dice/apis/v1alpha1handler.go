@@ -20,14 +20,17 @@ var upGrader = websocket.Upgrader{
 	},
 }
 
+// WsBox is WebSocket struct with connection only so far
 type WsBox struct {
 	out *websocket.Conn
 }
 
+// WsWorker interface for all Websocket handlers
 type WsWorker interface {
 	Processor(ctx context.Context, messageType int, p []byte, dryRun bool) error
 }
 
+// WsHandler handle all coming request from WebSocket
 func WsHandler(ctx context.Context, c *gin.Context) {
 	ws, err := upGrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
@@ -62,12 +65,14 @@ func WsHandler(ctx context.Context, c *gin.Context) {
 
 }
 
+// WsCloseHandler handle close connection
 func WsCloseHandler(cancel context.CancelFunc, code int, txt string) error {
 	log.Printf("WebSocket connection was closed...error: %d - %s\n", code, txt)
 	cancel()
 	return nil
 }
 
+// Processor handle full process of deployment request
 func (wb *WsBox) Processor(ctx context.Context, messageType int, p []byte, dryRun bool) error {
 	sid := uuid.New().String()
 	ctx = context.WithValue(ctx, "d-sid", sid)
@@ -109,6 +114,7 @@ func (wb *WsBox) Processor(ctx context.Context, messageType int, p []byte, dryRu
 
 }
 
+// RetrieveTemplate download template from S3 repo.
 func RetrieveTemplate(ctx context.Context, c *gin.Context) {
 	name := c.Param("name")
 	switch name {
@@ -129,6 +135,7 @@ func RetrieveTemplate(ctx context.Context, c *gin.Context) {
 	}
 }
 
+// AtsContent shows recorded key content in memory
 func AtsContent(ctx context.Context, c *gin.Context) {
 	sid := c.Param("sid")
 	if at, ok := engine.AllTs[sid]; ok {
@@ -143,6 +150,7 @@ func AtsContent(ctx context.Context, c *gin.Context) {
 	}
 }
 
+// Deployment validate deployment yaml
 func Deployment(ctx context.Context, c *gin.Context) {
 	buf, err := c.GetRawData()
 	if err != nil {
@@ -161,6 +169,7 @@ func Deployment(ctx context.Context, c *gin.Context) {
 	c.String(http.StatusOK, string(b))
 }
 
+// Tile validate Tile yaml
 func Tile(ctx context.Context, c *gin.Context) {
 
 	buf, err := c.GetRawData()
@@ -180,6 +189,7 @@ func Tile(ctx context.Context, c *gin.Context) {
 	c.String(http.StatusOK, string(b))
 }
 
+// allowCORS allows cross site access
 func allowCORS(ctx context.Context, c *gin.Context) {
 
 	// allow CORS

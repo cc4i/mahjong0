@@ -37,7 +37,6 @@ func Router(ctx context.Context) *gin.Engine {
 		RetrieveTemplate(ctx, c)
 	})
 
-
 	// Validate Tile specification
 	r.POST("/v1alpha1/tile", func(c *gin.Context) {
 		Tile(ctx, c)

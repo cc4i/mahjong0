@@ -26,7 +26,7 @@ var Client HttpClient
 func (s3 *DiceConfig) LoadTile(tile string, version string) (string, error) {
 	if s3.Mode == "dev" {
 		dest, err := s3.LoadTileDev(tile, version)
-		if err !=nil {
+		if err != nil {
 			dest, err = s3.LoadTileS3(tile, version)
 		}
 		return dest, err
@@ -92,7 +92,7 @@ func (s3 *DiceConfig) LoadTileDev(tile string, version string) (string, error) {
 func (s3 *DiceConfig) LoadSuper() (string, error) {
 	if s3.Mode == "dev" {
 		dest, err := s3.LoadSuperDev()
-		if err !=nil {
+		if err != nil {
 			dest, err = s3.LoadSuperS3()
 		}
 		return dest, err

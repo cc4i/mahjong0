@@ -44,13 +44,17 @@ type ExecutionStage struct {
 	PostRunCommands []string `json:"postRunCommands"`
 }
 
+// StageKind defines type of stage
 type StageKind int
 
 const (
+	// CDK based Tile
 	CDK StageKind = iota
+	// Non-CDK based Tile
 	Command
 )
 
+// Convert enumeration into string
 func (sk StageKind) SKString() string {
 	return [...]string{"CDK", "Command", "FromCommand"}[sk]
 }
@@ -354,6 +358,7 @@ func (ep *ExecutionPlan) WsTail(ctx context.Context, reader io.ReadCloser, stage
 	}
 }
 
+// ExtractValue retrieve values from output logs.
 func (ep *ExecutionPlan) ExtractValue(ctx context.Context, buf []byte, out *websocket.Conn) error {
 	key := ctx.Value(`d-sid`).(string)
 	if ts, ok := AllTs[key]; ok {
@@ -407,6 +412,7 @@ func (ep *ExecutionPlan) ExtractValue(ctx context.Context, buf []byte, out *webs
 	return nil
 }
 
+// PostRun manages and executes commands after provision
 func (ep *ExecutionPlan) PostRun(ctx context.Context, buf []byte, out *websocket.Conn) error {
 	stage := ep.CurrentStage
 	script := stage.WorkHome + "/script-" + stage.Name + "-Post-" + RandString(8) + ".sh"
@@ -471,6 +477,7 @@ echo $?
 
 }
 
+// RandString return random string as per length 'n'
 func RandString(n int) string {
 	const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	b := make([]byte, n)

@@ -1,5 +1,6 @@
 package utils
 
+// DiceConfig includes all key configuration.
 type DiceConfig struct {
 	WorkHome   string
 	Region     string

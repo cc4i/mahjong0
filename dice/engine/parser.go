@@ -6,6 +6,7 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+// Data as []byte
 type Data []byte
 
 // Enumeration for category of metadata in Tile specification.
@@ -27,6 +28,7 @@ func (c Category) CString() string {
 	return [...]string{"Network", "Compute", "ContainerProvider", "Storage", "Database", "Application", "ContainerApplication", "Analysis", "ML"}[c]
 }
 
+// Enumeration for services' vendor
 type VendorService int
 
 const (
@@ -54,7 +56,7 @@ func (iot IOType) IOTString() string {
 	return [...]string{"String", "Number", "CDKObject", "FromCommand"}[iot]
 }
 
-// Manifest type
+// Manifest for manifest type in Tile specification
 type ManifestType int
 
 const (
@@ -205,7 +207,7 @@ type PostRunStages struct {
 	Command string `json:"command"`
 }
 
-// Parsing functions
+// ParserCore has all parsing functions for Tile/Deployment
 type ParserCore interface {
 	ParseTile(ctx context.Context) (*Tile, error)
 	ParseDeployment(ctx context.Context) (*Deployment, error)
