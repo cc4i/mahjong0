@@ -89,7 +89,7 @@ RUN apk add --no-cache ca-certificates \
 # Copy dice from Step 1
 COPY --from=dicebuilder /go/bin/dice /usr/local/bin/dice
 # Copy static files
-COPY ./dice/toy /workspace/toy
+COPY ./toy /workspace/toy
 
 WORKDIR /workspace
 
