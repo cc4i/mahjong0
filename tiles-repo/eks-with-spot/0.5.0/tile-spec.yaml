@@ -150,22 +150,31 @@ spec:
         command: |
           cd $TILE_HOME
           VALUE=$(echo ${D_TBD_EKS_WITH_SPOT_MASTERROLEARN} | sed -e "s#/#\\\/#g")
-          sed -i -e 's/X_EKSClusterMasterRoleARN_X/'$VALUE'/g' lib/aws-auth-cm.yaml
+          sed -i -e 's/X_EKSClusterMasterRoleARN_X/'$VALUE'/g' lib/yaml/aws-auth-cm.yaml
           VALUE=$(echo ${D_TBD_EKS_WITH_SPOT_NODESROLEARN} | sed -e "s#/#\\\/#g")
-          sed -i -e 's/X_NodeGroupRoleARN_X/'$VALUE'/g' lib/aws-auth-cm.yaml
+          sed -i -e 's/X_NodeGroupRoleARN_X/'$VALUE'/g' lib/yaml/aws-auth-cm.yaml
           aws eks update-kubeconfig --name $D_TBD_EKS_WITH_SPOT_CLUSTERNAME --region $D_TBD_EKS_WITH_SPOT_REGIONOFCLUSTER --role-arn $D_TBD_EKS_WITH_SPOT_MASTERROLEARN --kubeconfig $TILE_HOME/kube.config
           export KUBECONFIG=$TILE_HOME/kube.config
-          kubectl apply -f lib/aws-auth-cm.yaml
+          kubectl apply -f lib/yaml/aws-auth-cm.yaml
+      - name: UpdateConfigMap
+        command: |
+          # waiting nodes' ready for 5 seconds
+          sleep 5
+          lib/script/tagec2.sh
       - name: InstallClusterAutoScaler
         command: |
-          sed -i -e 's/X_CLUSTER_NAME_X/'$D_TBD_EKS_WITH_SPOT_CLUSTERNAME'/g' lib/cluster-autoscaler-autodiscover.yaml
-          kubectl apply -f lib/cluster-autoscaler-autodiscover.yaml
+          sed -i -e 's/X_CLUSTER_NAME_X/'$D_TBD_EKS_WITH_SPOT_CLUSTERNAME'/g' lib/yaml/cluster-autoscaler-autodiscover.yaml
+          kubectl apply -f lib/yaml/cluster-autoscaler-autodiscover-starter.yaml
+          sleep 5
+          kubectl apply -f lib/yaml/cluster-autoscaler-autodiscover.yaml
           kubectl -n kube-system annotate deployment.apps/cluster-autoscaler cluster-autoscaler.kubernetes.io/safe-to-evict="false"
           kubectl -n kube-system set image deployment.apps/cluster-autoscaler cluster-autoscaler=us.gcr.io/k8s-artifacts-prod/autoscaling/cluster-autoscaler:v$D_TBD_EKS_WITH_SPOT_CLUSTERVERSION.5          
       - name: InstallHorizontalPodAutoscaler
         command: |
-          kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.3.6/components.yaml
-
+          kubectl apply -f lib/yaml/hpa036-components.yaml
+      - name: InstallTerminationHandler
+        command: |
+          kubectl apply -f lib/yaml/termination-handler14-all-resources.yaml
   # Notes are description list for addtional information.
   notes:
     - "Tag public subnets with 'kubernetes.io/role/elb=1'"

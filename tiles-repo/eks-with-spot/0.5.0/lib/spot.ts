@@ -129,7 +129,8 @@ export class EksNodesSpot extends cdk.Construct {
         
 
         this.autoScalingGroup = new autoscaling.CfnAutoScalingGroup(this, "NodesAutoScalingGroup", {
-            
+
+            autoScalingGroupName: "auto-scaling-group-"+props.clusterName,
             vpcZoneIdentifier: [
                 props.publicSubnetId1,
                 props.publicSubnetId2,
@@ -162,7 +163,7 @@ export class EksNodesSpot extends cdk.Construct {
             // would be failed to register into EKS cluster
             tags: [
                 {
-                    key: "Name",
+                    key: "member",
                     value: "nodes-asg-"+props.clusterName,
                     propagateAtLaunch: true
                 },
@@ -181,8 +182,7 @@ export class EksNodesSpot extends cdk.Construct {
                     value: "owned",
                     propagateAtLaunch: true
                 }
-                k8s.io/cluster-autoscaler/knative-cluster-115     
-                owned   
+  
             ]
         });
         

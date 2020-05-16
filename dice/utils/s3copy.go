@@ -6,6 +6,7 @@ import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"net/http"
+	"os"
 	"strings"
 )
 
@@ -90,6 +91,11 @@ func (s3 *DiceConfig) LoadTileDev(tile string, version string) (string, error) {
 }
 
 func (s3 *DiceConfig) LoadSuper() (string, error) {
+	destDir := s3.WorkHome + "/super"
+	if f, _ := os.Stat(destDir); f.IsDir() {
+		os.RemoveAll(destDir)
+	}
+
 	if s3.Mode == "dev" {
 		dest, err := s3.LoadSuperDev()
 		if err != nil {
@@ -129,3 +135,4 @@ func (s3 *DiceConfig) LoadSuperDev() (string, error) {
 	destDir := s3.WorkHome + "/super"
 	return destDir, Copy(repoDir, destDir)
 }
+
