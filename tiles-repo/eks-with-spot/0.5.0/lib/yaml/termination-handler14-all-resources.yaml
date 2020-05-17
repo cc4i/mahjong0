@@ -252,5 +252,7 @@ spec:
             requests:
               cpu: 50m
               memory: 64Mi
+      nodeSelector:
+        lifecycle: spot
       tolerations:
         - operator: Exists

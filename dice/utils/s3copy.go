@@ -135,4 +135,3 @@ func (s3 *DiceConfig) LoadSuperDev() (string, error) {
 	destDir := s3.WorkHome + "/super"
 	return destDir, Copy(repoDir, destDir)
 }
-

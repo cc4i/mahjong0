@@ -156,7 +156,7 @@ spec:
           aws eks update-kubeconfig --name $D_TBD_EKS_WITH_SPOT_CLUSTERNAME --region $D_TBD_EKS_WITH_SPOT_REGIONOFCLUSTER --role-arn $D_TBD_EKS_WITH_SPOT_MASTERROLEARN --kubeconfig $TILE_HOME/kube.config
           export KUBECONFIG=$TILE_HOME/kube.config
           kubectl apply -f lib/yaml/aws-auth-cm.yaml
-      - name: UpdateConfigMap
+      - name: TagSpotInstances
         command: |
           # waiting nodes' ready for 5 seconds
           sleep 5

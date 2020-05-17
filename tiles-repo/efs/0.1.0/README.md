@@ -1,12 +1,2 @@
-# Welcome to your CDK TypeScript Construct Library project!
-
-You should explore the contents of this project. It demonstrates a CDK Construct Library that includes a construct (`Efs`)
-which contains an Amazon SQS queue that is subscribed to an Amazon SNS topic.
-
-The construct defines an interface (`EfsProps`) to configure the visibility timeout of the queue.
-
-## Useful commands
-
- * `npm run build`   compile typescript to js
- * `npm run watch`   watch for changes and compile
- * `npm run test`    perform the jest unit tests
+# EFS
+The basic EFS conpoment and based on Network0. EFS is a perfect choice as storage option for Kubernetes.   

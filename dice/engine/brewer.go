@@ -173,7 +173,7 @@ func (ep *ExecutionPlan) CommandExecutor(ctx context.Context, stage *ExecutionSt
 
 	SRf(out, "cmd => '%s'\n", ct)
 	cts := strings.Split(ct, " ")
-	cmd := exec.Command(cts[0], cts[1:len(cts)]...)
+	cmd := exec.Command(cts[0], cts[1:]...)
 
 	stdoutIn, _ := cmd.StdoutPipe()
 	stderrIn, _ := cmd.StderrPipe()
