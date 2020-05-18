@@ -77,30 +77,35 @@ type Deployment struct {
 	Spec       DeploymentSpec `json:"spec"`
 }
 
+// DeploymentSpec deployment.spec
 type DeploymentSpec struct {
 	Template DeploymentTemplate `json:"template"`
 	Summary  DeploymentSummary  `json:"summary"`
 }
 
+// DeploymentTemplate deployment.spec.template
 type DeploymentTemplate struct {
-	//Category string                     `json:"category" valid:"in(Network|Compute|ContainerProvider|Storage|Database|Application|ContainerApplication|Analysis|ML)"`
+	// Tiles
 	Tiles []DeploymentTemplateDetail `json:"tiles"`
 	// Order for execution plan
 	ForceOrder []string `json:"forceOrder"`
 }
 
+// DeploymentSummary deployment.spec.summary
 type DeploymentSummary struct {
 	Description string                    `json:"description"`
 	Outputs     []DeploymentSummaryOutput `json:"outputs"`
 	Notes       []string                  `json:"notes"`
 }
 
+// DeploymentSummaryOutput deployment.spec.summary.outputs
 type DeploymentSummaryOutput struct {
 	Name           string `json:"name"`
 	TileReference  string `json:"tileReference"`
 	OutputValueRef string `json:"outputValueRef"`
 }
 
+// DeploymentTemplateDetail deployment.spec.template
 type DeploymentTemplateDetail struct {
 	TileReference string       `json:"tileReference"`
 	TileVersion   string       `json:"tileVersion"`
@@ -116,6 +121,7 @@ type Tile struct {
 	Spec       TileSpec `json:"spec"`
 }
 
+// Metadata for Tile & Deployment
 type Metadata struct {
 	Name                     string `json:"name"`
 	Category                 string `json:"category"`
@@ -124,6 +130,7 @@ type Metadata struct {
 	Version                  string `json:"version"`
 }
 
+// TileSpec tile.spec
 type TileSpec struct {
 	Global       GlobalDetail     `json:"global"`
 	PreRun       PreRunDetail     `json:"preRun"`
@@ -135,30 +142,37 @@ type TileSpec struct {
 	Notes        []string         `json:"notes"`
 }
 
+// GlobalDetail tile.spec.global
 type GlobalDetail struct {
 	Env []GlobalDetailEnv `json:"env"`
 }
+
+// GlobalDetailEnv tile.spec.global.env
 type GlobalDetailEnv struct {
 	Name     string `json:"name"`
 	Value    string `json:"value"`
 	ValueRef string `json:"valueRef"`
 }
 
+// PreRunDetail tile.spec.preRun
 type PreRunDetail struct {
 	Stages []PreRunStages `json:"stages"`
 }
 
+// PreRunStages tile.spec.preRun.stage
 type PreRunStages struct {
 	Name    string `json:"name"`
 	Command string `json:"command"`
 }
 
+// TileDependency tile.spec.dependencies
 type TileDependency struct {
 	Name          string `json:"name"`
 	TileReference string `json:"tileReference"`
 	TileVersion   string `json:"tileVersion"`
 }
 
+// TileInput tile.spec.input
 type TileInput struct {
 	Name          string                `json:"name"`
 	InputType     string                `json:"inputType"`
@@ -172,12 +186,15 @@ type TileInput struct {
 	Override      TileInputOverride     `json:"override"`
 }
 
+// TileInputOverride tile.spec.input.override
 type TileInputOverride struct {
 	Name          string `json:"name"`
 	Field         string `json:"field"`
 	InputName     string
 	OverrideValue string
 }
+
+// TileManifest tile.spec.manifest
 type TileManifest struct {
 	ManifestType string   `json:"manifestType"`
 	Namespace    string   `json:"namespace"`
@@ -185,11 +202,13 @@ type TileManifest struct {
 	Folders      []string `json:"folders"`
 }
 
+// TileInputDependency tile.spec.input.dependency
 type TileInputDependency struct {
 	Name  string `json:"name"`
 	Field string `json:"field"`
 }
 
+// TileOutput tile.spec.output
 type TileOutput struct {
 	Name                string `json:"name"`
 	OutputType          string `json:"outputType"`
@@ -198,10 +217,12 @@ type TileOutput struct {
 	Description         string `json:"description"`
 }
 
+// PostRunDetail tile.spec.postRun
 type PostRunDetail struct {
 	Stages []PostRunStages `json:"stages"`
 }
 
+// PostRunStages tile.spec.postRun.stage
 type PostRunStages struct {
 	Name    string `json:"name"`
 	Command string `json:"command"`
@@ -250,7 +271,6 @@ func (d *Data) ValidateTile(ctx context.Context, tile *Tile) error {
 func (d *Data) ValidateDeployment(ctx context.Context, deployment *Deployment) error {
 	//TODO implementing ValidateDeployment
 	//	such as: Are inputs covered all required inputs?
-
 	_, err := valid.ValidateStruct(deployment)
 	return err
 }

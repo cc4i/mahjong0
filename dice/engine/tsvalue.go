@@ -81,5 +81,5 @@ type TsOutputDetail struct {
 	Description         string
 }
 
-// AllTs represents all information about tiles, input, output, etc.,  session-id -> Ts
+// AllTs represents all information about tiles, input, output, etc.,  id(uuid) -> Ts
 var AllTs = make(map[string]Ts)

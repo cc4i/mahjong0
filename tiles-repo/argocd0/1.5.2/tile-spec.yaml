@@ -74,9 +74,7 @@ spec:
     # manifest folder
     # folders:
     #   - k8s
-    dependencies:
-      # As a reference name 
-      - name: eks
+
           
   # Ouptputs represnt output value after launched, for 'ContainerApplication' might need leverage specific command to retrive output.
   outputs:

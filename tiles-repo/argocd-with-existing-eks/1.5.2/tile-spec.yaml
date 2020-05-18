@@ -10,16 +10,17 @@ metadata:
 # Specification
 spec:
   inputs:
-    # string
+    # String
     - name: clusterName
-      inputType: string
+      inputType: String
       require: true
-    # string
+    # String
     - name: masterRoleARN
-      inputType: string
+      inputType: String
       require: true
+    # String
     - name: namespace
-      inputType: string
+      inputType: String
       require: false
       defaultValue: argocd-existing
 
