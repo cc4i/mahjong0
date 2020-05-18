@@ -2,7 +2,7 @@
 
 for t in `ls ../tiles-repo`
 do
-    if [ $t != "super" ]
+    if [ $t != "super" ] && [ $t != "cdk-tile" ] && [ $t != "app-tile" ]
     then
         for v in `ls ../tiles-repo/$t`
         do
@@ -11,5 +11,6 @@ do
         done
     else 
         ./sync-super.sh
+        ./sync-tile-template.sh
     fi
 done

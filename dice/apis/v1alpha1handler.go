@@ -116,15 +116,24 @@ func (wb *WsBox) Processor(ctx context.Context, messageType int, p []byte, dryRu
 
 // RetrieveTemplate download template from S3 repo.
 func RetrieveTemplate(ctx context.Context, c *gin.Context) {
-	name := c.Param("name")
-	switch name {
-	case "tile":
+	what := c.Param("what")
+
+	switch what {
+	case "sample-tile":
 		tileUrl := fmt.Sprintf("https://%s.s3-%s.amazonaws.com/tiles-repo/%s/%s/%s.tgz",
 			engine.DiceConfig.BucketName,
 			engine.DiceConfig.Region,
 			"sample-tile",
 			"0.1.0",
 			"sample-tile")
+		c.String(http.StatusOK, tileUrl)
+	case "tile":
+		tileType := c.Query("type")
+		tileUrl := fmt.Sprintf("https://%s.s3-%s.amazonaws.com/tiles-repo/%s/%s-tile.tgz",
+			engine.DiceConfig.BucketName,
+			engine.DiceConfig.Region,
+			"tile",
+			tileType)
 		c.String(http.StatusOK, tileUrl)
 	case "deployment":
 		c.String(http.StatusOK, "not ready yet")

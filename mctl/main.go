@@ -17,8 +17,7 @@ func main() {
 	addr.Shorthand = "s"
 
 	cmd.PersistentFlags().Bool("dry-run", false, "Default is false, only print out the yaml that would be executed")
-	dryRun := cmd.PersistentFlags().Lookup("dry-run")
-	dryRun.Shorthand = "d"
+
 
 	// Initial commands
 	cmd.AddCommand(initial.Init,

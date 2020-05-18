@@ -3,10 +3,15 @@ package initial
 import (
 	"bufio"
 	"crypto/tls"
+	"github.com/iancoleman/strcase"
 	"github.com/spf13/cobra"
 	"log"
 	"mctl/cmd"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
+	"text/template"
 )
 
 var Init = &cobra.Command{
@@ -28,14 +33,6 @@ var Tile = &cobra.Command{
 	},
 }
 
-var SampleTile = &cobra.Command{
-	Use:   "sample-tile",
-	Short: "\tInitial Sample Tile with basic template.",
-	Long:  "\tInitial Sample Tile to kick off building a nwe Tile, with all basic needs.",
-	Run: func(c *cobra.Command, args []string) {
-		sampleTileFunc(c, args)
-	},
-}
 
 var Deployment = &cobra.Command{
 	Use:   "deployment",
@@ -46,25 +43,105 @@ var Deployment = &cobra.Command{
 	},
 }
 
-func init() {
-	Init.PersistentFlags().StringP("name", "n","", "The name of building Tile/Deployment")
-	Init.PersistentFlags().String("version", "0.0.1", "The version of building Tile/Deployment")
-	Init.PersistentFlags().String("directory", ".", "Where to place the Tile/Deployment with templates")
 
-	Init.AddCommand(Tile, SampleTile, Deployment)
+// TileTemplateData used to replace template
+type TileTemplateData struct {
+	TileName string // Tile Name
+	TileNameLowerCase string // Tile Name >>> Tile Name with Lower Case
+	TileNameCDK string // TileName >>> Tile Name with Camel Case
 
 }
 
-func sampleTileFunc(c *cobra.Command, args []string) {
-	log.Printf("Loading Sample Tile from Tile-Repo started ...")
 
-	destDir := "./sample-tile/0.1.0"
-	uri := "v1alpha1/template/tile"
+func init() {
+	Init.PersistentFlags().StringP("name", "n","", "The name of building Tile/Deployment")
+	Init.PersistentFlags().StringP("type", "t","cdk", "The type of building Tile, cdk - cdk tiles/app - app tiles.")
+	Init.PersistentFlags().StringP("version", "v", "0.1.0", "The version of building Tile/Deployment")
+	Init.PersistentFlags().StringP("directory", "d",".", "Where to place the Tile/Deployment with templates")
+
+	Init.AddCommand(Tile, Deployment)
+
+}
+
+
+func tileFunc(c *cobra.Command, args []string) {
+	name, _ := c.Flags().GetString("name")
+	if destDir, err := download(c, args, name); err != nil {
+		return
+	} else {
+		if name != "sample-tile" {
+			tt := &TileTemplateData {
+				TileName: name,
+				TileNameLowerCase: strings.ToLower(name),
+				TileNameCDK: strcase.ToCamel(name),
+			}
+			filepath.Walk(destDir, func(path string, info os.FileInfo, err error) error {
+				if !info.IsDir() && strings.HasSuffix(path, ".tp") {
+					//tp = tp.New("x")
+					tp, err := template.ParseFiles(path)
+					if err != nil {
+						log.Printf("%s\n", err)
+					}
+					f, err := os.Create(strings.TrimSuffix(path,".tp"))
+					if err != nil {
+						log.Printf("%s\n", err)
+					}
+
+					err = tp.Execute(f, tt)
+					if err != nil {
+						log.Printf("file: %s : %s\n", path, err)
+					}
+					defer f.Close()
+					os.Remove(path)
+				}
+				log.Printf("Generated file - %s \n", path)
+				return nil
+			})
+
+		}
+
+	}
+
+
+}
+
+func deploymentFunc(c *cobra.Command, args []string) {
+	log.Printf("Download https://github.com/cc4i/mahjong0/blob/master/templates/deployment-schema.json for schema, and jump to https://github.com/cc4i/mahjong0#examples for more examples.\n")
+}
+
+
+func download(c *cobra.Command, args []string, name string) (string, error) {
+	log.Printf("Loading %s templates from Tile-Repo started ...", name)
+
 	addr, _ := c.Flags().GetString("addr")
+
+	t, _ := c.Flags().GetString("type")
+	uri := "v1alpha1/template/"
+	if name == "sample-tile" {
+		uri = uri + name
+	} else {
+		if t != "cdk" {
+			uri = uri + "tile?type=app"
+		} else {
+			uri = uri + "tile?type=cdk"
+		}
+	}
+
+	destDir := "/" + name + "/"
+	oDir, _ := c.Flags().GetString("directory")
+	if oDir == "" {
+		destDir = "." + destDir
+	} else {
+		destDir = oDir + destDir
+	}
+
+	version, _ := c.Flags().GetString("version")
+	destDir = destDir + version
+
 	url, err := cmd.RunGet(addr, uri)
 	if err != nil {
-		log.Printf("Loading Sample Tile was failed with Err: %s. \n", err)
-		return
+		log.Printf("Loading %s was failed with Err: %s. %s\n", name, err, url)
+		return destDir, err
 	}
 
 	config := &tls.Config{
@@ -77,20 +154,15 @@ func sampleTileFunc(c *cobra.Command, args []string) {
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		log.Printf("Downloading was failed from %s with Err: %s. \n", string(url), err)
-		return
+		return destDir, err
 	}
 
 	err = cmd.UnTarGz(destDir, bufio.NewReader(resp.Body))
 	if err != nil {
 		log.Printf("Unzip tar was failed with Err: %s \n", err.Error())
+		return destDir, err
 	}
-	log.Printf("Loading Sample Tile finished")
-}
 
-func tileFunc(c *cobra.Command, args []string) {
-
-}
-
-func deploymentFunc(c *cobra.Command, args []string) {
-
+	log.Printf("Loading %s templates finished.", name)
+	return destDir, nil
 }

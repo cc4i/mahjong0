@@ -1,0 +1,8 @@
+# {{.TileName}}
+
+This is a application Tile, which would be deploy to EKS. It shows various possibility to build your favourite Tile. This demo application is underder Kustomization style and can retrieve air quality index from AQI.
+
+## Link:
+
+- http://<host>:<port>/air/city/:city
+- http://<host>:<port>/air/city/beijing

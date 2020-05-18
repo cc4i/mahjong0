@@ -13,15 +13,12 @@ import (
 var apiVersion = "v1alpha1"
 
 func RunGet(addr string, uri string) ([]byte, error) {
-	u := &url.URL{
-		Scheme: "http",
-		Host:   addr,
-		Path:   fmt.Sprintf("/%s", uri),
-	}
-	resp, err := http.Get(u.String())
+
+	resp, err := http.Get(fmt.Sprintf("http://%s/%s", addr, uri))
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 	return ioutil.ReadAll(resp.Body)
 }
 

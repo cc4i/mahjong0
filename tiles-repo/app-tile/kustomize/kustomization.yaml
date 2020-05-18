@@ -1,0 +1,14 @@
+# kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# namespace to deploy all resources to
+namespace: go-bumblebee
+
+resources:
+- air
+
+# all with following *kustomization*
+images:
+  - name: herochinese/go-bumblebee-air
+    newTag: front-end-site-v1

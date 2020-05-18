@@ -33,7 +33,7 @@ func Router(ctx context.Context) *gin.Engine {
 	})
 
 	// Return url of basic templates as per request
-	r.GET("/v1alpha1/template/:name", func(c *gin.Context) {
+	r.GET("/v1alpha1/template/:what", func(c *gin.Context) {
 		RetrieveTemplate(ctx, c)
 	})
 

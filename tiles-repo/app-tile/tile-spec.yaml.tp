@@ -1,0 +1,39 @@
+apiVersion: mahjong.io/v1alpha1
+kind: Tile
+metadata:
+    name: {{.TileName}}
+    category: Application
+    version: 0.1.0
+    dependentOnVendorService: EKS
+spec:
+
+  preRun:
+    stages:
+      - name: CreateNamespace
+        command: |
+          kubectl create ns go-bumblebee || true
+      - name: DeployAirService
+        command: |
+          kustomize build kustomize | k apply -f -
+
+  inputs:
+    # String
+    - name: clusterName
+      inputType: String
+      require: true
+    # String
+    - name: masterRoleARN
+      inputType: String
+      require: true
+
+          
+  # Ouptputs represnt output value after launched, for 'ContainerApplication' might need leverage specific command to retrive output.
+  outputs:
+    # FromCommand
+    - name: appRepo
+      outputType: String
+      defaultValueCommand: kubectl get svc/airservice -n go-bumblebee |jq '.status.loadBalancer.ingress[].hostname'
+      description: Custom::URL        
+
+  notes: []
+
