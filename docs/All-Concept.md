@@ -20,7 +20,11 @@ Customer could quickly spin up solutions on AWS and accelerating their adoption 
 
 
 # High-level Architecture
-<img src='./docs/high-level-arch.png' width='500'>
+
+<img src='./high-level-arch.png'>
+
+Mahjong is a platform to bridge the gap betewwn builders and customers through abstract solution and building blocks. It also could be a tool to simplify the experience and accelerate the cloud adoption on AWS.
+
 
 # Core concepts
 
