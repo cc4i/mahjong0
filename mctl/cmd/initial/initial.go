@@ -47,7 +47,7 @@ var Deployment = &cobra.Command{
 }
 
 func init() {
-	Init.PersistentFlags().String("name", "", "The name of building Tile/Deployment")
+	Init.PersistentFlags().StringP("name", "n","", "The name of building Tile/Deployment")
 	Init.PersistentFlags().String("version", "0.0.1", "The version of building Tile/Deployment")
 	Init.PersistentFlags().String("directory", ".", "Where to place the Tile/Deployment with templates")
 
