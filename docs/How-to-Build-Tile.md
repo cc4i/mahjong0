@@ -45,7 +45,8 @@ docker run -it -v ~/local-tiles-repo:/workspace/tiles-repo \
 ```bash
 
 # Generate sample Tile by mctl
-mctl init sample-tile
+mctl init tile -n sample-tile
+# Or mctl init tile -n <tile name>
 
 
 # Create Tile manually/
