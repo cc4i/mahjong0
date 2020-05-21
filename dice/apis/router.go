@@ -32,6 +32,13 @@ func Router(ctx context.Context) *gin.Engine {
 		WsHandler(ctx, c)
 	})
 
+	// Destroy API through WebSocket
+	r.GET("/v1alpha1/destroy", func(c *gin.Context) {
+		// TODO
+
+	})
+
+
 	// Return url of basic templates as per request
 	r.GET("/v1alpha1/template/:what", func(c *gin.Context) {
 		RetrieveTemplate(ctx, c)
