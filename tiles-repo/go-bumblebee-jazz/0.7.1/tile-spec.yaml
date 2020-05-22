@@ -1,19 +1,21 @@
 apiVersion: mahjong.io/v1alpha1
 kind: Tile
 metadata:
-    name: Go-Bumblebee
+    name: Go-Bumblebee-Jazz
     category: Application
-    version: 0.0.1
+    version: 0.7.1
     dependentOnVendorService: EKS
 spec:
   global:
     env:
       - name: GITHUB_USER
         value: cc4i
-      - name: REPO_NAME
-        value: go-bumblebee-tile
       - name: ACCESS_TOKEN
         valueRef: accessToken
+      - name: APP_REPO_NAME
+        value: go-bumblebee-jazz
+      - name: CONF_REPO_NAME
+        value: go-bumblebee-jazz-config
   preRun:
     stages:
       - name: CreateRepository
@@ -42,7 +44,7 @@ spec:
 
   manifests:
     manifestType: kustomize
-    namespace: go-bumblebee 
+    namespace: go-bumblebee-jazz
     folders:
       - kustomize
           
