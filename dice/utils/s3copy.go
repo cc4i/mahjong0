@@ -92,7 +92,7 @@ func (s3 *DiceConfig) LoadTileDev(tile string, version string) (string, error) {
 
 func (s3 *DiceConfig) LoadSuper() (string, error) {
 	destDir := s3.WorkHome + "/super"
-	if f, _ := os.Stat(destDir); f.IsDir() {
+	if f, err := os.Stat(destDir); err==nil && f.IsDir() {
 		os.RemoveAll(destDir)
 	}
 
