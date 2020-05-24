@@ -10,7 +10,7 @@ import (
 var mutex sync.Mutex
 
 // SR send repose back to client & output logs
-func SR(out *websocket.Conn, response []byte) error {
+func SR(out *websocket.Conn, response []byte) {
 	log.Printf("%s\n", response)
 	mutex.Lock()
 	defer mutex.Unlock()
@@ -18,12 +18,11 @@ func SR(out *websocket.Conn, response []byte) error {
 	if err != nil {
 		log.Printf("write error: %s\n", err)
 	}
-	return err
 
 }
 
 // SRf send repose back to client & output logs with given format
-func SRf(out *websocket.Conn, format string, v ...interface{}) error {
+func SRf(out *websocket.Conn, format string, v ...interface{}) {
 	log.Printf(format, v...)
 	mutex.Lock()
 	defer mutex.Unlock()
@@ -31,6 +30,5 @@ func SRf(out *websocket.Conn, format string, v ...interface{}) error {
 	if err != nil {
 		log.Printf("write error: %s\n", err)
 	}
-	return err
 
 }

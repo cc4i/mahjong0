@@ -6,10 +6,6 @@ metadata:
     version: 0.0.1
     dependentOnVendorService: EKS
 spec:
-  dependencies:
-    - name: argocd0
-      tileReference: Argocd0
-      tileVersion: 1.5.2
 
   global:
     env:
@@ -64,18 +60,7 @@ spec:
     - name: argocdNamespace
       inputType: String
       require: true
-    - name: argocdUser
-      inputType: String
-      require: false
-      dependencies:
-        - name: argocd0
-          field: user
-    - name: argocdPassword
-      inputType: String
-      require: false
-      dependencies:
-        - name: argocd0
-          field: password
+
 
           
   # Ouptputs represnt output value after launched, for 'ContainerApplication' might need leverage specific command to retrive output.

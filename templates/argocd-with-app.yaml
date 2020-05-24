@@ -1,11 +1,12 @@
 apiVersion: mahjong.io/v1alpha1
 kind: Deployment 
 metadata:
-  name: argocd-simple
+  name: argocd-with-app
 spec:
   template:
     tiles:
-      - tileReference: Argocd0
+      tileArgocd0152A:
+        tileReference: Argocd0
         tileVersion: 1.5.2
         inputs:
           - name: cidr
@@ -20,39 +21,52 @@ spec:
             inputValue: 1.16
         manifests:
           namespace: argocd
-      - tileReference: Go-Bumblebee-ONLY
+      tileArgocd0152B:
+        tileReference: Argocd0
+        tileVersion: 1.5.2
+        inputs:
+          - name: cidr
+            inputValue: 192.0.0.0/16        
+          - name: clusterName
+            inputValue: argocd-app-cluster2
+          - name: capacity
+            inputValue: 2
+          - name: capacityInstance
+            inputValue: m5.large
+          - name: version
+            inputValue: 1.15
+        manifests:
+          namespace: argocd
+      goBumblebeeOnly001:
+        tileReference: Go-Bumblebee-ONLY
         tileVersion: 0.0.1
+        dependsOn: tileArgocd0152A
         inputs:
           - name: accessToken
             inputValue: <GITHUB TOKEN>
           - name: argocdNamespace
             inputValue: argocd
-    forceOrder:
-      - Network0
-      - Eks0
-      - Argocd0
-      - Go-Bumblebee-ONLY
-          
+
   summary:
       description: Argo CD has been installed in $clusterName with success and checking out following notes to get started.
       outputs:
         - name: EKS Cluster Name
-          tileReference: Eks0
+          tileInstance: tileArgocd0152
           outputValueRef: clusterName
         - name: Master role arn for EKS Cluster
-          tileReference: Eks0
+          tileInstance: tileArgocd0152
           outputValueRef: masterRoleARN
         - name: The API endpoint EKS Cluster
-          tileReference: Eks0
+          tileInstance: tileArgocd0152
           outputValueRef: clusterEndpoint
         - name: ArgoCD admin
-          tileReference: Argocd0
+          tileInstance: tileArgocd0152
           outputValueRef: user
         - name: ArgoCD password
-          tileReference: Argocd0
+          tileInstance: tileArgocd0152
           outputValueRef: password
         - name: Application Repository
-          tileReference: Go-Bumblebee-ONLY
+          tileInstance: goBumblebeeOnly001
           outputValueRef: appRepo
         
       notes:

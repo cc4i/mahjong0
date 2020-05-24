@@ -86,7 +86,7 @@ type DeploymentSpec struct {
 // DeploymentTemplate deployment.spec.template
 type DeploymentTemplate struct {
 	// Tiles
-	Tiles []DeploymentTemplateDetail `json:"tiles"`
+	Tiles map[string]DeploymentTemplateDetail `json:"tiles"`
 	// Order for execution plan
 	ForceOrder []string `json:"forceOrder"`
 }
@@ -101,7 +101,7 @@ type DeploymentSummary struct {
 // DeploymentSummaryOutput deployment.spec.summary.outputs
 type DeploymentSummaryOutput struct {
 	Name           string `json:"name"`
-	TileReference  string `json:"tileReference"`
+	TileInstance  string `json:"tileInstance"`
 	OutputValueRef string `json:"outputValueRef"`
 }
 
@@ -109,12 +109,14 @@ type DeploymentSummaryOutput struct {
 type DeploymentTemplateDetail struct {
 	TileReference string       `json:"tileReference"`
 	TileVersion   string       `json:"tileVersion"`
+	DependsOn string `json:"dependsOn"`
 	Inputs        []TileInput  `json:"inputs"`
 	Manifests     TileManifest `json:"manifests"`
 }
 
 // Tile specification
 type Tile struct {
+	TileInstance string `json:"tileInstance"`
 	ApiVersion string   `json:"apiVersion"`
 	Kind       string   `json:"kind" valid:"in(Tile)"`
 	Metadata   Metadata `json:"metadata"`

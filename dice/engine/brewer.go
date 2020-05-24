@@ -31,7 +31,7 @@ type ExecutionPlan struct {
 // ExecutionStage represents an unit of execution plan.
 type ExecutionStage struct {
 	// Name
-	Name string `json:"name"`
+	Name string `json:"name"` // = Tile Instance
 	// Stage type
 	Kind        string   `json:"kind"`     //CDK/Command
 	WorkHome    string   `json:"workHome"` //root folder for execution
@@ -113,7 +113,7 @@ func (ep *ExecutionPlan) GenerateSummary(ctx context.Context, out *websocket.Con
 		}
 		SR(out, []byte("\n"))
 		for _, ot := range ep.OriginDeployment.Spec.Summary.Outputs {
-			SR(out, []byte(fmt.Sprintf("%s = %s\n", ot.Name, getValueByRef(ot.TileReference, ot.OutputValueRef, at.AllOutputs))))
+			SR(out, []byte(fmt.Sprintf("%s = %s\n", ot.Name, getValueByRef(ot.TileInstance, ot.OutputValueRef, at.AllOutputsN))))
 		}
 		SR(out, []byte("\n"))
 		for _, n := range ep.OriginDeployment.Spec.Summary.Notes {
@@ -133,7 +133,7 @@ func replaceByValue(str string, at Ts) string {
 
 		}
 		//replace by output value
-		if output, ok := at.AllOutputs[ts.TileName]; ok {
+		if output, ok := at.AllOutputsN[ts.TileInstance]; ok {
 			for k1, v1 := range output.TsOutputs {
 				str = strings.ReplaceAll(str, "$"+k1, v1.OutputValue)
 			}
@@ -143,8 +143,8 @@ func replaceByValue(str string, at Ts) string {
 }
 
 // Retrieve output value from cache
-func getValueByRef(tile string, outputName string, all map[string]*TsOutput) string {
-	if ts, ok := all[tile]; ok {
+func getValueByRef(tileInstance string, outputName string, all map[string]*TsOutput) string {
+	if ts, ok := all[tileInstance]; ok {
 		if output, ok := ts.TsOutputs[outputName]; ok {
 			return output.OutputValue
 		}
@@ -161,7 +161,7 @@ func (ep *ExecutionPlan) CommandExecutor(ctx context.Context, stage *ExecutionSt
 		SR(out, []byte("Initializing stage log file ..."))
 		stageLog = log.New()
 		fileName := DiceConfig.WorkHome + "/super/" + stage.Name + "-output.log"
-		logFile, err := os.OpenFile(fileName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+		logFile, err := os.OpenFile(fileName, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 		if err != nil {
 			SRf(out, "Failed to save stage log, using default stderr, %s\n", err)
 			return err
@@ -241,13 +241,13 @@ echo $?
 	//Insert kube.config if need to
 	dSid := ctx.Value(`d-sid`).(string)
 	if at, ok := AllTs[dSid]; ok {
-		if stack, ok := at.TsStacksMap[stage.TileName]; ok {
+		if stack, ok := at.TsStacksMapN[stage.Name]; ok {
 			// Looking for initial kube.config. For EKS, require clusterName, masterRoleARN ; For others, not implementing.
 			if stack.TsManifests.ManifestType != "" {
 				var clusterName, masterRoleARN string
 				// Tile with dependency
-				if stack.TsManifests.VendorService == EKS.VSString() {
-					if outputs, ok := at.AllOutputs[stack.TsManifests.DependentTile]; ok {
+				if tile := DependentEKSTile(dSid, stack.TileInstance); tile != nil {
+					if outputs, ok := at.AllOutputsN[tile.TileInstance]; ok {
 						cn, ok := outputs.TsOutputs["clusterName"]
 						if !ok {
 							return script, errors.New("ContainerProvider with EKS didn'stack include output: clusterName.")
@@ -263,23 +263,20 @@ echo $?
 					}
 				}
 				// Tile without dependency but input parameters
-				if stack, ok := at.TsStacksMap[stage.TileName]; ok {
-					category := stack.TileCategory
-					if t, ok := at.AllTiles[category+"-"+stage.TileName]; ok {
-						if t.Metadata.DependentOnVendorService == EKS.VSString() {
-							if s, ok := at.TsStacksMap[stage.TileName]; ok {
-								inputParameters, ok := s.InputParameters["clusterName"]
-								if !ok {
-									return script, errors.New("ContainerProvider with EKS didn'stack include output: clusterName.")
-								}
-								clusterName = inputParameters.InputValue
-
-								inputParameters, ok = s.InputParameters["masterRoleARN"]
-								if !ok {
-									return script, errors.New("ContainerProvider with EKS didn'stack include output: masterRoleARN.")
-								}
-								masterRoleARN = inputParameters.InputValue
+				if tile, ok := at.AllTilesN[stage.Name]; ok {
+					if tile.Metadata.DependentOnVendorService == EKS.VSString() {
+						if s, ok := at.TsStacksMapN[stage.Name]; ok {
+							inputParameters, ok := s.InputParameters["clusterName"]
+							if !ok {
+								return script, errors.New("ContainerProvider with EKS didn'stack include output: clusterName.")
 							}
+							clusterName = inputParameters.InputValue
+
+							inputParameters, ok = s.InputParameters["masterRoleARN"]
+							if !ok {
+								return script, errors.New("ContainerProvider with EKS didn'stack include output: masterRoleARN.")
+							}
+							masterRoleARN = inputParameters.InputValue
 						}
 					}
 				}
@@ -296,19 +293,18 @@ echo $?
 			////
 
 			// Inject output values as env which can be retrieved only after execution
-			if tile, ok := at.AllTiles[stack.TileCategory+"-"+stage.TileName]; ok {
-				for _, td := range tile.Spec.Dependencies {
-					if to, ok := at.AllOutputs[td.TileReference]; ok {
-						for k, v := range to.TsOutputs {
-							//$D-TBD_TileName.Output-Name
-							if v.OutputValue != "" {
-								stage.InjectedEnv = append(stage.InjectedEnv, fmt.Sprintf("export D_TBD_%s_%s=%s",
-									strings.ReplaceAll(strings.ToUpper(stage.TileName), "-", "_"),
-									strings.ToUpper(k),
-									v.OutputValue))
-							}
-
+			dependentTiles := AllDependentTiles(dSid, stage.Name)
+			for _, tile := range dependentTiles {
+				if to, ok := at.AllOutputsN[tile.TileInstance]; ok {
+					for k, v := range to.TsOutputs {
+						//$D-TBD_TileName.Output-Name
+						if v.OutputValue != "" {
+							stage.InjectedEnv = append(stage.InjectedEnv, fmt.Sprintf("export D_TBD_%s_%s=%s",
+								strings.ReplaceAll(strings.ToUpper(stage.TileName), "-", "_"),
+								strings.ToUpper(k),
+								v.OutputValue))
 						}
+
 					}
 				}
 			}
@@ -362,14 +358,14 @@ func (ep *ExecutionPlan) WsTail(ctx context.Context, reader io.ReadCloser, stage
 func (ep *ExecutionPlan) ExtractValue(ctx context.Context, buf []byte, out *websocket.Conn) error {
 	key := ctx.Value(`d-sid`).(string)
 	if ts, ok := AllTs[key]; ok {
-		tileName := ep.CurrentStage.TileName
+		tileInstance := ep.CurrentStage.Name
 		var tileCategory string
 		//var vendorService string
-		if stack, ok := ts.TsStacksMap[tileName]; ok {
+		if stack, ok := ts.TsStacksMapN[tileInstance]; ok {
 			tileCategory = stack.TileCategory
 		}
 
-		if outputs, ok := ts.AllOutputs[tileName]; ok {
+		if outputs, ok := ts.AllOutputsN[tileInstance]; ok {
 			outputs.StageName = ep.CurrentStage.Name
 			for outputName, outputDetail := range outputs.TsOutputs {
 				var regx *regexp.Regexp
@@ -381,7 +377,7 @@ func (ep *ExecutionPlan) ExtractValue(ctx context.Context, buf []byte, out *webs
 						".*?)\"}$")
 				} else {
 					// Extract key, value from CDK outputs
-					if stack, ok := ts.TsStacksMap[tileName]; ok {
+					if stack, ok := ts.TsStacksMapN[tileInstance]; ok {
 						regx = regexp.MustCompile("^\\{\"level\":\"info\"\\,\"msg\":\"(" +
 							stack.TileStackName + "." +
 							".*" +
@@ -438,17 +434,15 @@ echo $?
 	// Injected output values of current Tile as env
 	dSid := ctx.Value(`d-sid`).(string)
 	if at, ok := AllTs[dSid]; ok {
-		if stack, ok := at.TsStacksMap[stage.TileName]; ok {
-			if tile, ok := at.AllTiles[stack.TileCategory+"-"+stage.TileName]; ok {
-				if to, ok := at.AllOutputs[tile.Metadata.Name]; ok {
-					for k, v := range to.TsOutputs {
-						//$D-TBD_TileName.Output-Name
-						if v.OutputValue != "" {
-							stage.InjectedEnv = append(stage.InjectedEnv, fmt.Sprintf("export D_TBD_%s_%s=%s",
-								strings.ReplaceAll(strings.ToUpper(stage.TileName), "-", "_"),
-								strings.ToUpper(k),
-								v.OutputValue))
-						}
+		if tile, ok := at.AllTilesN[stage.Name]; ok {
+			if to, ok := at.AllOutputsN[tile.TileInstance]; ok {
+				for k, v := range to.TsOutputs {
+					//$D-TBD_TileName.Output-Name
+					if v.OutputValue != "" {
+						stage.InjectedEnv = append(stage.InjectedEnv, fmt.Sprintf("export D_TBD_%s_%s=%s",
+							strings.ReplaceAll(strings.ToUpper(stage.TileName), "-", "_"),
+							strings.ToUpper(k),
+							v.OutputValue))
 					}
 				}
 			}
