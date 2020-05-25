@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gorilla/websocket"
+	"github.com/iancoleman/strcase"
 	log "github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
@@ -248,39 +249,31 @@ echo $?
 				// Tile with dependency
 				if tile := DependentEKSTile(dSid, stack.TileInstance); tile != nil {
 					if outputs, ok := at.AllOutputsN[tile.TileInstance]; ok {
-						cn, ok := outputs.TsOutputs["clusterName"]
-						if !ok {
-							return script, errors.New("ContainerProvider with EKS didn'stack include output: clusterName.")
+						if cn, ok := outputs.TsOutputs["clusterName"]; ok {
+							clusterName = cn.OutputValue
 						}
-						clusterName = cn.OutputValue
-
-						arn, ok := outputs.TsOutputs["masterRoleARN"]
-						if !ok {
-							return script, errors.New("ContainerProvider with EKS didn'stack include output: masterRoleARN.")
+						if arn, ok := outputs.TsOutputs["masterRoleARN"]; ok {
+							masterRoleARN = arn.OutputValue
 						}
-						masterRoleARN = arn.OutputValue
-
 					}
 				}
 				// Tile without dependency but input parameters
 				if tile, ok := at.AllTilesN[stage.Name]; ok {
 					if tile.Metadata.DependentOnVendorService == EKS.VSString() {
 						if s, ok := at.TsStacksMapN[stage.Name]; ok {
-							inputParameters, ok := s.InputParameters["clusterName"]
-							if !ok {
-								return script, errors.New("ContainerProvider with EKS didn'stack include output: clusterName.")
+							if inputParameters, ok := s.InputParameters["clusterName"]; ok {
+								clusterName = inputParameters.InputValue
 							}
-							clusterName = inputParameters.InputValue
-
-							inputParameters, ok = s.InputParameters["masterRoleARN"]
-							if !ok {
-								return script, errors.New("ContainerProvider with EKS didn'stack include output: masterRoleARN.")
+							if inputParameters, ok := s.InputParameters["masterRoleARN"]; ok {
+								masterRoleARN = inputParameters.InputValue
 							}
-							masterRoleARN = inputParameters.InputValue
 						}
 					}
 				}
 
+				if clusterName == "" || masterRoleARN == "" {
+					return script, errors.New("ContainerProvider with EKS didn't include output: clusterName & masterRoleARN")
+				}
 				tContent4K8s = strings.ReplaceAll(tContent4K8s, "[kube.config]",
 					fmt.Sprintf("aws eks update-kubeconfig --name %s --role-arn %s --kubeconfig %s\nexport KUBECONFIG=%s",
 						clusterName,
@@ -300,7 +293,7 @@ echo $?
 						//$D-TBD_TileName.Output-Name
 						if v.OutputValue != "" {
 							stage.InjectedEnv = append(stage.InjectedEnv, fmt.Sprintf("export D_TBD_%s_%s=%s",
-								strings.ReplaceAll(strings.ToUpper(stage.TileName), "-", "_"),
+								strcase.ToScreamingSnake(strings.ToUpper(stage.TileName)),
 								strings.ToUpper(k),
 								v.OutputValue))
 						}
@@ -440,7 +433,7 @@ echo $?
 					//$D-TBD_TileName.Output-Name
 					if v.OutputValue != "" {
 						stage.InjectedEnv = append(stage.InjectedEnv, fmt.Sprintf("export D_TBD_%s_%s=%s",
-							strings.ReplaceAll(strings.ToUpper(stage.TileName), "-", "_"),
+							strcase.ToScreamingSnake(strings.ToUpper(stage.TileName)),
 							strings.ToUpper(k),
 							v.OutputValue))
 					}

@@ -192,7 +192,7 @@ type TileInput struct {
 type TileInputOverride struct {
 	Name          string `json:"name"`
 	Field         string `json:"field"`
-	InputName     string
+	//InputName     string
 	OverrideValue string
 }
 

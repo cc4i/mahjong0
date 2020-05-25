@@ -21,22 +21,7 @@ spec:
             inputValue: 1.16
         manifests:
           namespace: argocd
-      tileArgocd0152B:
-        tileReference: Argocd0
-        tileVersion: 1.5.2
-        inputs:
-          - name: cidr
-            inputValue: 192.0.0.0/16        
-          - name: clusterName
-            inputValue: argocd-app-cluster2
-          - name: capacity
-            inputValue: 2
-          - name: capacityInstance
-            inputValue: m5.large
-          - name: version
-            inputValue: 1.15
-        manifests:
-          namespace: argocd
+
       goBumblebeeOnly001:
         tileReference: Go-Bumblebee-ONLY
         tileVersion: 0.0.1
@@ -51,19 +36,19 @@ spec:
       description: Argo CD has been installed in $clusterName with success and checking out following notes to get started.
       outputs:
         - name: EKS Cluster Name
-          tileInstance: tileArgocd0152
+          tileInstance: tileArgocd0152A
           outputValueRef: clusterName
         - name: Master role arn for EKS Cluster
-          tileInstance: tileArgocd0152
+          tileInstance: tileArgocd0152A
           outputValueRef: masterRoleARN
         - name: The API endpoint EKS Cluster
-          tileInstance: tileArgocd0152
+          tileInstance: tileArgocd0152A
           outputValueRef: clusterEndpoint
         - name: ArgoCD admin
-          tileInstance: tileArgocd0152
+          tileInstance: tileArgocd0152A
           outputValueRef: user
         - name: ArgoCD password
-          tileInstance: tileArgocd0152
+          tileInstance: tileArgocd0152A
           outputValueRef: password
         - name: Application Repository
           tileInstance: goBumblebeeOnly001

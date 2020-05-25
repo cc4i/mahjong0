@@ -56,7 +56,7 @@ type TsStack struct {
 	TileStackName     string
 	TileStackVariable string
 	TileCategory      string
-	InputParameters   map[string]TsInputParameter
+	InputParameters   map[string]TsInputParameter //input name -> TsInputParameter
 	TsManifests       *TsManifests
 	// Caching predefined & default ENV
 	PredefinedEnv map[string]string
@@ -66,6 +66,8 @@ type TsInputParameter struct {
 	InputName       string
 	InputValue      string
 	IsOverrideField string
+	DependentTileInstance string
+	DependentTileInputName string
 }
 
 type TsManifests struct {
@@ -117,12 +119,14 @@ func SortedTilesGrid(dSid string) []TilesGrid {
 func DependentEKSTile(dSid string, tileInstance string) *Tile {
 
 	if allTG, ok := AllTilesGrids[dSid]; ok {
-		for _, v := range *allTG {
-			if v.ParentTileInstance == tileInstance {
-				if at, ok := AllTs[dSid]; ok {
-					if tile, ok := at.AllTilesN[v.TileInstance]; ok {
-						if tile.Metadata.VendorService == EKS.VSString() {
-							return tile
+		if tg, ok := (*allTG)[tileInstance]; ok {
+			for _, v := range *allTG {
+				if v.rootTileInstance == tg.rootTileInstance {
+					if at, ok := AllTs[dSid]; ok {
+						if tile, ok := at.AllTilesN[v.TileInstance]; ok {
+							if tile.Metadata.VendorService == EKS.VSString() {
+								return tile
+							}
 						}
 					}
 				}
@@ -163,4 +167,18 @@ func IsDuplicatedCategory(dSid string, rootTileInstance string, tileCategory str
 		}
 	}
 	return false
+}
+
+func ReferencedTsStack(dSid string, rootTileInstance string, tileName string) *TsStack {
+	if allTG, ok := AllTilesGrids[dSid]; ok {
+		for _, v := range *allTG {
+			if v.rootTileInstance == rootTileInstance {
+				if v.TileName == tileName {
+					ts := AllTs[dSid]
+					return ts.TsStacksMapN[v.TileInstance]
+				}
+			}
+		}
+	}
+	return nil
 }
