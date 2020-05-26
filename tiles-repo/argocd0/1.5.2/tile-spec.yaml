@@ -82,7 +82,7 @@ spec:
     - name: installedNamespace
       outputType: String
       defaultValueCommand: echo $NAMESPACE
-      description: Custom::User
+      description: Custom::Namespace
     # String
     - name: user
       outputType: String

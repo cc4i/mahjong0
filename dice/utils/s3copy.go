@@ -5,7 +5,10 @@ import (
 	"crypto/tls"
 	"fmt"
 	log "github.com/sirupsen/logrus"
+	"io/ioutil"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -15,6 +18,8 @@ type s3Functions interface {
 	LoadSuper() (string, error)
 	LoadSuperDev() (string, error)
 	Decompress(tile string, version string) error
+	LoadTestOutput(tile string) ([]byte, error)
+	CleanJunk()
 }
 
 type HttpClient interface {
@@ -89,12 +94,23 @@ func (s3 *DiceConfig) LoadTileDev(tile string, version string) (string, error) {
 
 }
 
+// CleanJunk removes all *.log / *.sh under super/
+func (s3 *DiceConfig)CleanJunk() {
+	destDir := s3.WorkHome + "/super"
+	if f, err := os.Stat(destDir); err==nil && f.IsDir() {
+		for _, suffix := range []string{"*.sh", "*.log"} {
+			files, err := filepath.Glob(destDir+"/"+suffix)
+			if err == nil {
+				for _, f := range files {
+					os.Remove(f)
+				}
+			}
+		}
+	}
+}
 func (s3 *DiceConfig) LoadSuper() (string, error) {
-	//destDir := s3.WorkHome + "/super"
-	//if f, err := os.Stat(destDir); err==nil && f.IsDir() {
-	//	os.RemoveAll(destDir)
-	//}
 
+	s3.CleanJunk()
 	if s3.Mode == "dev" {
 		dest, err := s3.LoadSuperDev()
 		if err != nil {
@@ -133,4 +149,15 @@ func (s3 *DiceConfig) LoadSuperDev() (string, error) {
 	repoDir := s3.LocalRepo + "/super"
 	destDir := s3.WorkHome + "/super"
 	return destDir, Copy(repoDir, destDir)
+}
+
+
+func (s3 *DiceConfig) LoadTestOutput(tile string) ([]byte, error) {
+	testOutputFile := s3.WorkHome + "/super/lib/"+strings.ToLower(tile)+"/test/"+tile+".output"
+	f, err := os.Open(testOutputFile)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	return ioutil.ReadAll(f)
 }

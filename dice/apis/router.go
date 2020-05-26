@@ -31,6 +31,10 @@ func Router(ctx context.Context) *gin.Engine {
 	r.GET("/v1alpha1/ws?dryRun=true", func(c *gin.Context) {
 		WsHandler(ctx, c)
 	})
+	// Run Linux commands for purpose
+	r.GET("/v1alpha1/ws?linuxCommand=true", func(c *gin.Context) {
+		WsHandler(ctx, c)
+	})
 
 	// Destroy API through WebSocket
 	r.GET("/v1alpha1/destroy", func(c *gin.Context) {

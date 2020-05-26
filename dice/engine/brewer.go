@@ -64,11 +64,12 @@ func (sk StageKind) SKString() string {
 // execution plan.
 type BrewerCore interface {
 	ExecutePlan(ctx context.Context, dryRun bool, out *websocket.Conn) error
-	CommandExecutor(ctx context.Context, stage *ExecutionStage, cmd []byte, out *websocket.Conn) error
-	CommandWrapperExecutor(ctx context.Context, stage *ExecutionStage, out *websocket.Conn) (string, error)
+	CommandExecutor(ctx context.Context,  dryRun bool, cmd []byte, out *websocket.Conn) error
+	LinuxCommandExecutor(ctx context.Context, cmdTxt []byte, stageLog *log.Logger, out *websocket.Conn) error
+	CommandWrapperExecutor(ctx context.Context, dryRun bool, out *websocket.Conn) (string, error)
 	WsTail(ctx context.Context, reader io.ReadCloser, stageLog *log.Logger, out *websocket.Conn)
 	ExtractValue(ctx context.Context, buf []byte, out *websocket.Conn) error
-	PostRun(ctx context.Context, buf []byte, out *websocket.Conn) error
+	PostRun(ctx context.Context,  dryRun bool, buf []byte, out *websocket.Conn) error
 	GenerateSummary(ctx context.Context, out *websocket.Conn) error
 }
 
@@ -77,26 +78,29 @@ func (ep *ExecutionPlan) ExecutePlan(ctx context.Context, dryRun bool, out *webs
 	for e := ep.Plan.Back(); e != nil; e = e.Prev() {
 		stage := e.Value.(*ExecutionStage)
 		ep.CurrentStage = stage
-		cmd, err := ep.CommandWrapperExecutor(ctx, stage, out)
+		// Wrap commands into a shell script
+		cmd, err := ep.CommandWrapperExecutor(ctx, dryRun, out)
 		if err != nil {
 			return err
 		}
-		if !dryRun {
-			if err := ep.CommandExecutor(ctx, stage, []byte(cmd), out); err != nil {
-				return err
-			}
-			buf, err := ioutil.ReadFile(DiceConfig.WorkHome + "/super/" + stage.Name + "-output.log")
-			if err != nil {
-				return err
-			}
-			// Caching output values
-			ep.ExtractValue(ctx, buf, out)
-			//
-			// Post run with commands
-			if err := ep.PostRun(ctx, buf, out); err != nil {
-				return err
-			}
 
+		// Execute wrapped script
+		if err := ep.CommandExecutor(ctx, dryRun, []byte(cmd), out); err != nil {
+			return err
+		}
+
+		// Extract output values & caching results
+		buf, err := ioutil.ReadFile(DiceConfig.WorkHome + "/super/" + stage.Name + "-output.log")
+		if err != nil {
+			return err
+		}
+		ep.ExtractValue(ctx, buf, out)
+
+		// Post run with commands
+		if ep.CurrentStage.PostRunCommands != nil {
+			if err := ep.PostRun(ctx, dryRun, buf, out); err != nil {
+				return err
+			}
 		}
 	}
 	ep.GenerateSummary(ctx, out)
@@ -113,9 +117,9 @@ func (ep *ExecutionPlan) GenerateSummary(ctx context.Context, out *websocket.Con
 			SR(out, []byte(replaceByValue(ep.OriginDeployment.Spec.Summary.Description, at)+"\n"))
 		}
 		SR(out, []byte("\n"))
-		for _, ot := range ep.OriginDeployment.Spec.Summary.Outputs {
-			SR(out, []byte(fmt.Sprintf("%s = %s\n", ot.Name, getValueByRef(ot.TileInstance, ot.OutputValueRef, at.AllOutputsN))))
-		}
+		//for _, ot := range ep.OriginDeployment.Spec.Summary.Outputs {
+		//	SR(out, []byte(fmt.Sprintf("%s = %s\n", ot.Name, getValueByRef(ot.TileInstance, ot.OutputValueRef, at.AllOutputsN))))
+		//}
 		SR(out, []byte("\n"))
 		for _, n := range ep.OriginDeployment.Spec.Summary.Notes {
 			SR(out, []byte(replaceByValue(n, at)+"\n"))
@@ -144,35 +148,48 @@ func replaceByValue(str string, at Ts) string {
 }
 
 // Retrieve output value from cache
-func getValueByRef(tileInstance string, outputName string, all map[string]*TsOutput) string {
-	if ts, ok := all[tileInstance]; ok {
-		if output, ok := ts.TsOutputs[outputName]; ok {
-			return output.OutputValue
-		}
-	}
-	return ""
-}
+//func getValueByRef(tileInstance string, outputName string, all map[string]*TsOutput) string {
+//	if ts, ok := all[tileInstance]; ok {
+//		if output, ok := ts.TsOutputs[outputName]; ok {
+//			return output.OutputValue
+//		}
+//	}
+//	return ""
+//}
 
 // CommandExecutor exec command and return output.
-func (ep *ExecutionPlan) CommandExecutor(ctx context.Context, stage *ExecutionStage, cmdTxt []byte, out *websocket.Conn) error {
-	ct := strings.TrimSpace(string(cmdTxt))
+func (ep *ExecutionPlan) CommandExecutor(ctx context.Context,  dryRun bool, cmdTxt []byte, out *websocket.Conn) error {
 
 	var stageLog *log.Logger
-	if stage != nil {
-		SR(out, []byte("Initializing stage log file ..."))
-		stageLog = log.New()
-		fileName := DiceConfig.WorkHome + "/super/" + stage.Name + "-output.log"
-		logFile, err := os.OpenFile(fileName, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
-		if err != nil {
-			SRf(out, "Failed to save stage log, using default stderr, %s\n", err)
-			return err
-		}
-		stageLog.SetOutput(logFile)
-		stageLog.SetFormatter(&log.JSONFormatter{DisableTimestamp: true})
-		SR(out, []byte("Initializing stage log file with success"))
+	SR(out, []byte("Initializing stage log file ..."))
+	stageLog = log.New()
+	fileName := DiceConfig.WorkHome + "/super/" + ep.CurrentStage.Name + "-output.log"
+	logFile, err := os.OpenFile(fileName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		SRf(out, "Failed to save stage log, using default stderr, %s\n", err)
+		return err
 	}
+	stageLog.SetOutput(logFile)
+	stageLog.SetFormatter(&log.JSONFormatter{DisableTimestamp: true})
+	SR(out, []byte("Initializing stage log file with success"))
 
-	SRf(out, "cmd => '%s'\n", ct)
+	SRf(out, "cmd => '%s'\n", cmdTxt)
+	if !dryRun {
+		return ep.LinuxCommandExecutor(ctx, cmdTxt, stageLog, out)
+	} else {
+		testData, err := DiceConfig.LoadTestOutput(ep.CurrentStage.TileName)
+		if err != nil {
+			log.Printf("No testing output for %s\n", ep.CurrentStage.TileName)
+		} else {
+			logFile.Write(testData)
+			//stageLog.Printf("%s", testData)
+		}
+	}
+	return nil
+}
+
+func (ep *ExecutionPlan) LinuxCommandExecutor(ctx context.Context, cmdTxt []byte, stageLog *log.Logger, out *websocket.Conn) error {
+	ct := strings.TrimSpace(string(cmdTxt))
 	cts := strings.Split(ct, " ")
 	cmd := exec.Command(cts[0], cts[1:]...)
 
@@ -199,16 +216,14 @@ func (ep *ExecutionPlan) CommandExecutor(ctx context.Context, stage *ExecutionSt
 
 	if err != nil {
 		SRf(out, "cmd.Run() failed with %s\n", err)
-		return err
 	}
-
-	return nil
+	return err
 }
 
 // CommandWrapperExecutor wrap commands as a unix script in order to execute.
-func (ep *ExecutionPlan) CommandWrapperExecutor(ctx context.Context, stage *ExecutionStage, out *websocket.Conn) (string, error) {
+func (ep *ExecutionPlan) CommandWrapperExecutor(ctx context.Context, dryRun bool, out *websocket.Conn) (string, error) {
 	//stage.WorkHome
-	script := stage.WorkHome + "/script-" + stage.Name + "-" + RandString(8) + ".sh"
+	script := ep.CurrentStage.WorkHome + "/script-" + ep.CurrentStage.Name + "-" + RandString(8) + ".sh"
 	tContent := `#!/bin/bash
 set -xe
 {{range .InjectedEnv}}
@@ -242,7 +257,7 @@ echo $?
 	//Insert kube.config if need to
 	dSid := ctx.Value(`d-sid`).(string)
 	if at, ok := AllTs[dSid]; ok {
-		if stack, ok := at.TsStacksMapN[stage.Name]; ok {
+		if stack, ok := at.TsStacksMapN[ep.CurrentStage.Name]; ok {
 			// Looking for initial kube.config. For EKS, require clusterName, masterRoleARN ; For others, not implementing.
 			if stack.TsManifests.ManifestType != "" {
 				var clusterName, masterRoleARN string
@@ -258,9 +273,9 @@ echo $?
 					}
 				}
 				// Tile without dependency but input parameters
-				if tile, ok := at.AllTilesN[stage.Name]; ok {
+				if tile, ok := at.AllTilesN[ep.CurrentStage.Name]; ok {
 					if tile.Metadata.DependentOnVendorService == EKS.VSString() {
-						if s, ok := at.TsStacksMapN[stage.Name]; ok {
+						if s, ok := at.TsStacksMapN[ep.CurrentStage.Name]; ok {
 							if inputParameters, ok := s.InputParameters["clusterName"]; ok {
 								clusterName = inputParameters.InputValue
 							}
@@ -271,7 +286,7 @@ echo $?
 					}
 				}
 
-				if clusterName == "" || masterRoleARN == "" {
+				if (clusterName == "" || masterRoleARN == "") && !dryRun {
 					return script, errors.New("ContainerProvider with EKS didn't include output: clusterName & masterRoleARN")
 				}
 				tContent4K8s = strings.ReplaceAll(tContent4K8s, "[kube.config]",
@@ -286,14 +301,14 @@ echo $?
 			////
 
 			// Inject output values as env which can be retrieved only after execution
-			dependentTiles := AllDependentTiles(dSid, stage.Name)
+			dependentTiles := AllDependentTiles(dSid, ep.CurrentStage.Name)
 			for _, tile := range dependentTiles {
 				if to, ok := at.AllOutputsN[tile.TileInstance]; ok {
 					for k, v := range to.TsOutputs {
 						//$D-TBD_TileName.Output-Name
 						if v.OutputValue != "" {
-							stage.InjectedEnv = append(stage.InjectedEnv, fmt.Sprintf("export D_TBD_%s_%s=%s",
-								strcase.ToScreamingSnake(strings.ToUpper(stage.TileName)),
+							ep.CurrentStage.InjectedEnv = append(ep.CurrentStage.InjectedEnv, fmt.Sprintf("export D_TBD_%s_%s=%s",
+								strcase.ToScreamingSnake(strings.ToUpper(ep.CurrentStage.TileName)),
 								strings.ToUpper(k),
 								v.OutputValue))
 						}
@@ -318,7 +333,22 @@ echo $?
 		return script, err
 	}
 	defer file.Close()
-	err = tp.Execute(file, stage)
+
+	//TODO: transform value to actual value
+	// Global ENV
+	for i, x := range ep.CurrentStage.InjectedEnv {
+		if strings.Contains(x, "$(") {
+
+			v, err := ValueRef(dSid, x[strings.Index(x,"=")+1:], ep.CurrentStage.Name)
+			if err != nil {
+				SR(out, []byte(err.Error()))
+			} else {
+				ep.CurrentStage.InjectedEnv[i] = x[0:strings.Index(x,"=")+1]+v
+			}
+		}
+	}
+
+	err = tp.Execute(file, ep.CurrentStage)
 	if err != nil {
 		SR(out, []byte(err.Error()))
 		return script, err
@@ -402,7 +432,7 @@ func (ep *ExecutionPlan) ExtractValue(ctx context.Context, buf []byte, out *webs
 }
 
 // PostRun manages and executes commands after provision
-func (ep *ExecutionPlan) PostRun(ctx context.Context, buf []byte, out *websocket.Conn) error {
+func (ep *ExecutionPlan) PostRun(ctx context.Context,  dryRun bool, buf []byte, out *websocket.Conn) error {
 	stage := ep.CurrentStage
 	script := stage.WorkHome + "/script-" + stage.Name + "-Post-" + RandString(8) + ".sh"
 	file, err := os.OpenFile(script, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755) //Create(script)
@@ -460,7 +490,7 @@ echo $?
 	SR(out, cnt)
 	SR(out, []byte("--EO:-------------------------------------------------"))
 
-	return ep.CommandExecutor(ctx, stage, []byte(script), out)
+	return ep.CommandExecutor(ctx, dryRun, []byte(script), out)
 
 }
 

@@ -268,7 +268,7 @@ func (d *Deployment) PullTile(ctx context.Context,
 
 	// Kick start processing
 	// Step 1. Caching the tile
-	aTs.AllTilesN[tileInstance] = parsedTile
+	aTs.AllTilesN[ti] = parsedTile
 	////
 
 	// Step 2. Caching inputs & input values from deployment
@@ -280,6 +280,9 @@ func (d *Deployment) PullTile(ctx context.Context,
 				deploymentInputs[dt.TileReference + "-" + input.Name] = input.InputValues
 			} else {
 				deploymentInputs[dt.TileReference + "-" + input.Name] = []string{input.InputValue}
+			}
+			if input.ValueRef != "" {
+				deploymentInputs[dt.TileReference + "-" + input.Name] = []string{input.ValueRef}
 			}
 		}
 	}
@@ -506,7 +509,11 @@ func array2String(array []string, inputType string) string {
 	switch inputType {
 	case String.IOTString():
 		for _, d := range array {
+			if strings.HasPrefix(d,"$(") {
+				val = val + d + ","
+			} else {
 				val = val + "'" + d + "',"
+			}
 		}
 	default:
 		for _, d := range array {
@@ -522,7 +529,12 @@ func str2string(str string, inputType string) string {
 	val :=""
 	switch inputType {
 	case String.IOTString():
-		val = "'" + str + "'"
+		if strings.HasPrefix(str,"$(") {
+			val = str
+		} else {
+			val = "'" + str + "'"
+		}
+
 	default:
 		val = str
 
@@ -678,10 +690,15 @@ func (d *Deployment) GenerateExecutePlan(ctx context.Context, out *websocket.Con
 						stage.InjectedEnv = append(stage.InjectedEnv, fmt.Sprintf("export %s=%s", e.Name, e.Value))
 						ts.PredefinedEnv[e.Name] = e.Value
 					} else if e.Value == "" && e.ValueRef != "" {
-						if v, ok := ts.InputParameters[e.ValueRef]; ok {
+						//if v, ok := ts.InputParameters[e.ValueRef]; ok {
+						if v, err := ValueRef(dSid, e.ValueRef, ts.TileInstance); err != nil {
+							log.Errorf("Inject Global environment : %s  was failed: %s\n", e.ValueRef, err.Error())
+						} else {
 							stage.InjectedEnv = append(stage.InjectedEnv, fmt.Sprintf("export %s=%s", e.Name, v))
-							ts.PredefinedEnv[e.Name] = v.InputValue
+							ts.PredefinedEnv[e.Name] = v
 						}
+
+						//}
 					}
 				}
 				// Adding PreRun's commands into stage.Preparation

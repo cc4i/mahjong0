@@ -14,15 +14,16 @@ spec:
       - name: REPO_NAME
         value: go-bumblebee-tile
       - name: ACCESS_TOKEN
-        valueRef: accessToken
+         # <tileInstance.outputs.name> / self -> tileInstane of this Tile
+        valueRef: $(self.inputs.accessToken)
       - name: APP_NAMESPACE
         value: go-bumblebee
       - name: ARGOCD_NAMESPACE
-        valueRef: argocdNamespace
+        valueRef: $(self.inputs.argocdNamespace)
       - name: ARGOCD_USER
-        valueRef: argocdUser
+        valueRef: $(self.inputs.argocdUser)
       - name: ARGOCD_PASSWORD
-        valueRef: argocdPassword
+        valueRef: $(self.inputs.argocdPassword)
 
   preRun:
     stages:
@@ -60,6 +61,12 @@ spec:
     - name: argocdNamespace
       inputType: String
       require: true
+    - name: argocdUser
+      inputType: String
+      require: true      
+    - name: argocdPassword
+      inputType: String
+      require: true
 
 
           
@@ -70,6 +77,10 @@ spec:
       outputType: String
       defaultValue: https://github.com:$GITHUB_USER/$REPO_NAME.git
       description: Custom::Repo        
+    - name: appNamespace
+      outputType: String
+      defaultValue: go-bumblebee
+      description: Custom::Namespace        
 
   notes: []
 

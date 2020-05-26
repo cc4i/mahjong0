@@ -101,8 +101,7 @@ type DeploymentSummary struct {
 // DeploymentSummaryOutput deployment.spec.summary.outputs
 type DeploymentSummaryOutput struct {
 	Name           string `json:"name"`
-	TileInstance  string `json:"tileInstance"`
-	OutputValueRef string `json:"outputValueRef"`
+	ValueRef string `json:"valueRef"`
 }
 
 // DeploymentTemplateDetail deployment.spec.template
@@ -153,6 +152,7 @@ type GlobalDetail struct {
 type GlobalDetailEnv struct {
 	Name     string `json:"name"`
 	Value    string `json:"value"`
+	// ValueRef means value from referred field
 	ValueRef string `json:"valueRef"`
 }
 
@@ -186,6 +186,8 @@ type TileInput struct {
 	InputValues   []string              `json:"inputValues"`
 	Require       bool                  `json:"require"` // true/false
 	Override      TileInputOverride     `json:"override"`
+	// ValueRef means value from referred field
+	ValueRef string `json:"valueRef"`
 }
 
 // TileInputOverride tile.spec.input.override

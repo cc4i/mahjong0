@@ -1,7 +1,10 @@
 package engine
 
 import (
+	"errors"
+	"regexp"
 	"sort"
+	"strings"
 	"time"
 )
 
@@ -26,12 +29,14 @@ type Ts struct {
 
 	// TsStacks
 	TsStacks []*TsStack
-	// TsStacksMap : TileInstance -> TsStack ////TileName -> TsStack
+	// TsStacksMap : TileInstance -> TsStack
+	// 		all initialized values will be store here, include input, env, etc
 	TsStacksMapN map[string]*TsStack
 
-	// AllTiles : TileInstance -> Tile ////"Category-TileName" -> Tile
+	// AllTiles : TileInstance -> Tile
 	AllTilesN map[string]*Tile
-	// AllOutputs :  TileInstance ->TsOutput ////TileName -> TsOutput
+	// AllOutputs :  TileInstance ->TsOutput
+	// 		all output values will be store here
 	AllOutputsN map[string]*TsOutput
 
 	// Created time
@@ -119,14 +124,12 @@ func SortedTilesGrid(dSid string) []TilesGrid {
 func DependentEKSTile(dSid string, tileInstance string) *Tile {
 
 	if allTG, ok := AllTilesGrids[dSid]; ok {
-		if tg, ok := (*allTG)[tileInstance]; ok {
-			for _, v := range *allTG {
-				if v.rootTileInstance == tg.rootTileInstance {
-					if at, ok := AllTs[dSid]; ok {
-						if tile, ok := at.AllTilesN[v.TileInstance]; ok {
-							if tile.Metadata.VendorService == EKS.VSString() {
-								return tile
-							}
+		for _, v := range *allTG {
+			if v.ParentTileInstance == tileInstance {
+				if at, ok := AllTs[dSid]; ok {
+					if tile, ok := at.AllTilesN[v.TileInstance]; ok {
+						if tile.Metadata.VendorService == EKS.VSString() {
+							return tile
 						}
 					}
 				}
@@ -181,4 +184,45 @@ func ReferencedTsStack(dSid string, rootTileInstance string, tileName string) *T
 		}
 	}
 	return nil
+}
+
+
+func ValueRef(dSid string, ref string, ti string) (string, error) {
+	re := regexp.MustCompile(`^\$\(([[:alnum:]]*\.[[:alnum:]]*\.[[:alnum:]]*)\)$`)
+	ms := re.FindStringSubmatch(ref)
+	if len(ms)==2 {
+		str := strings.Split(ms[1], ".")
+		tileInstance := str[0]
+		where := str[1]
+		field := str[2]
+		if tileInstance == "self" {
+			tileInstance = ti
+		}
+		if at, ok := AllTs[dSid]; ok {
+
+				switch where {
+				case "inputs":
+					if tsStack, ok := at.TsStacksMapN[tileInstance]; ok {
+						for _, input := range tsStack.InputParameters {
+							if field == input.InputName {
+								return input.InputValue, nil
+							}
+						}
+					}
+				case "outputs":
+					if outputs, ok := at.AllOutputsN[tileInstance]; ok {
+						for name, output := range outputs.TsOutputs {
+							if name == field {
+								return output.OutputValue, nil
+							}
+						}
+					}
+
+				}
+		}
+
+	} else {
+		return "", errors.New("expression: "+ref+" was error")
+	}
+	return "", errors.New("referred value wasn't exist")
 }

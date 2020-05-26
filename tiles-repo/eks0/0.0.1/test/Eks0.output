@@ -1,0 +1,129 @@
+{"level":"info","msg":"+ export WORK_HOME=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/super"}
+{"level":"info","msg":"+ WORK_HOME=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/super"}
+{"level":"info","msg":"+ export TILE_HOME=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/super/lib/eks0"}
+{"level":"info","msg":"+ TILE_HOME=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/super/lib/eks0"}
+{"level":"info","msg":"+ export D_TBD_EKS_0_PUBLICSUBNETID2=subnet-00dff320e84494673"}
+{"level":"info","msg":"+ D_TBD_EKS_0_PUBLICSUBNETID2=subnet-00dff320e84494673"}
+{"level":"info","msg":"+ export D_TBD_EKS_0_PRIVATESUBNETID1=subnet-08cbab06aed78cfc6"}
+{"level":"info","msg":"+ D_TBD_EKS_0_PRIVATESUBNETID1=subnet-08cbab06aed78cfc6"}
+{"level":"info","msg":"+ export D_TBD_EKS_0_PUBLICSUBNETID1=subnet-0f648aa6be151252d"}
+{"level":"info","msg":"+ D_TBD_EKS_0_PUBLICSUBNETID1=subnet-0f648aa6be151252d"}
+{"level":"info","msg":"+ export D_TBD_EKS_0_PRIVATESUBNETID2=subnet-03737e09aeafc26ba"}
+{"level":"info","msg":"+ D_TBD_EKS_0_PRIVATESUBNETID2=subnet-03737e09aeafc26ba"}
+{"level":"info","msg":"+ export D_TBD_EKS_0_VPCID=vpc-0e9a257173ed56938"}
+{"level":"info","msg":"+ D_TBD_EKS_0_VPCID=vpc-0e9a257173ed56938"}
+{"level":"info","msg":"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/super"}
+{"level":"info","msg":"+ npm install"}
+{"level":"info","msg":"npm WARN super@0.1.0 No repository field."}
+{"level":"info","msg":"npm WARN super@0.1.0 No license field."}
+{"level":"info","msg":""}
+{"level":"info","msg":"audited 853 packages in 7.71s"}
+{"level":"info","msg":""}
+{"level":"info","msg":"14 packages are looking for funding"}
+{"level":"info","msg":"  run `npm fund` for details"}
+{"level":"info","msg":""}
+{"level":"info","msg":"found 0 vulnerabilities"}
+{"level":"info","msg":""}
+{"level":"info","msg":"+ npm run build"}
+{"level":"info","msg":""}
+{"level":"info","msg":"\u003e super@0.1.0 build /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/super"}
+{"level":"info","msg":"\u003e tsc"}
+{"level":"info","msg":""}
+{"level":"info","msg":"+ cdk list"}
+{"level":"info","msg":"Network0Stackaa9d0fc3"}
+{"level":"info","msg":"Eks0Stackcda1c3ac"}
+{"level":"info","msg":"+ cdk deploy Eks0Stackcda1c3ac --require-approval never"}
+{"level":"info","msg":"Including dependency stacks: Network0Stackaa9d0fc3"}
+{"level":"info","msg":"Network0Stackaa9d0fc3"}
+{"level":"info","msg":"Network0Stackaa9d0fc3: deploying..."}
+{"level":"info","msg":""}
+{"level":"info","msg":" ✅  Network0Stackaa9d0fc3 (no changes)"}
+{"level":"info","msg":""}
+{"level":"info","msg":"Outputs:"}
+{"level":"info","msg":"Network0Stackaa9d0fc3.Network0publicSubnetId1AE831B0A = subnet-0f648aa6be151252d"}
+{"level":"info","msg":"Network0Stackaa9d0fc3.ExportsOutputRefNetwork0BaseVPCPublicSubnet1SubnetA4A58F16534FB2D0 = subnet-0f648aa6be151252d"}
+{"level":"info","msg":"Network0Stackaa9d0fc3.Network0availabilityZonesuswest2bD55CD48C = us-west-2b"}
+{"level":"info","msg":"Network0Stackaa9d0fc3.Network0privateSubnetId15BEF5820 = subnet-08cbab06aed78cfc6"}
+{"level":"info","msg":"Network0Stackaa9d0fc3.Network0publicSubnetId26BBC24FE = subnet-00dff320e84494673"}
+{"level":"info","msg":"Network0Stackaa9d0fc3.ExportsOutputRefNetwork0BaseVPCPrivateSubnet1Subnet1E8C6EF90CFC05E7 = subnet-08cbab06aed78cfc6"}
+{"level":"info","msg":"Network0Stackaa9d0fc3.ExportsOutputRefNetwork0BaseVPCF17C8F455FAB5CE7 = vpc-0e9a257173ed56938"}
+{"level":"info","msg":"Network0Stackaa9d0fc3.Network0privateSubnetId281C6427A = subnet-03737e09aeafc26ba"}
+{"level":"info","msg":"Network0Stackaa9d0fc3.Network0vpcId7C11C88F = vpc-0e9a257173ed56938"}
+{"level":"info","msg":"Network0Stackaa9d0fc3.ExportsOutputRefNetwork0BaseVPCPrivateSubnet2SubnetB81072E8264A6F09 = subnet-03737e09aeafc26ba"}
+{"level":"info","msg":"Network0Stackaa9d0fc3.Network0availabilityZonesuswest2a30BA59C6 = us-west-2a"}
+{"level":"info","msg":"Network0Stackaa9d0fc3.ExportsOutputRefNetwork0BaseVPCPublicSubnet2Subnet17A8456FB8CAABE0 = subnet-00dff320e84494673"}
+{"level":"info","msg":""}
+{"level":"info","msg":"Stack ARN:"}
+{"level":"info","msg":"Eks0Stackcda1c3ac"}
+{"level":"info","msg":"Eks0Stackcda1c3ac: deploying..."}
+{"level":"info","msg":"arn:aws:cloudformation:us-west-2:530820415924:stack/Network0Stackaa9d0fc3/84ba1700-9eec-11ea-a659-0a5c3e85f31a"}
+{"level":"info","msg":"[0%] start: Publishing 4745ceb0c1d5244f98a439c192c0a194d2b1da4ac56407975c05eab89fdeaf2b:current"}
+{"level":"info","msg":"[20%] success: Published 4745ceb0c1d5244f98a439c192c0a194d2b1da4ac56407975c05eab89fdeaf2b:current"}
+{"level":"info","msg":"[20%] start: Publishing 4c2988a57571fd4c34de12bae67441541aeea1a59e085f95e5b708922ff45061:current"}
+{"level":"info","msg":"[40%] success: Published 4c2988a57571fd4c34de12bae67441541aeea1a59e085f95e5b708922ff45061:current"}
+{"level":"info","msg":"[40%] start: Publishing a6d508eaaa0d3cddbb47a84123fc878809c8431c5466f360912f70b5b9770afb:current"}
+{"level":"info","msg":"[60%] success: Published a6d508eaaa0d3cddbb47a84123fc878809c8431c5466f360912f70b5b9770afb:current"}
+{"level":"info","msg":"[60%] start: Publishing f24a3afe34074fcf9064b490ddafddd61c09a4b4ff1195bfb0e2e0f885e1e562:current"}
+{"level":"info","msg":"[80%] success: Published f24a3afe34074fcf9064b490ddafddd61c09a4b4ff1195bfb0e2e0f885e1e562:current"}
+{"level":"info","msg":"[80%] start: Publishing ee5f0883c1b7dde4e9196375ee2bc286eef48385605b36527a9dc44a5b253b1b:current"}
+{"level":"info","msg":"[100%] success: Published ee5f0883c1b7dde4e9196375ee2bc286eef48385605b36527a9dc44a5b253b1b:current"}
+{"level":"info","msg":"Eks0Stackcda1c3ac: creating CloudFormation changeset..."}
+{"level":"info","msg":"  0/14 | 1:06:49 PM | CREATE_IN_PROGRESS   | AWS::CDK::Metadata                    | CDKMetadata "}
+{"level":"info","msg":"  0/14 | 1:06:50 PM | CREATE_IN_PROGRESS   | AWS::EC2::SecurityGroup               | Eks0/BasicEKSCluster/ControlPlaneSecurityGroup (Eks0BasicEKSClusterControlPlaneSecurityGroup97B8A3DB) "}
+{"level":"info","msg":"  0/14 | 1:06:50 PM | CREATE_IN_PROGRESS   | AWS::CloudFormation::Stack            | @aws-cdk--aws-eks.KubectlProvider.NestedStack/@aws-cdk--aws-eks.KubectlProvider.NestedStackResource (awscdkawseksKubectlProviderNestedStackawscdkawseksKubectlProviderNestedStackResourceA7AEBA6B) "}
+{"level":"info","msg":"  0/14 | 1:06:50 PM | CREATE_IN_PROGRESS   | AWS::IAM::Role                        | Eks0/EksClusterMasterRole (Eks0EksClusterMasterRole7692695E) "}
+{"level":"info","msg":"  0/14 | 1:06:50 PM | CREATE_IN_PROGRESS   | AWS::IAM::Role                        | Eks0/BasicEKSCluster/Role (Eks0BasicEKSClusterRoleD4500852) "}
+{"level":"info","msg":"  0/14 | 1:06:50 PM | CREATE_IN_PROGRESS   | AWS::CloudFormation::Stack            | @aws-cdk--aws-eks.ClusterResourceProvider.NestedStack/@aws-cdk--aws-eks.ClusterResourceProvider.NestedStackResource (awscdkawseksClusterResourceProviderNestedStackawscdkawseksClusterResourceProviderNestedStackResource9827C454) "}
+{"level":"info","msg":"  0/14 | 1:06:50 PM | CREATE_IN_PROGRESS   | AWS::IAM::Role                        | Eks0/EksClusterMasterRole (Eks0EksClusterMasterRole7692695E) Resource creation Initiated"}
+{"level":"info","msg":"  0/14 | 1:06:50 PM | CREATE_IN_PROGRESS   | AWS::IAM::Role                        | Eks0/BasicEKSCluster/NodegroupDefaultCapacity/NodeGroupRole (Eks0BasicEKSClusterNodegroupDefaultCapacityNodeGroupRoleE76AD008) "}
+{"level":"info","msg":"  0/14 | 1:06:51 PM | CREATE_IN_PROGRESS   | AWS::IAM::Role                        | Eks0/BasicEKSCluster/Role (Eks0BasicEKSClusterRoleD4500852) Resource creation Initiated"}
+{"level":"info","msg":"  0/14 | 1:06:51 PM | CREATE_IN_PROGRESS   | AWS::CloudFormation::Stack            | @aws-cdk--aws-eks.KubectlProvider.NestedStack/@aws-cdk--aws-eks.KubectlProvider.NestedStackResource (awscdkawseksKubectlProviderNestedStackawscdkawseksKubectlProviderNestedStackResourceA7AEBA6B) Resource creation Initiated"}
+{"level":"info","msg":"  0/14 | 1:06:51 PM | CREATE_IN_PROGRESS   | AWS::CDK::Metadata                    | CDKMetadata Resource creation Initiated"}
+{"level":"info","msg":"  0/14 | 1:06:51 PM | CREATE_IN_PROGRESS   | AWS::IAM::Role                        | Eks0/BasicEKSCluster/NodegroupDefaultCapacity/NodeGroupRole (Eks0BasicEKSClusterNodegroupDefaultCapacityNodeGroupRoleE76AD008) Resource creation Initiated"}
+{"level":"info","msg":"  0/14 | 1:06:51 PM | CREATE_IN_PROGRESS   | AWS::CloudFormation::Stack            | @aws-cdk--aws-eks.ClusterResourceProvider.NestedStack/@aws-cdk--aws-eks.ClusterResourceProvider.NestedStackResource (awscdkawseksClusterResourceProviderNestedStackawscdkawseksClusterResourceProviderNestedStackResource9827C454) Resource creation Initiated"}
+{"level":"info","msg":"  1/14 | 1:06:51 PM | CREATE_COMPLETE      | AWS::CDK::Metadata                    | CDKMetadata "}
+{"level":"info","msg":"  1/14 | 1:06:55 PM | CREATE_IN_PROGRESS   | AWS::EC2::SecurityGroup               | Eks0/BasicEKSCluster/ControlPlaneSecurityGroup (Eks0BasicEKSClusterControlPlaneSecurityGroup97B8A3DB) Resource creation Initiated"}
+{"level":"info","msg":"  2/14 | 1:06:56 PM | CREATE_COMPLETE      | AWS::EC2::SecurityGroup               | Eks0/BasicEKSCluster/ControlPlaneSecurityGroup (Eks0BasicEKSClusterControlPlaneSecurityGroup97B8A3DB) "}
+{"level":"info","msg":"  3/14 | 1:07:06 PM | CREATE_COMPLETE      | AWS::IAM::Role                        | Eks0/EksClusterMasterRole (Eks0EksClusterMasterRole7692695E) "}
+{"level":"info","msg":"  4/14 | 1:07:06 PM | CREATE_COMPLETE      | AWS::IAM::Role                        | Eks0/BasicEKSCluster/NodegroupDefaultCapacity/NodeGroupRole (Eks0BasicEKSClusterNodegroupDefaultCapacityNodeGroupRoleE76AD008) "}
+{"level":"info","msg":"  5/14 | 1:07:07 PM | CREATE_COMPLETE      | AWS::IAM::Role                        | Eks0/BasicEKSCluster/Role (Eks0BasicEKSClusterRoleD4500852) "}
+{"level":"info","msg":"  5/14 | 1:07:10 PM | CREATE_IN_PROGRESS   | AWS::IAM::Policy                      | Eks0/EksClusterMasterRole/DefaultPolicy (Eks0EksClusterMasterRoleDefaultPolicyCD491F36) "}
+{"level":"info","msg":"  5/14 | 1:07:11 PM | CREATE_IN_PROGRESS   | AWS::IAM::Policy                      | Eks0/EksClusterMasterRole/DefaultPolicy (Eks0EksClusterMasterRoleDefaultPolicyCD491F36) Resource creation Initiated"}
+{"level":"info","msg":"  6/14 | 1:07:25 PM | CREATE_COMPLETE      | AWS::IAM::Policy                      | Eks0/EksClusterMasterRole/DefaultPolicy (Eks0EksClusterMasterRoleDefaultPolicyCD491F36) "}
+{"level":"info","msg":" 6/14 Currently in progress: awscdkawseksKubectlProviderNestedStackawscdkawseksKubectlProviderNestedStackResourceA7AEBA6B, awscdkawseksClusterResourceProviderNestedStackawscdkawseksClusterResourceProviderNestedStackResource9827C454"}
+{"level":"info","msg":"  7/14 | 1:08:08 PM | CREATE_COMPLETE      | AWS::CloudFormation::Stack            | @aws-cdk--aws-eks.KubectlProvider.NestedStack/@aws-cdk--aws-eks.KubectlProvider.NestedStackResource (awscdkawseksKubectlProviderNestedStackawscdkawseksKubectlProviderNestedStackResourceA7AEBA6B) "}
+{"level":"info","msg":" 7/14 Currently in progress: awscdkawseksClusterResourceProviderNestedStackawscdkawseksClusterResourceProviderNestedStackResource9827C454"}
+{"level":"info","msg":"  8/14 | 1:09:06 PM | CREATE_COMPLETE      | AWS::CloudFormation::Stack            | @aws-cdk--aws-eks.ClusterResourceProvider.NestedStack/@aws-cdk--aws-eks.ClusterResourceProvider.NestedStackResource (awscdkawseksClusterResourceProviderNestedStackawscdkawseksClusterResourceProviderNestedStackResource9827C454) "}
+{"level":"info","msg":"  8/14 | 1:09:10 PM | CREATE_IN_PROGRESS   | AWS::IAM::Role                        | Eks0/BasicEKSCluster/Resource/CreationRole (Eks0BasicEKSClusterCreationRole7134837B) "}
+{"level":"info","msg":"  8/14 | 1:09:10 PM | CREATE_IN_PROGRESS   | AWS::IAM::Role                        | Eks0/BasicEKSCluster/Resource/CreationRole (Eks0BasicEKSClusterCreationRole7134837B) Resource creation Initiated"}
+{"level":"info","msg":"  9/14 | 1:09:25 PM | CREATE_COMPLETE      | AWS::IAM::Role                        | Eks0/BasicEKSCluster/Resource/CreationRole (Eks0BasicEKSClusterCreationRole7134837B) "}
+{"level":"info","msg":"  9/14 | 1:09:29 PM | CREATE_IN_PROGRESS   | AWS::IAM::Policy                      | Eks0/BasicEKSCluster/Resource/CreationRole/DefaultPolicy (Eks0BasicEKSClusterCreationRoleDefaultPolicy3AF94FBB) "}
+{"level":"info","msg":"  9/14 | 1:09:30 PM | CREATE_IN_PROGRESS   | AWS::IAM::Policy                      | Eks0/BasicEKSCluster/Resource/CreationRole/DefaultPolicy (Eks0BasicEKSClusterCreationRoleDefaultPolicy3AF94FBB) Resource creation Initiated"}
+{"level":"info","msg":" 10/14 | 1:09:45 PM | CREATE_COMPLETE      | AWS::IAM::Policy                      | Eks0/BasicEKSCluster/Resource/CreationRole/DefaultPolicy (Eks0BasicEKSClusterCreationRoleDefaultPolicy3AF94FBB) "}
+{"level":"info","msg":" 10/14 | 1:09:48 PM | CREATE_IN_PROGRESS   | Custom::AWSCDK-EKS-Cluster            | Eks0/BasicEKSCluster/Resource/Resource/Default (Eks0BasicEKSClusterA7A93D9F) "}
+{"level":"info","msg":"10/14 Currently in progress: Eks0BasicEKSClusterA7A93D9F"}
+{"level":"info","msg":" 10/14 | 1:20:11 PM | CREATE_IN_PROGRESS   | Custom::AWSCDK-EKS-Cluster            | Eks0/BasicEKSCluster/Resource/Resource/Default (Eks0BasicEKSClusterA7A93D9F) Resource creation Initiated"}
+{"level":"info","msg":" 11/14 | 1:20:12 PM | CREATE_COMPLETE      | Custom::AWSCDK-EKS-Cluster            | Eks0/BasicEKSCluster/Resource/Resource/Default (Eks0BasicEKSClusterA7A93D9F) "}
+{"level":"info","msg":" 11/14 | 1:20:16 PM | CREATE_IN_PROGRESS   | AWS::EKS::Nodegroup                   | Eks0/BasicEKSCluster/NodegroupDefaultCapacity (Eks0BasicEKSClusterNodegroupDefaultCapacityC479CD1B) "}
+{"level":"info","msg":" 11/14 | 1:20:16 PM | CREATE_IN_PROGRESS   | Custom::AWSCDK-EKS-KubernetesResource | Eks0/BasicEKSCluster/AwsAuth/manifest/Resource/Default (Eks0BasicEKSClusterAwsAuthmanifest5002C0E8) "}
+{"level":"info","msg":" 11/14 | 1:20:20 PM | CREATE_IN_PROGRESS   | AWS::EKS::Nodegroup                   | Eks0/BasicEKSCluster/NodegroupDefaultCapacity (Eks0BasicEKSClusterNodegroupDefaultCapacityC479CD1B) Resource creation Initiated"}
+{"level":"info","msg":"11/14 Currently in progress: Eks0BasicEKSClusterNodegroupDefaultCapacityC479CD1B, Eks0BasicEKSClusterAwsAuthmanifest5002C0E8"}
+{"level":"info","msg":" 11/14 | 1:20:59 PM | CREATE_IN_PROGRESS   | Custom::AWSCDK-EKS-KubernetesResource | Eks0/BasicEKSCluster/AwsAuth/manifest/Resource/Default (Eks0BasicEKSClusterAwsAuthmanifest5002C0E8) Resource creation Initiated"}
+{"level":"info","msg":" 12/14 | 1:21:00 PM | CREATE_COMPLETE      | Custom::AWSCDK-EKS-KubernetesResource | Eks0/BasicEKSCluster/AwsAuth/manifest/Resource/Default (Eks0BasicEKSClusterAwsAuthmanifest5002C0E8) "}
+{"level":"info","msg":"12/14 Currently in progress: Eks0BasicEKSClusterNodegroupDefaultCapacityC479CD1B"}
+{"level":"info","msg":" 13/14 | 1:22:48 PM | CREATE_COMPLETE      | AWS::EKS::Nodegroup                   | Eks0/BasicEKSCluster/NodegroupDefaultCapacity (Eks0BasicEKSClusterNodegroupDefaultCapacityC479CD1B) "}
+{"level":"info","msg":" 14/14 | 1:22:51 PM | CREATE_COMPLETE      | AWS::CloudFormation::Stack            | Eks0Stackcda1c3ac "}
+{"level":"info","msg":"arn:aws:cloudformation:us-west-2:530820415924:stack/Eks0Stackcda1c3ac/18b19370-9eed-11ea-b290-0aa1d8d9d478"}
+{"level":"info","msg":""}
+{"level":"info","msg":" ✅  Eks0Stackcda1c3ac"}
+{"level":"info","msg":""}
+{"level":"info","msg":"Outputs:"}
+{"level":"info","msg":"Eks0Stackcda1c3ac.Eks0BasicEKSClusterConfigCommandC46E120F = aws eks update-kubeconfig --name argocd-app-cluster0526-2 --region us-west-2 --role-arn arn:aws:iam::530820415924:role/Eks0Stackcda1c3ac-Eks0EksClusterMasterRole7692695E-8JAP9JEUAQWO"}
+{"level":"info","msg":"Eks0Stackcda1c3ac.Eks0clusterName0B983808 = argocd-app-cluster0526-2"}
+{"level":"info","msg":"Eks0Stackcda1c3ac.Eks0BasicEKSClusterGetTokenCommand68233B35 = aws eks get-token --cluster-name argocd-app-cluster0526-2 --region us-west-2 --role-arn arn:aws:iam::530820415924:role/Eks0Stackcda1c3ac-Eks0EksClusterMasterRole7692695E-8JAP9JEUAQWO"}
+{"level":"info","msg":"Eks0Stackcda1c3ac.Eks0masterRoleARNCAD2F314 = arn:aws:iam::530820415924:role/Eks0Stackcda1c3ac-Eks0EksClusterMasterRole7692695E-8JAP9JEUAQWO"}
+{"level":"info","msg":"0"}
+{"level":"info","msg":"Eks0Stackcda1c3ac.Eks0clusterArnF2B021C8 = arn:aws:eks:us-west-2:530820415924:cluster/argocd-app-cluster0526-2"}
+{"level":"info","msg":"Eks0Stackcda1c3ac.Eks0clusterEndpoint4CC1AE15 = https://F6F1091F1B7C90A4E4205939AC5CB16C.yl4.us-west-2.eks.amazonaws.com"}
+{"level":"info","msg":""}
+{"level":"info","msg":"Stack ARN:"}
