@@ -1,0 +1,46 @@
+apiVersion: mahjong.io/v1alpha1
+kind: Deployment 
+metadata:
+  name: go-bumblebee-jazz-application-demo
+spec:
+  template:
+    tiles:
+      tileEksWithSpot050:
+        tileReference: Eks-with-Spot
+        tileVersion: 0.5.0
+        inputs:
+          - name: cidr
+            inputValue: 192.0.0.0/16
+          - name: clusterName
+            inputValue: mahjong-spot-cluster0
+          - name: clusterVersion
+            inputValue: 1.16
+          - name: keyPair4EC2
+            inputValue: ore-keypair
+          - name: capacityInstance
+            inputValues: 
+              - m5.large
+              - r5.large
+              - c5.large
+
+      tileArgocdWithExsitingEks152:
+        tileReference: Argocd-With-Existing-EKS
+        tileVersion: 1.5.2
+        dependsOn: tileEksWithSpot050
+        inputs:
+          - name: clusterName
+            valueRef: $(tileEksWithSpot050.outputs.clusterName)         
+          - name: masterRoleARN
+            valueRef: $(tileEksWithSpot050.outputs.masterRoleARN) 
+
+      tileGoBumblebeeJazz071:
+        tileReference: Go-Bumblebee-Jazz
+        tileVersion: 0.7.1
+        dependsOn: tileEksWithSpot050
+        inputs:
+          - name: clusterName
+            valueRef: $(tileEksWithSpot050.outputs.clusterName)
+          - name: masterRoleARN
+            valueRef: $(tileEksWithSpot050.outputs.masterRoleARN)
+          - name: accessToken
+            inputValue: <GITHUB TOKEN>

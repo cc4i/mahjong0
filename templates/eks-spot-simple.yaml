@@ -5,7 +5,8 @@ metadata:
 spec:
   template:
     tiles:
-      - tileReference: Eks-with-Spot
+      tileEksWithSpot050:
+        tileReference: Eks-with-Spot
         tileVersion: 0.5.0
         inputs:
           - name: cidr
@@ -25,17 +26,13 @@ spec:
     description: 
     outputs:
       - name: EKS Cluster Name
-        tileReference: Eks-with-Spot
-        outputValueRef: clusterName
+        valueRef: $(tileEksWithSpot050.outputs.clusterName)
       - name: Master role arn for EKS Cluster
-        tileReference: Eks-with-Spot
-        outputValueRef: masterRoleARN
+        valueRef: $(tileEksWithSpot050.outputs.masterRoleARN)
       - name: The API endpoint EKS Cluster
-        tileReference: Eks-with-Spot
-        outputValueRef: clusterEndpoint
+        valueRef: $(tileEksWithSpot050.outputs.clusterEndpoint)
       - name: Instance type of worker node
-        tileReference: Eks-with-Spot
-        outputValueRef: capacityInstance
+        valueRef: $(tileEksWithSpot050.outputs.capacityInstance)
 
 
     notes: []

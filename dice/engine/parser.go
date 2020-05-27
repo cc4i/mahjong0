@@ -2,7 +2,9 @@ package engine
 
 import (
 	"context"
+	"errors"
 	valid "github.com/asaskevich/govalidator"
+	log "github.com/sirupsen/logrus"
 	"sigs.k8s.io/yaml"
 )
 
@@ -257,7 +259,8 @@ func (d *Data) ParseDeployment(ctx context.Context) (*Deployment, error) {
 	var deployment Deployment
 
 	if err := yaml.Unmarshal(*d, &deployment); err != nil {
-		return &deployment, err
+		log.Errorf("%s\n", err)
+		return &deployment, errors.New(" Deployment specification was invalid")
 	}
 
 	return &deployment, d.ValidateDeployment(ctx, &deployment)

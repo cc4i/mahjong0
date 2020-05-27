@@ -98,6 +98,14 @@ spec:
     - name: masterRoleARN
       outputType: String
       description: AWS::IAM::Role.ARN
+    # String
+    - name: capacityInstance
+      outputType: String
+      description: AWS::EKS::Cluster.capacityInstance
+    # String/ default: '1.15'
+    - name: capacity
+      outputType: String
+      description: AWS::EKS::Cluster.capacity
 
   # Notes are description list for addtional information.
   notes:

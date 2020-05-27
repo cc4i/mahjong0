@@ -1,0 +1,19 @@
+apiVersion: mahjong.io/v1alpha1
+kind: Deployment 
+metadata:
+  name: go-bumblebee-jazz-application-demo
+spec:
+  template:
+    tiles:
+      tileGoBumblebeeJazz071:
+        tileReference: Go-Bumblebee-Jazz
+        tileVersion: 0.7.1
+        inputs:
+          - name: clusterName
+            inputValue: <EKS CLuster Name>
+          - name: masterRoleARN
+            inputValue: <IAM ROLE ARN>
+          - name: accessToken
+            inputValue: <GITHUB TOKEN>
+
+    
