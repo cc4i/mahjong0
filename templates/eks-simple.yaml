@@ -5,8 +5,9 @@ metadata:
 spec:
   template:
     tiles:
-      - tileReference: Eks0
-        tileVersion: 0.0.1
+      tileEks0001:
+        tileReference: Eks0
+        tileVersion: 0.0.5
         inputs:
           - name: clusterName
             inputValue: mahjong-cluster0
@@ -15,24 +16,19 @@ spec:
           - name: capacityInstance
             inputValue: m5.large
           - name: version
-            inputValue: 1.15
+            inputValue: 1.16
   summary:
     description: 
     outputs:
       - name: EKS Cluster Name
-        tileReference: Eks0
-        outputValueRef: clusterName
+        valueRef: $(tileEks0001.outputs.clusterName)
       - name: Master role arn for EKS Cluster
-        tileReference: Eks0
-        outputValueRef: masterRoleARN
+        valueRef: $(tileEks0001.outputs.masterRoleARN)
       - name: The API endpoint EKS Cluster
-        tileReference: Eks0
-        outputValueRef: clusterEndpoint
+        valueRef: $(tileEks0001.outputs.clusterEndpoint)
       - name: Instance type of worker node
-        tileReference: Eks0
-        outputValueRef: capacityInstance
+        valueRef: $(tileEks0001.outputs.capacityInstance)
       - name: Default capacity of worker node
-        tileReference: Eks0
-        outputValueRef: capacityInstance
+        valueRef: $(tileEks0001.outputs.capacity)
 
     notes: []

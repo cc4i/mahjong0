@@ -22,7 +22,7 @@ spec:
     - name: namespace
       inputType: String
       require: false
-      defaultValue: argocd-existing
+      defaultValue: argocd
 
   manifests:
     manifestType: K8s

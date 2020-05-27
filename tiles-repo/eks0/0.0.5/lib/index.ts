@@ -22,6 +22,8 @@ export class Eks0 extends cdk.Construct {
   public readonly clusterEndpoint: string;
   public readonly masterRoleARN: string;
   public readonly clusterArn: string;
+  public readonly capacity: number;
+  public readonly capacityInstance: string;
 
   constructor(scope: cdk.Construct, id: string, props: Eks0Props) {
     super(scope, id);
@@ -86,11 +88,15 @@ export class Eks0 extends cdk.Construct {
     new cdk.CfnOutput(this,"masterRoleARN", {value: eksRole.roleArn})
     new cdk.CfnOutput(this,"clusterEndpoint", {value: cluster.clusterEndpoint})
     new cdk.CfnOutput(this,"clusterArn", {value: cluster.clusterArn})
+    new cdk.CfnOutput(this,"capacity", {value: String(props.capacity) || "0"})
+    new cdk.CfnOutput(this,"capacityInstance", {value: capacityInstance.toString() })
     
     this.clusterName = cluster.clusterName;
     this.masterRoleARN = eksRole.roleArn;
     this.clusterEndpoint = cluster.clusterEndpoint;
     this.clusterArn = cluster.clusterArn;
+    this.capacity =  props.capacity || 0
+    this.capacityInstance = capacityInstance.toString()
 
   }
 

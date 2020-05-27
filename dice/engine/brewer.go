@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gorilla/websocket"
+	"github.com/iancoleman/strcase"
 	log "github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
@@ -31,13 +32,12 @@ type ExecutionPlan struct {
 // ExecutionStage represents an unit of execution plan.
 type ExecutionStage struct {
 	// Name
-	Name string `json:"name"`
+	Name string `json:"name"` // = Tile Instance
 	// Stage type
-	Kind        string   `json:"kind"`     //CDK/Command
-	WorkHome    string   `json:"workHome"` //root folder for execution
-	InjectedEnv []string `json:"injectedEnv"`
+	Kind        string   `json:"kind"`     // CDK/Command
+	WorkHome    string   `json:"workHome"` // root folder for execution
+	InjectedEnv []string `json:"injectedEnv"` // example: "export variable=value"
 	Preparation []string `json:"preparation"`
-	//Command       *list.List        `json:"command"`
 	Commands        []string `json:"commands"`
 	TileName        string   `json:"tileName"`
 	TileVersion     string   `json:"tileVersion"`
@@ -63,12 +63,16 @@ func (sk StageKind) SKString() string {
 // execution plan.
 type BrewerCore interface {
 	ExecutePlan(ctx context.Context, dryRun bool, out *websocket.Conn) error
-	CommandExecutor(ctx context.Context, stage *ExecutionStage, cmd []byte, out *websocket.Conn) error
-	CommandWrapperExecutor(ctx context.Context, stage *ExecutionStage, out *websocket.Conn) (string, error)
+	CommandExecutor(ctx context.Context,  dryRun bool, cmd []byte, out *websocket.Conn) error
+	LinuxCommandExecutor(ctx context.Context, cmdTxt []byte, stageLog *log.Logger, out *websocket.Conn) error
+	CommandWrapperExecutor(ctx context.Context, dryRun bool, out *websocket.Conn) (string, error)
 	WsTail(ctx context.Context, reader io.ReadCloser, stageLog *log.Logger, out *websocket.Conn)
 	ExtractValue(ctx context.Context, buf []byte, out *websocket.Conn) error
-	PostRun(ctx context.Context, buf []byte, out *websocket.Conn) error
+	PostRun(ctx context.Context,  dryRun bool, buf []byte, out *websocket.Conn) error
 	GenerateSummary(ctx context.Context, out *websocket.Conn) error
+	ExtractAllEnv() map[string]string
+	ReplaceAll(str string, dSid string, kv map[string]string) string
+	ReplaceAllEnv(str string, kv map[string]string) string
 }
 
 //ExecutePlan is a orchestrator to run execution plan.
@@ -76,26 +80,29 @@ func (ep *ExecutionPlan) ExecutePlan(ctx context.Context, dryRun bool, out *webs
 	for e := ep.Plan.Back(); e != nil; e = e.Prev() {
 		stage := e.Value.(*ExecutionStage)
 		ep.CurrentStage = stage
-		cmd, err := ep.CommandWrapperExecutor(ctx, stage, out)
+		// Wrap commands into a shell script
+		cmd, err := ep.CommandWrapperExecutor(ctx, dryRun, out)
 		if err != nil {
 			return err
 		}
-		if !dryRun {
-			if err := ep.CommandExecutor(ctx, stage, []byte(cmd), out); err != nil {
-				return err
-			}
-			buf, err := ioutil.ReadFile(DiceConfig.WorkHome + "/super/" + stage.Name + "-output.log")
-			if err != nil {
-				return err
-			}
-			// Caching output values
-			ep.ExtractValue(ctx, buf, out)
-			//
-			// Post run with commands
-			if err := ep.PostRun(ctx, buf, out); err != nil {
-				return err
-			}
 
+		// Execute wrapped script
+		if err := ep.CommandExecutor(ctx, dryRun, []byte(cmd), out); err != nil {
+			return err
+		}
+
+		// Extract output values & caching results
+		buf, err := ioutil.ReadFile(DiceConfig.WorkHome + "/super/" + stage.Name + "-output.log")
+		if err != nil {
+			return err
+		}
+		ep.ExtractValue(ctx, buf, out)
+
+		// Post run with commands
+		if ep.CurrentStage.PostRunCommands != nil {
+			if err := ep.PostRun(ctx, dryRun, buf, out); err != nil {
+				return err
+			}
 		}
 	}
 	ep.GenerateSummary(ctx, out)
@@ -107,71 +114,100 @@ func (ep *ExecutionPlan) GenerateSummary(ctx context.Context, out *websocket.Con
 	SR(out, []byte("\n"))
 	SR(out, []byte("============================Summary===================================="))
 	dSid := ctx.Value("d-sid").(string)
-	if at, ok := AllTs[dSid]; ok {
-		if ep.OriginDeployment.Spec.Summary.Description != "" {
-			SR(out, []byte(replaceByValue(ep.OriginDeployment.Spec.Summary.Description, at)+"\n"))
-		}
-		SR(out, []byte("\n"))
-		for _, ot := range ep.OriginDeployment.Spec.Summary.Outputs {
-			SR(out, []byte(fmt.Sprintf("%s = %s\n", ot.Name, getValueByRef(ot.TileReference, ot.OutputValueRef, at.AllOutputs))))
-		}
-		SR(out, []byte("\n"))
-		for _, n := range ep.OriginDeployment.Spec.Summary.Notes {
-			SR(out, []byte(replaceByValue(n, at)+"\n"))
-		}
+	kv := ep.ExtractAllEnv()
+	if ep.OriginDeployment.Spec.Summary.Description != "" {
+
+		SR(out, []byte(ep.ReplaceAll(ep.OriginDeployment.Spec.Summary.Description, dSid, kv)+"\n"))
+	}
+	SR(out, []byte("\n"))
+	for _, ot := range ep.OriginDeployment.Spec.Summary.Outputs {
+		SR(out, []byte(fmt.Sprintf("%s = %s\n", ot.Name, ep.ReplaceAll(ot.ValueRef, dSid, kv))))
+	}
+	SR(out, []byte("\n"))
+	for _, n := range ep.OriginDeployment.Spec.Summary.Notes {
+		SR(out, []byte(ep.ReplaceAll(n, dSid, kv)+"\n"))
 	}
 	SR(out, []byte("======================================================================="))
 	return nil
 }
 
-// Replace env & var by values
-func replaceByValue(str string, at Ts) string {
-	for _, ts := range at.TsStacks {
+func (ep *ExecutionPlan) ExtractAllEnv() map[string]string {
+	env := make(map[string]string)
+	for e := ep.Plan.Back(); e != nil; e = e.Prev() {
+		stage := e.Value.(*ExecutionStage)
 		//replace by env value
-		for k, v := range ts.PredefinedEnv {
-			str = strings.ReplaceAll(str, "$"+k, v)
-
-		}
-		//replace by output value
-		if output, ok := at.AllOutputs[ts.TileName]; ok {
-			for k1, v1 := range output.TsOutputs {
-				str = strings.ReplaceAll(str, "$"+k1, v1.OutputValue)
+		for _, val := range stage.InjectedEnv {
+			re := regexp.MustCompile(`^export (.*)=(.*)$`)
+			kv := re.FindStringSubmatch(val)
+			if len(kv) == 3 {
+				env[kv[1]]= kv[2]
 			}
+		}
+	}
+	return env
+}
+// Replace all possible env & value reference
+func (ep *ExecutionPlan) ReplaceAll(str string, dSid string, kv map[string]string) string {
+	str = ep.ReplaceAllEnv(str, kv)
+	for {
+		re := regexp.MustCompile(`.*(\$\([[:alnum:]]*\.[[:alnum:]]*\.[[:alnum:]]*\)).*`)
+		s := re.FindStringSubmatch(str)
+		//
+		if len(s) == 2 {
+			if v , err := ValueRef(dSid,s[1],""); err != nil {
+				log.Errorf("Replace value reference was failed : %s \n", err)
+				break
+			} else {
+				str = strings.ReplaceAll(str,s[1], v)
+			}
+		} else {
+			break
 		}
 	}
 	return str
 }
-
-// Retrieve output value from cache
-func getValueByRef(tile string, outputName string, all map[string]*TsOutput) string {
-	if ts, ok := all[tile]; ok {
-		if output, ok := ts.TsOutputs[outputName]; ok {
-			return output.OutputValue
-		}
+// Replace env by value
+func (ep *ExecutionPlan) ReplaceAllEnv(str string, allEnv map[string]string) string {
+	for k,v := range allEnv {
+		str = strings.ReplaceAll(str, "$"+k, v)
 	}
-	return ""
+	return str
 }
 
+
 // CommandExecutor exec command and return output.
-func (ep *ExecutionPlan) CommandExecutor(ctx context.Context, stage *ExecutionStage, cmdTxt []byte, out *websocket.Conn) error {
-	ct := strings.TrimSpace(string(cmdTxt))
+func (ep *ExecutionPlan) CommandExecutor(ctx context.Context,  dryRun bool, cmdTxt []byte, out *websocket.Conn) error {
 
 	var stageLog *log.Logger
-	if stage != nil {
-		SR(out, []byte("Initializing stage log file ..."))
-		stageLog = log.New()
-		fileName := DiceConfig.WorkHome + "/super/" + stage.Name + "-output.log"
-		logFile, err := os.OpenFile(fileName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
-		if err != nil {
-			SRf(out, "Failed to save stage log, using default stderr, %s\n", err)
-			return err
-		}
-		stageLog.SetOutput(logFile)
-		stageLog.SetFormatter(&log.JSONFormatter{DisableTimestamp: true})
-		SR(out, []byte("Initializing stage log file with success"))
+	SR(out, []byte("Initializing stage log file ..."))
+	stageLog = log.New()
+	fileName := DiceConfig.WorkHome + "/super/" + ep.CurrentStage.Name + "-output.log"
+	logFile, err := os.OpenFile(fileName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		SRf(out, "Failed to save stage log, using default stderr, %s\n", err)
+		return err
 	}
+	stageLog.SetOutput(logFile)
+	stageLog.SetFormatter(&log.JSONFormatter{DisableTimestamp: true})
+	SR(out, []byte("Initializing stage log file with success"))
 
-	SRf(out, "cmd => '%s'\n", ct)
+	SRf(out, "cmd => '%s'\n", cmdTxt)
+	if !dryRun {
+		return ep.LinuxCommandExecutor(ctx, cmdTxt, stageLog, out)
+	} else {
+		testData, err := DiceConfig.LoadTestOutput(ep.CurrentStage.TileName)
+		if err != nil {
+			log.Printf("No testing output for %s\n", ep.CurrentStage.TileName)
+		} else {
+			logFile.Write(testData)
+			//stageLog.Printf("%s", testData)
+		}
+	}
+	return nil
+}
+
+func (ep *ExecutionPlan) LinuxCommandExecutor(ctx context.Context, cmdTxt []byte, stageLog *log.Logger, out *websocket.Conn) error {
+	ct := strings.TrimSpace(string(cmdTxt))
 	cts := strings.Split(ct, " ")
 	cmd := exec.Command(cts[0], cts[1:]...)
 
@@ -198,16 +234,16 @@ func (ep *ExecutionPlan) CommandExecutor(ctx context.Context, stage *ExecutionSt
 
 	if err != nil {
 		SRf(out, "cmd.Run() failed with %s\n", err)
-		return err
 	}
-
-	return nil
+	return err
 }
 
 // CommandWrapperExecutor wrap commands as a unix script in order to execute.
-func (ep *ExecutionPlan) CommandWrapperExecutor(ctx context.Context, stage *ExecutionStage, out *websocket.Conn) (string, error) {
+func (ep *ExecutionPlan) CommandWrapperExecutor(ctx context.Context, dryRun bool, out *websocket.Conn) (string, error) {
 	//stage.WorkHome
-	script := stage.WorkHome + "/script-" + stage.Name + "-" + RandString(8) + ".sh"
+	script := ep.CurrentStage.WorkHome + "/script-" + ep.CurrentStage.Name + "-" + RandString(8) + ".sh"
+	// context id
+	dSid := ctx.Value(`d-sid`).(string)
 	tContent := `#!/bin/bash
 set -xe
 {{range .InjectedEnv}}
@@ -238,52 +274,40 @@ set -xe
 {{end}}
 echo $?
 `
-	//Insert kube.config if need to
-	dSid := ctx.Value(`d-sid`).(string)
+	//Inject kube.config if need to
 	if at, ok := AllTs[dSid]; ok {
-		if stack, ok := at.TsStacksMap[stage.TileName]; ok {
+		if stack, ok := at.TsStacksMapN[ep.CurrentStage.Name]; ok {
 			// Looking for initial kube.config. For EKS, require clusterName, masterRoleARN ; For others, not implementing.
 			if stack.TsManifests.ManifestType != "" {
 				var clusterName, masterRoleARN string
 				// Tile with dependency
-				if stack.TsManifests.VendorService == EKS.VSString() {
-					if outputs, ok := at.AllOutputs[stack.TsManifests.DependentTile]; ok {
-						cn, ok := outputs.TsOutputs["clusterName"]
-						if !ok {
-							return script, errors.New("ContainerProvider with EKS didn'stack include output: clusterName.")
+				if tile := DependentEKSTile(dSid, stack.TileInstance); tile != nil {
+					if outputs, ok := at.AllOutputsN[tile.TileInstance]; ok {
+						if cn, ok := outputs.TsOutputs["clusterName"]; ok {
+							clusterName = cn.OutputValue
 						}
-						clusterName = cn.OutputValue
-
-						arn, ok := outputs.TsOutputs["masterRoleARN"]
-						if !ok {
-							return script, errors.New("ContainerProvider with EKS didn'stack include output: masterRoleARN.")
+						if arn, ok := outputs.TsOutputs["masterRoleARN"]; ok {
+							masterRoleARN = arn.OutputValue
 						}
-						masterRoleARN = arn.OutputValue
-
 					}
 				}
 				// Tile without dependency but input parameters
-				if stack, ok := at.TsStacksMap[stage.TileName]; ok {
-					category := stack.TileCategory
-					if t, ok := at.AllTiles[category+"-"+stage.TileName]; ok {
-						if t.Metadata.DependentOnVendorService == EKS.VSString() {
-							if s, ok := at.TsStacksMap[stage.TileName]; ok {
-								inputParameters, ok := s.InputParameters["clusterName"]
-								if !ok {
-									return script, errors.New("ContainerProvider with EKS didn'stack include output: clusterName.")
-								}
+				if tile, ok := at.AllTilesN[ep.CurrentStage.Name]; ok {
+					if tile.Metadata.DependentOnVendorService == EKS.VSString() {
+						if s, ok := at.TsStacksMapN[ep.CurrentStage.Name]; ok {
+							if inputParameters, ok := s.InputParameters["clusterName"]; ok {
 								clusterName = inputParameters.InputValue
-
-								inputParameters, ok = s.InputParameters["masterRoleARN"]
-								if !ok {
-									return script, errors.New("ContainerProvider with EKS didn'stack include output: masterRoleARN.")
-								}
+							}
+							if inputParameters, ok := s.InputParameters["masterRoleARN"]; ok {
 								masterRoleARN = inputParameters.InputValue
 							}
 						}
 					}
 				}
 
+				if (clusterName == "" || masterRoleARN == "") && !dryRun {
+					return script, errors.New("ContainerProvider with EKS didn't include output: clusterName & masterRoleARN")
+				}
 				tContent4K8s = strings.ReplaceAll(tContent4K8s, "[kube.config]",
 					fmt.Sprintf("aws eks update-kubeconfig --name %s --role-arn %s --kubeconfig %s\nexport KUBECONFIG=%s",
 						clusterName,
@@ -296,18 +320,16 @@ echo $?
 			////
 
 			// Inject output values as env which can be retrieved only after execution
-			if tile, ok := at.AllTiles[stack.TileCategory+"-"+stage.TileName]; ok {
-				for _, td := range tile.Spec.Dependencies {
-					if to, ok := at.AllOutputs[td.TileReference]; ok {
-						for k, v := range to.TsOutputs {
-							//$D-TBD_TileName.Output-Name
-							if v.OutputValue != "" {
-								stage.InjectedEnv = append(stage.InjectedEnv, fmt.Sprintf("export D_TBD_%s_%s=%s",
-									strings.ReplaceAll(strings.ToUpper(stage.TileName), "-", "_"),
-									strings.ToUpper(k),
-									v.OutputValue))
-							}
-
+			dependentTiles := AllDependentTiles(dSid, ep.CurrentStage.Name)
+			for _, tile := range dependentTiles {
+				if to, ok := at.AllOutputsN[tile.TileInstance]; ok {
+					for k, v := range to.TsOutputs {
+						//$D-TBD_TileName.Output-Name
+						if v.OutputValue != "" {
+							ep.CurrentStage.InjectedEnv = append(ep.CurrentStage.InjectedEnv, fmt.Sprintf("export D_TBD_%s_%s=%s",
+								strcase.ToScreamingSnake(strings.ToUpper(ep.CurrentStage.TileName)),
+								strings.ToUpper(k),
+								v.OutputValue))
 						}
 					}
 				}
@@ -329,7 +351,26 @@ echo $?
 		return script, err
 	}
 	defer file.Close()
-	err = tp.Execute(file, stage)
+
+	// !!! Replace $(value) to actual value !!!
+	for _, kvs := range [][]string{ep.CurrentStage.InjectedEnv,
+									ep.CurrentStage.Preparation,
+									ep.CurrentStage.Commands,
+									ep.CurrentStage.PostRunCommands } {
+		for i, vs := range  kvs {
+			if strings.Contains(vs, "$(") {
+				val, err := ValueRef(dSid, vs[strings.Index(vs,"=")+1:], ep.CurrentStage.Name)
+				if err != nil {
+					SR(out, []byte(err.Error()))
+				} else {
+					ep.CurrentStage.InjectedEnv[i] = vs[0:strings.Index(vs,"=")+1]+val
+				}
+			}
+		}
+	}
+	////
+
+	err = tp.Execute(file, ep.CurrentStage)
 	if err != nil {
 		SR(out, []byte(err.Error()))
 		return script, err
@@ -360,30 +401,31 @@ func (ep *ExecutionPlan) WsTail(ctx context.Context, reader io.ReadCloser, stage
 
 // ExtractValue retrieve values from output logs.
 func (ep *ExecutionPlan) ExtractValue(ctx context.Context, buf []byte, out *websocket.Conn) error {
-	key := ctx.Value(`d-sid`).(string)
-	if ts, ok := AllTs[key]; ok {
-		tileName := ep.CurrentStage.TileName
+	dSid := ctx.Value(`d-sid`).(string)
+	allEnv := ep.ExtractAllEnv()
+	if ts, ok := AllTs[dSid]; ok {
+		tileInstance := ep.CurrentStage.Name
 		var tileCategory string
 		//var vendorService string
-		if stack, ok := ts.TsStacksMap[tileName]; ok {
+		if stack, ok := ts.TsStacksMapN[tileInstance]; ok {
 			tileCategory = stack.TileCategory
 		}
 
-		if outputs, ok := ts.AllOutputs[tileName]; ok {
+		if outputs, ok := ts.AllOutputsN[tileInstance]; ok {
 			outputs.StageName = ep.CurrentStage.Name
 			for outputName, outputDetail := range outputs.TsOutputs {
 				var regx *regexp.Regexp
 				if tileCategory == ContainerApplication.CString() || tileCategory == Application.CString() {
-					// Extract key, value from Command outputs
+					// Extract dSid, value from Command outputs
 					regx = regexp.MustCompile("^\\{\"(" +
 						outputName +
 						"=" +
 						".*?)\"}$")
 				} else {
-					// Extract key, value from CDK outputs
-					if stack, ok := ts.TsStacksMap[tileName]; ok {
+					// Extract dSid, value from CDK outputs
+					if stack, ok := ts.TsStacksMapN[tileInstance]; ok {
 						regx = regexp.MustCompile("^\\{\"level\":\"info\"\\,\"msg\":\"(" +
-							stack.TileStackName + "." +
+							stack.TileName + "." +
 							".*" +
 							outputName +
 							".*?)\"}$")
@@ -402,18 +444,30 @@ func (ep *ExecutionPlan) ExtractValue(ctx context.Context, buf []byte, out *webs
 						break
 					}
 				}
-
+				// Replace possible ENV in output
+				if strings.Contains(outputDetail.OutputValue,"$") {
+					outputDetail.OutputValue = ep.ReplaceAllEnv(outputDetail.OutputValue, allEnv)
+				}
 			}
-
 		}
 
+		// Pass output values to parent stack
+		if parentTileInstance := ParentTileInstance(dSid, tileInstance); parentTileInstance!="" {
+			if outputs, ok := ts.AllOutputsN[tileInstance]; ok {
+				if parentOutputs, ok := ts.AllOutputsN[parentTileInstance]; ok {
+					for k, v := range outputs.TsOutputs {
+						parentOutputs.TsOutputs[k] = v
+					}
+				}
+			}
+		}
 	}
 
 	return nil
 }
 
 // PostRun manages and executes commands after provision
-func (ep *ExecutionPlan) PostRun(ctx context.Context, buf []byte, out *websocket.Conn) error {
+func (ep *ExecutionPlan) PostRun(ctx context.Context,  dryRun bool, buf []byte, out *websocket.Conn) error {
 	stage := ep.CurrentStage
 	script := stage.WorkHome + "/script-" + stage.Name + "-Post-" + RandString(8) + ".sh"
 	file, err := os.OpenFile(script, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755) //Create(script)
@@ -438,17 +492,15 @@ echo $?
 	// Injected output values of current Tile as env
 	dSid := ctx.Value(`d-sid`).(string)
 	if at, ok := AllTs[dSid]; ok {
-		if stack, ok := at.TsStacksMap[stage.TileName]; ok {
-			if tile, ok := at.AllTiles[stack.TileCategory+"-"+stage.TileName]; ok {
-				if to, ok := at.AllOutputs[tile.Metadata.Name]; ok {
-					for k, v := range to.TsOutputs {
-						//$D-TBD_TileName.Output-Name
-						if v.OutputValue != "" {
-							stage.InjectedEnv = append(stage.InjectedEnv, fmt.Sprintf("export D_TBD_%s_%s=%s",
-								strings.ReplaceAll(strings.ToUpper(stage.TileName), "-", "_"),
-								strings.ToUpper(k),
-								v.OutputValue))
-						}
+		if tile, ok := at.AllTilesN[stage.Name]; ok {
+			if to, ok := at.AllOutputsN[tile.TileInstance]; ok {
+				for k, v := range to.TsOutputs {
+					//$D-TBD_TileName.Output-Name
+					if v.OutputValue != "" {
+						stage.InjectedEnv = append(stage.InjectedEnv, fmt.Sprintf("export D_TBD_%s_%s=%s",
+							strcase.ToScreamingSnake(strings.ToUpper(stage.TileName)),
+							strings.ToUpper(k),
+							v.OutputValue))
 					}
 				}
 			}
@@ -473,7 +525,7 @@ echo $?
 	SR(out, cnt)
 	SR(out, []byte("--EO:-------------------------------------------------"))
 
-	return ep.CommandExecutor(ctx, stage, []byte(script), out)
+	return ep.CommandExecutor(ctx, dryRun, []byte(script), out)
 
 }
 

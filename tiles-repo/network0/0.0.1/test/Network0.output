@@ -1,0 +1,123 @@
+{"level":"info","msg":"+ export WORK_HOME=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/super"}
+{"level":"info","msg":"+ WORK_HOME=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/super"}
+{"level":"info","msg":"+ export TILE_HOME=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/super/lib/network0"}
+{"level":"info","msg":"+ TILE_HOME=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/super/lib/network0"}
+{"level":"info","msg":"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/super"}
+{"level":"info","msg":"+ npm install"}
+{"level":"info","msg":"npm WARN deprecated request@2.88.2: request has been deprecated, see https://github.com/request/request/issues/3142"}
+{"level":"info","msg":"npm WARN super@0.1.0 No repository field."}
+{"level":"info","msg":"npm WARN super@0.1.0 No license field."}
+{"level":"info","msg":""}
+{"level":"info","msg":"added 851 packages from 471 contributors and audited 853 packages in 53.961s"}
+{"level":"info","msg":""}
+{"level":"info","msg":"14 packages are looking for funding"}
+{"level":"info","msg":"  run `npm fund` for details"}
+{"level":"info","msg":""}
+{"level":"info","msg":"found 0 vulnerabilities"}
+{"level":"info","msg":""}
+{"level":"info","msg":"+ npm run build"}
+{"level":"info","msg":""}
+{"level":"info","msg":"\u003e super@0.1.0 build /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/super"}
+{"level":"info","msg":"\u003e tsc"}
+{"level":"info","msg":""}
+{"level":"info","msg":"+ cdk list"}
+{"level":"info","msg":"Network0Stackaa9d0fc3"}
+{"level":"info","msg":"Eks0Stackcda1c3ac"}
+{"level":"info","msg":"+ cdk deploy Network0Stackaa9d0fc3 --require-approval never"}
+{"level":"info","msg":"Network0Stackaa9d0fc3: deploying..."}
+{"level":"info","msg":"Network0Stackaa9d0fc3: creating CloudFormation changeset..."}
+{"level":"info","msg":"  0/25 | 1:02:19 PM | CREATE_IN_PROGRESS   | AWS::CDK::Metadata                    | CDKMetadata "}
+{"level":"info","msg":"  0/25 | 1:02:19 PM | CREATE_IN_PROGRESS   | AWS::EC2::EIP                         | Network0/BaseVPC/PublicSubnet2/EIP (Network0BaseVPCPublicSubnet2EIP2C783132) "}
+{"level":"info","msg":"  0/25 | 1:02:19 PM | CREATE_IN_PROGRESS   | AWS::EC2::VPC                         | Network0/BaseVPC (Network0BaseVPCF17C8F45) "}
+{"level":"info","msg":"  0/25 | 1:02:19 PM | CREATE_IN_PROGRESS   | AWS::EC2::InternetGateway             | Network0/BaseVPC/IGW (Network0BaseVPCIGWA87D71A0) "}
+{"level":"info","msg":"  0/25 | 1:02:19 PM | CREATE_IN_PROGRESS   | AWS::EC2::EIP                         | Network0/BaseVPC/PublicSubnet1/EIP (Network0BaseVPCPublicSubnet1EIP36E27698) "}
+{"level":"info","msg":"  0/25 | 1:02:19 PM | CREATE_IN_PROGRESS   | AWS::EC2::VPC                         | Network0/BaseVPC (Network0BaseVPCF17C8F45) Resource creation Initiated"}
+{"level":"info","msg":"  0/25 | 1:02:19 PM | CREATE_IN_PROGRESS   | AWS::EC2::InternetGateway             | Network0/BaseVPC/IGW (Network0BaseVPCIGWA87D71A0) Resource creation Initiated"}
+{"level":"info","msg":"  0/25 | 1:02:19 PM | CREATE_IN_PROGRESS   | AWS::EC2::EIP                         | Network0/BaseVPC/PublicSubnet2/EIP (Network0BaseVPCPublicSubnet2EIP2C783132) Resource creation Initiated"}
+{"level":"info","msg":"  0/25 | 1:02:19 PM | CREATE_IN_PROGRESS   | AWS::EC2::EIP                         | Network0/BaseVPC/PublicSubnet1/EIP (Network0BaseVPCPublicSubnet1EIP36E27698) Resource creation Initiated"}
+{"level":"info","msg":"  0/25 | 1:02:20 PM | CREATE_IN_PROGRESS   | AWS::CDK::Metadata                    | CDKMetadata Resource creation Initiated"}
+{"level":"info","msg":"  1/25 | 1:02:21 PM | CREATE_COMPLETE      | AWS::CDK::Metadata                    | CDKMetadata "}
+{"level":"info","msg":"  2/25 | 1:02:35 PM | CREATE_COMPLETE      | AWS::EC2::EIP                         | Network0/BaseVPC/PublicSubnet2/EIP (Network0BaseVPCPublicSubnet2EIP2C783132) "}
+{"level":"info","msg":"  3/25 | 1:02:35 PM | CREATE_COMPLETE      | AWS::EC2::InternetGateway             | Network0/BaseVPC/IGW (Network0BaseVPCIGWA87D71A0) "}
+{"level":"info","msg":"  4/25 | 1:02:35 PM | CREATE_COMPLETE      | AWS::EC2::EIP                         | Network0/BaseVPC/PublicSubnet1/EIP (Network0BaseVPCPublicSubnet1EIP36E27698) "}
+{"level":"info","msg":"  5/25 | 1:02:36 PM | CREATE_COMPLETE      | AWS::EC2::VPC                         | Network0/BaseVPC (Network0BaseVPCF17C8F45) "}
+{"level":"info","msg":"  5/25 | 1:02:37 PM | CREATE_IN_PROGRESS   | AWS::EC2::RouteTable                  | Network0/BaseVPC/PublicSubnet2/RouteTable (Network0BaseVPCPublicSubnet2RouteTableB5AE379F) "}
+{"level":"info","msg":"  5/25 | 1:02:37 PM | CREATE_IN_PROGRESS   | AWS::EC2::Subnet                      | Network0/BaseVPC/PublicSubnet1/Subnet (Network0BaseVPCPublicSubnet1SubnetA4A58F16) "}
+{"level":"info","msg":"  5/25 | 1:02:37 PM | CREATE_IN_PROGRESS   | AWS::EC2::RouteTable                  | Network0/BaseVPC/PublicSubnet1/RouteTable (Network0BaseVPCPublicSubnet1RouteTable63EEF13A) "}
+{"level":"info","msg":"  5/25 | 1:02:37 PM | CREATE_IN_PROGRESS   | AWS::EC2::Subnet                      | Network0/BaseVPC/PrivateSubnet1/Subnet (Network0BaseVPCPrivateSubnet1Subnet1E8C6EF9) "}
+{"level":"info","msg":"  5/25 | 1:02:37 PM | CREATE_IN_PROGRESS   | AWS::EC2::VPCGatewayAttachment        | Network0/BaseVPC/VPCGW (Network0BaseVPCVPCGWD488E91E) "}
+{"level":"info","msg":"  5/25 | 1:02:37 PM | CREATE_IN_PROGRESS   | AWS::EC2::RouteTable                  | Network0/BaseVPC/PrivateSubnet2/RouteTable (Network0BaseVPCPrivateSubnet2RouteTable3CA80346) "}
+{"level":"info","msg":"  5/25 | 1:02:37 PM | CREATE_IN_PROGRESS   | AWS::EC2::Subnet                      | Network0/BaseVPC/PublicSubnet2/Subnet (Network0BaseVPCPublicSubnet2Subnet17A8456F) "}
+{"level":"info","msg":"  5/25 | 1:02:37 PM | CREATE_IN_PROGRESS   | AWS::EC2::Subnet                      | Network0/BaseVPC/PrivateSubnet2/Subnet (Network0BaseVPCPrivateSubnet2SubnetB81072E8) "}
+{"level":"info","msg":"  5/25 | 1:02:37 PM | CREATE_IN_PROGRESS   | AWS::EC2::RouteTable                  | Network0/BaseVPC/PrivateSubnet1/RouteTable (Network0BaseVPCPrivateSubnet1RouteTable3DF2A811) "}
+{"level":"info","msg":"  5/25 | 1:02:37 PM | CREATE_IN_PROGRESS   | AWS::EC2::RouteTable                  | Network0/BaseVPC/PublicSubnet2/RouteTable (Network0BaseVPCPublicSubnet2RouteTableB5AE379F) Resource creation Initiated"}
+{"level":"info","msg":"  5/25 | 1:02:38 PM | CREATE_IN_PROGRESS   | AWS::EC2::RouteTable                  | Network0/BaseVPC/PublicSubnet1/RouteTable (Network0BaseVPCPublicSubnet1RouteTable63EEF13A) Resource creation Initiated"}
+{"level":"info","msg":"  5/25 | 1:02:38 PM | CREATE_IN_PROGRESS   | AWS::EC2::RouteTable                  | Network0/BaseVPC/PrivateSubnet2/RouteTable (Network0BaseVPCPrivateSubnet2RouteTable3CA80346) Resource creation Initiated"}
+{"level":"info","msg":"  5/25 | 1:02:38 PM | CREATE_IN_PROGRESS   | AWS::EC2::Subnet                      | Network0/BaseVPC/PrivateSubnet1/Subnet (Network0BaseVPCPrivateSubnet1Subnet1E8C6EF9) Resource creation Initiated"}
+{"level":"info","msg":"  5/25 | 1:02:38 PM | CREATE_IN_PROGRESS   | AWS::EC2::VPCGatewayAttachment        | Network0/BaseVPC/VPCGW (Network0BaseVPCVPCGWD488E91E) Resource creation Initiated"}
+{"level":"info","msg":"  5/25 | 1:02:38 PM | CREATE_IN_PROGRESS   | AWS::EC2::RouteTable                  | Network0/BaseVPC/PrivateSubnet1/RouteTable (Network0BaseVPCPrivateSubnet1RouteTable3DF2A811) Resource creation Initiated"}
+{"level":"info","msg":"  5/25 | 1:02:38 PM | CREATE_IN_PROGRESS   | AWS::EC2::Subnet                      | Network0/BaseVPC/PublicSubnet1/Subnet (Network0BaseVPCPublicSubnet1SubnetA4A58F16) Resource creation Initiated"}
+{"level":"info","msg":"  5/25 | 1:02:38 PM | CREATE_IN_PROGRESS   | AWS::EC2::Subnet                      | Network0/BaseVPC/PublicSubnet2/Subnet (Network0BaseVPCPublicSubnet2Subnet17A8456F) Resource creation Initiated"}
+{"level":"info","msg":"  5/25 | 1:02:38 PM | CREATE_IN_PROGRESS   | AWS::EC2::Subnet                      | Network0/BaseVPC/PrivateSubnet2/Subnet (Network0BaseVPCPrivateSubnet2SubnetB81072E8) Resource creation Initiated"}
+{"level":"info","msg":"  6/25 | 1:02:38 PM | CREATE_COMPLETE      | AWS::EC2::RouteTable                  | Network0/BaseVPC/PublicSubnet2/RouteTable (Network0BaseVPCPublicSubnet2RouteTableB5AE379F) "}
+{"level":"info","msg":"  7/25 | 1:02:39 PM | CREATE_COMPLETE      | AWS::EC2::RouteTable                  | Network0/BaseVPC/PrivateSubnet1/RouteTable (Network0BaseVPCPrivateSubnet1RouteTable3DF2A811) "}
+{"level":"info","msg":"  8/25 | 1:02:39 PM | CREATE_COMPLETE      | AWS::EC2::RouteTable                  | Network0/BaseVPC/PrivateSubnet2/RouteTable (Network0BaseVPCPrivateSubnet2RouteTable3CA80346) "}
+{"level":"info","msg":"  9/25 | 1:02:39 PM | CREATE_COMPLETE      | AWS::EC2::RouteTable                  | Network0/BaseVPC/PublicSubnet1/RouteTable (Network0BaseVPCPublicSubnet1RouteTable63EEF13A) "}
+{"level":"info","msg":" 10/25 | 1:02:53 PM | CREATE_COMPLETE      | AWS::EC2::VPCGatewayAttachment        | Network0/BaseVPC/VPCGW (Network0BaseVPCVPCGWD488E91E) "}
+{"level":"info","msg":" 11/25 | 1:02:54 PM | CREATE_COMPLETE      | AWS::EC2::Subnet                      | Network0/BaseVPC/PrivateSubnet1/Subnet (Network0BaseVPCPrivateSubnet1Subnet1E8C6EF9) "}
+{"level":"info","msg":" 12/25 | 1:02:54 PM | CREATE_COMPLETE      | AWS::EC2::Subnet                      | Network0/BaseVPC/PublicSubnet2/Subnet (Network0BaseVPCPublicSubnet2Subnet17A8456F) "}
+{"level":"info","msg":" 13/25 | 1:02:54 PM | CREATE_COMPLETE      | AWS::EC2::Subnet                      | Network0/BaseVPC/PrivateSubnet2/Subnet (Network0BaseVPCPrivateSubnet2SubnetB81072E8) "}
+{"level":"info","msg":" 14/25 | 1:02:54 PM | CREATE_COMPLETE      | AWS::EC2::Subnet                      | Network0/BaseVPC/PublicSubnet1/Subnet (Network0BaseVPCPublicSubnet1SubnetA4A58F16) "}
+{"level":"info","msg":" 14/25 | 1:02:55 PM | CREATE_IN_PROGRESS   | AWS::EC2::Route                       | Network0/BaseVPC/PublicSubnet1/DefaultRoute (Network0BaseVPCPublicSubnet1DefaultRoute5F661903) "}
+{"level":"info","msg":" 14/25 | 1:02:55 PM | CREATE_IN_PROGRESS   | AWS::EC2::Route                       | Network0/BaseVPC/PublicSubnet2/DefaultRoute (Network0BaseVPCPublicSubnet2DefaultRoute20EDE339) "}
+{"level":"info","msg":" 14/25 | 1:02:55 PM | CREATE_IN_PROGRESS   | AWS::EC2::Route                       | Network0/BaseVPC/PublicSubnet1/DefaultRoute (Network0BaseVPCPublicSubnet1DefaultRoute5F661903) Resource creation Initiated"}
+{"level":"info","msg":" 14/25 | 1:02:55 PM | CREATE_IN_PROGRESS   | AWS::EC2::Route                       | Network0/BaseVPC/PublicSubnet2/DefaultRoute (Network0BaseVPCPublicSubnet2DefaultRoute20EDE339) Resource creation Initiated"}
+{"level":"info","msg":" 14/25 | 1:02:56 PM | CREATE_IN_PROGRESS   | AWS::EC2::SubnetRouteTableAssociation | Network0/BaseVPC/PrivateSubnet1/RouteTableAssociation (Network0BaseVPCPrivateSubnet1RouteTableAssociationFAB38A5B) "}
+{"level":"info","msg":" 14/25 | 1:02:56 PM | CREATE_IN_PROGRESS   | AWS::EC2::SubnetRouteTableAssociation | Network0/BaseVPC/PrivateSubnet2/RouteTableAssociation (Network0BaseVPCPrivateSubnet2RouteTableAssociationE79330DC) "}
+{"level":"info","msg":" 14/25 | 1:02:56 PM | CREATE_IN_PROGRESS   | AWS::EC2::NatGateway                  | Network0/BaseVPC/PublicSubnet2/NATGateway (Network0BaseVPCPublicSubnet2NATGateway905F1282) "}
+{"level":"info","msg":" 14/25 | 1:02:56 PM | CREATE_IN_PROGRESS   | AWS::EC2::SubnetRouteTableAssociation | Network0/BaseVPC/PublicSubnet2/RouteTableAssociation (Network0BaseVPCPublicSubnet2RouteTableAssociationAC054D83) "}
+{"level":"info","msg":" 14/25 | 1:02:56 PM | CREATE_IN_PROGRESS   | AWS::EC2::NatGateway                  | Network0/BaseVPC/PublicSubnet1/NATGateway (Network0BaseVPCPublicSubnet1NATGateway173E29D2) "}
+{"level":"info","msg":" 14/25 | 1:02:56 PM | CREATE_IN_PROGRESS   | AWS::EC2::SubnetRouteTableAssociation | Network0/BaseVPC/PublicSubnet1/RouteTableAssociation (Network0BaseVPCPublicSubnet1RouteTableAssociation8C9B7937) "}
+{"level":"info","msg":" 14/25 | 1:02:56 PM | CREATE_IN_PROGRESS   | AWS::EC2::NatGateway                  | Network0/BaseVPC/PublicSubnet2/NATGateway (Network0BaseVPCPublicSubnet2NATGateway905F1282) Resource creation Initiated"}
+{"level":"info","msg":" 14/25 | 1:02:56 PM | CREATE_IN_PROGRESS   | AWS::EC2::NatGateway                  | Network0/BaseVPC/PublicSubnet1/NATGateway (Network0BaseVPCPublicSubnet1NATGateway173E29D2) Resource creation Initiated"}
+{"level":"info","msg":" 14/25 | 1:02:56 PM | CREATE_IN_PROGRESS   | AWS::EC2::SubnetRouteTableAssociation | Network0/BaseVPC/PrivateSubnet1/RouteTableAssociation (Network0BaseVPCPrivateSubnet1RouteTableAssociationFAB38A5B) Resource creation Initiated"}
+{"level":"info","msg":" 14/25 | 1:02:56 PM | CREATE_IN_PROGRESS   | AWS::EC2::SubnetRouteTableAssociation | Network0/BaseVPC/PrivateSubnet2/RouteTableAssociation (Network0BaseVPCPrivateSubnet2RouteTableAssociationE79330DC) Resource creation Initiated"}
+{"level":"info","msg":" 14/25 | 1:02:56 PM | CREATE_IN_PROGRESS   | AWS::EC2::SubnetRouteTableAssociation | Network0/BaseVPC/PublicSubnet2/RouteTableAssociation (Network0BaseVPCPublicSubnet2RouteTableAssociationAC054D83) Resource creation Initiated"}
+{"level":"info","msg":" 14/25 | 1:02:56 PM | CREATE_IN_PROGRESS   | AWS::EC2::SubnetRouteTableAssociation | Network0/BaseVPC/PublicSubnet1/RouteTableAssociation (Network0BaseVPCPublicSubnet1RouteTableAssociation8C9B7937) Resource creation Initiated"}
+{"level":"info","msg":" 15/25 | 1:03:11 PM | CREATE_COMPLETE      | AWS::EC2::Route                       | Network0/BaseVPC/PublicSubnet1/DefaultRoute (Network0BaseVPCPublicSubnet1DefaultRoute5F661903) "}
+{"level":"info","msg":" 16/25 | 1:03:11 PM | CREATE_COMPLETE      | AWS::EC2::Route                       | Network0/BaseVPC/PublicSubnet2/DefaultRoute (Network0BaseVPCPublicSubnet2DefaultRoute20EDE339) "}
+{"level":"info","msg":" 17/25 | 1:03:12 PM | CREATE_COMPLETE      | AWS::EC2::SubnetRouteTableAssociation | Network0/BaseVPC/PrivateSubnet2/RouteTableAssociation (Network0BaseVPCPrivateSubnet2RouteTableAssociationE79330DC) "}
+{"level":"info","msg":" 18/25 | 1:03:12 PM | CREATE_COMPLETE      | AWS::EC2::SubnetRouteTableAssociation | Network0/BaseVPC/PrivateSubnet1/RouteTableAssociation (Network0BaseVPCPrivateSubnet1RouteTableAssociationFAB38A5B) "}
+{"level":"info","msg":" 19/25 | 1:03:12 PM | CREATE_COMPLETE      | AWS::EC2::SubnetRouteTableAssociation | Network0/BaseVPC/PublicSubnet1/RouteTableAssociation (Network0BaseVPCPublicSubnet1RouteTableAssociation8C9B7937) "}
+{"level":"info","msg":" 20/25 | 1:03:12 PM | CREATE_COMPLETE      | AWS::EC2::SubnetRouteTableAssociation | Network0/BaseVPC/PublicSubnet2/RouteTableAssociation (Network0BaseVPCPublicSubnet2RouteTableAssociationAC054D83) "}
+{"level":"info","msg":"20/25 Currently in progress: Network0BaseVPCPublicSubnet2NATGateway905F1282, Network0BaseVPCPublicSubnet1NATGateway173E29D2"}
+{"level":"info","msg":" 21/25 | 1:04:29 PM | CREATE_COMPLETE      | AWS::EC2::NatGateway                  | Network0/BaseVPC/PublicSubnet2/NATGateway (Network0BaseVPCPublicSubnet2NATGateway905F1282) "}
+{"level":"info","msg":" 21/25 | 1:04:31 PM | CREATE_IN_PROGRESS   | AWS::EC2::Route                       | Network0/BaseVPC/PrivateSubnet2/DefaultRoute (Network0BaseVPCPrivateSubnet2DefaultRoute7BDCFA7E) "}
+{"level":"info","msg":" 21/25 | 1:04:32 PM | CREATE_IN_PROGRESS   | AWS::EC2::Route                       | Network0/BaseVPC/PrivateSubnet2/DefaultRoute (Network0BaseVPCPrivateSubnet2DefaultRoute7BDCFA7E) Resource creation Initiated"}
+{"level":"info","msg":" 22/25 | 1:04:47 PM | CREATE_COMPLETE      | AWS::EC2::Route                       | Network0/BaseVPC/PrivateSubnet2/DefaultRoute (Network0BaseVPCPrivateSubnet2DefaultRoute7BDCFA7E) "}
+{"level":"info","msg":" 23/25 | 1:04:59 PM | CREATE_COMPLETE      | AWS::EC2::NatGateway                  | Network0/BaseVPC/PublicSubnet1/NATGateway (Network0BaseVPCPublicSubnet1NATGateway173E29D2) "}
+{"level":"info","msg":" 23/25 | 1:05:01 PM | CREATE_IN_PROGRESS   | AWS::EC2::Route                       | Network0/BaseVPC/PrivateSubnet1/DefaultRoute (Network0BaseVPCPrivateSubnet1DefaultRouteEBAFB01B) "}
+{"level":"info","msg":" 23/25 | 1:05:02 PM | CREATE_IN_PROGRESS   | AWS::EC2::Route                       | Network0/BaseVPC/PrivateSubnet1/DefaultRoute (Network0BaseVPCPrivateSubnet1DefaultRouteEBAFB01B) Resource creation Initiated"}
+{"level":"info","msg":" 24/25 | 1:05:17 PM | CREATE_COMPLETE      | AWS::EC2::Route                       | Network0/BaseVPC/PrivateSubnet1/DefaultRoute (Network0BaseVPCPrivateSubnet1DefaultRouteEBAFB01B) "}
+{"level":"info","msg":" 25/25 | 1:05:19 PM | CREATE_COMPLETE      | AWS::CloudFormation::Stack            | Network0Stackaa9d0fc3 "}
+{"level":"info","msg":""}
+{"level":"info","msg":" ✅  Network0Stackaa9d0fc3"}
+{"level":"info","msg":""}
+{"level":"info","msg":"Outputs:"}
+{"level":"info","msg":"Network0Stackaa9d0fc3.Network0publicSubnetId1AE831B0A = subnet-0f648aa6be151252d"}
+{"level":"info","msg":"Network0Stackaa9d0fc3.ExportsOutputRefNetwork0BaseVPCPublicSubnet1SubnetA4A58F16534FB2D0 = subnet-0f648aa6be151252d"}
+{"level":"info","msg":"Network0Stackaa9d0fc3.Network0availabilityZonesuswest2bD55CD48C = us-west-2b"}
+{"level":"info","msg":"Network0Stackaa9d0fc3.Network0privateSubnetId15BEF5820 = subnet-08cbab06aed78cfc6"}
+{"level":"info","msg":"Network0Stackaa9d0fc3.Network0publicSubnetId26BBC24FE = subnet-00dff320e84494673"}
+{"level":"info","msg":"Network0Stackaa9d0fc3.ExportsOutputRefNetwork0BaseVPCPrivateSubnet1Subnet1E8C6EF90CFC05E7 = subnet-08cbab06aed78cfc6"}
+{"level":"info","msg":"Network0Stackaa9d0fc3.ExportsOutputRefNetwork0BaseVPCF17C8F455FAB5CE7 = vpc-0e9a257173ed56938"}
+{"level":"info","msg":"Network0Stackaa9d0fc3.Network0privateSubnetId281C6427A = subnet-03737e09aeafc26ba"}
+{"level":"info","msg":"Network0Stackaa9d0fc3.Network0vpcId7C11C88F = vpc-0e9a257173ed56938"}
+{"level":"info","msg":"arn:aws:cloudformation:us-west-2:530820415924:stack/Network0Stackaa9d0fc3/84ba1700-9eec-11ea-a659-0a5c3e85f31a"}
+{"level":"info","msg":"Network0Stackaa9d0fc3.ExportsOutputRefNetwork0BaseVPCPrivateSubnet2SubnetB81072E8264A6F09 = subnet-03737e09aeafc26ba"}
+{"level":"info","msg":"Network0Stackaa9d0fc3.Network0availabilityZonesuswest2a30BA59C6 = us-west-2a"}
+{"level":"info","msg":"Network0Stackaa9d0fc3.ExportsOutputRefNetwork0BaseVPCPublicSubnet2Subnet17A8456FB8CAABE0 = subnet-00dff320e84494673"}
+{"level":"info","msg":""}
+{"level":"info","msg":"Stack ARN:"}
+{"level":"info","msg":"0"}
+{"level":"info","msg":"+ echo 0"}

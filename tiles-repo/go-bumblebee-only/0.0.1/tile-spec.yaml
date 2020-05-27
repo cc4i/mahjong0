@@ -6,10 +6,6 @@ metadata:
     version: 0.0.1
     dependentOnVendorService: EKS
 spec:
-  dependencies:
-    - name: argocd0
-      tileReference: Argocd0
-      tileVersion: 1.5.2
 
   global:
     env:
@@ -18,15 +14,16 @@ spec:
       - name: REPO_NAME
         value: go-bumblebee-tile
       - name: ACCESS_TOKEN
-        valueRef: accessToken
+         # <tileInstance.outputs.name> / self -> tileInstane of this Tile
+        valueRef: $(self.inputs.accessToken)
       - name: APP_NAMESPACE
         value: go-bumblebee
       - name: ARGOCD_NAMESPACE
-        valueRef: argocdNamespace
+        valueRef: $(self.inputs.argocdNamespace)
       - name: ARGOCD_USER
-        valueRef: argocdUser
+        valueRef: $(self.inputs.argocdUser)
       - name: ARGOCD_PASSWORD
-        valueRef: argocdPassword
+        valueRef: $(self.inputs.argocdPassword)
 
   preRun:
     stages:
@@ -66,16 +63,11 @@ spec:
       require: true
     - name: argocdUser
       inputType: String
-      require: false
-      dependencies:
-        - name: argocd0
-          field: user
+      require: true      
     - name: argocdPassword
       inputType: String
-      require: false
-      dependencies:
-        - name: argocd0
-          field: password
+      require: true
+
 
           
   # Ouptputs represnt output value after launched, for 'ContainerApplication' might need leverage specific command to retrive output.
@@ -83,8 +75,12 @@ spec:
     # FromCommand
     - name: appRepo
       outputType: String
-      defaultValue: https://github.com:$GITHUB_USER/$REPO_NAME.git
+      defaultValue: https://github.com/$GITHUB_USER/$REPO_NAME.git
       description: Custom::Repo        
+    - name: appNamespace
+      outputType: String
+      defaultValue: go-bumblebee
+      description: Custom::Namespace        
 
   notes: []
 

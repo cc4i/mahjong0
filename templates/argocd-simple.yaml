@@ -5,7 +5,8 @@ metadata:
 spec:
   template:
     tiles:
-      - tileReference: Argocd0
+      tileArgocd0152:
+        tileReference: Argocd0
         tileVersion: 1.5.2
         inputs:
           - name: cidr
@@ -22,24 +23,18 @@ spec:
           namespace: argocd-new
 
   summary:
-      description: Argo CD has been installed in $clusterName with success and checking out following notes to get started.
+      description: Argo CD has been installed in $(tileArgocd0152.outputs.clusterName) with success and checking out following notes to get started.
       outputs:
         - name: EKS Cluster Name
-          tileReference: Eks0
-          outputValueRef: clusterName
+          valueRef: $(tileArgocd0152.outputs.clusterName)
         - name: Master role arn for EKS Cluster
-          tileReference: Eks0
-          outputValueRef: masterRoleARN
+          valueRef: $(tileArgocd0152.outputs.masterRoleARN)
         - name: The API endpoint EKS Cluster
-          tileReference: Eks0
-          outputValueRef: clusterEndpoint
+          valueRef: $(tileArgocd0152.outputs.clusterEndpoint)
         - name: ArgoCD admin
-          tileReference: Argocd0
-          outputValueRef: user
+          valueRef: $(tileArgocd0152.outputs.user)
         - name: ArgoCD password
-          tileReference: Argocd0
-          outputValueRef: password
-        
+          valueRef: $(tileArgocd0152.outputs.password)        
 
       notes: 
         - kubectl port-forward svc/argocd-server -n $NAMESPACE 8080:443

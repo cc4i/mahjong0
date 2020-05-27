@@ -10,12 +10,18 @@ Building Cloud Native application is fairly hard, building Cloud Native applicat
 Customer could quickly spin up solutions on AWS and accelerating their adoption to AWS platform.
 
 
+# Goal 
+- Builders and customers can easily sharing technical & industry best practices through abstract building blocks.
+- Builders can easily test those building blocks without real provision.  
+- Customers have out-of-box experience without undifferentiated heavy-lifting.
+- With built-in abstract layer to accelerate solution building process.
+- Builders and customers can collaborate with the most efficient way.  
+- Building a community driven project to scale impact.
+
 # Proposal
 
 - Building a platform for both customers and builders to fulfil our goals, which we called Mahjong.
-
 - Mahjong has built-in mechanism to abstract best practice away from traditional solutions , so builders can quickly build new abstract block or full solution based on other building blocks or their own.
-
 - Customer can easily consumer full solution or combine any possible options to build a favorite one.
 
 

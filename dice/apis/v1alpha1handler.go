@@ -44,6 +44,7 @@ func WsHandler(ctx context.Context, c *gin.Context) {
 	//ws.SetWriteDeadline(time.Now().Add(5 * time.Second))
 	defer ws.Close()
 
+	linuxCommand := c.Query("linuxCommand") == "true"
 	dryRun := c.Query("dryRun") == "true"
 	for {
 		mt, message, err := ws.ReadMessage()
@@ -54,15 +55,18 @@ func WsHandler(ctx context.Context, c *gin.Context) {
 		log.Printf("recv: %s\n", message)
 
 		wb := WsBox{out: ws}
-		err = wb.Processor(stx, mt, message, dryRun)
+		if linuxCommand {
+			ep := &engine.ExecutionPlan{}
+			ep.LinuxCommandExecutor(stx, message, nil, wb.out)
+		} else {
+			err = wb.Processor(stx, mt, message, dryRun)
+		}
 		if err != nil {
 			engine.SR(wb.out, []byte(err.Error()))
 		}
 		// Signal client all done & Could close connection if need to
 		engine.SR(wb.out, []byte("d-done"))
-
 	}
-
 }
 
 // WsCloseHandler handle close connection
@@ -85,12 +89,7 @@ func (wb *WsBox) Processor(ctx context.Context, messageType int, p []byte, dryRu
 	deploy, err := dt.ParseDeployment(ctx)
 	if err != nil {
 		engine.SRf(wb.out, "Parsing Deployment error : %s \n", err)
-		engine.SRf(wb.out, "!!! Treat input < %s > as command and to be executing...\n", p)
-		if err := ep.CommandExecutor(ctx, nil, p, wb.out); err != nil {
-			engine.SRf(wb.out, "CommandExecutor error : %s \n", err)
-			return err
-		}
-		return nil
+		return err
 	}
 	engine.SR(wb.out, []byte("Parsing Deployment was success."))
 	engine.SR(wb.out, []byte("--BO:-------------------------------------------------"))

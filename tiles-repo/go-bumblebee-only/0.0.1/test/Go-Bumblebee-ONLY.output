@@ -1,0 +1,10 @@
+{"level":"info","msg":"+ export WORK_HOME=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/super"}
+{"level":"info","msg":"+ WORK_HOME=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/super"}
+{"level":"info","msg":"+ export TILE_HOME=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/super/lib/go-bumblebee-only"}
+{"level":"info","msg":"+ TILE_HOME=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/super/lib/go-bumblebee-only"}
+{"level":"info","msg":"+ export GITHUB_USER=cc4i"}
+{"level":"info","msg":"+ GITHUB_USER=cc4i"}
+{"level":"info","msg":"+ export REPO_NAME=go-bumblebee-tile"}
+{"level":"info","msg":"+ REPO_NAME=go-bumblebee-tile"}
+{"level":"info","msg":"+ export 'ACCESS_TOKEN={accessToken' GITHUB-TOKEN '}'"}
+{"level":"info","msg":"+ ACCESS_TOKEN='{accessToken'"}
