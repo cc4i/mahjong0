@@ -17,6 +17,7 @@ import (
 	"os/exec"
 	"regexp"
 	"strings"
+	"sync"
 	"text/template"
 )
 
@@ -62,20 +63,35 @@ func (sk StageKind) SKString() string {
 // BrewerCore represent a group of core functions to execute & manage for
 // execution plan.
 type BrewerCore interface {
+	// ExecutePlan executes the generated plan
 	ExecutePlan(ctx context.Context, dryRun bool, out *websocket.Conn) error
+	// CommandExecutor executes the generated script or wire simulated data
 	CommandExecutor(ctx context.Context,  dryRun bool, cmd []byte, out *websocket.Conn) error
+	// LinuxCommandExecutor run a command/script
 	LinuxCommandExecutor(ctx context.Context, cmdTxt []byte, stageLog *log.Logger, out *websocket.Conn) error
+	// CommandWrapperExecutor wrap all parameters and commands into a script
 	CommandWrapperExecutor(ctx context.Context, dryRun bool, out *websocket.Conn) (string, error)
+	// WsTail collects all output data
 	WsTail(ctx context.Context, reader io.ReadCloser, stageLog *log.Logger, out *websocket.Conn)
+	// ExtractValue extract output data from logs
 	ExtractValue(ctx context.Context, buf []byte, out *websocket.Conn) error
+	// PostRun execute post jobs after major work
 	PostRun(ctx context.Context,  dryRun bool, buf []byte, out *websocket.Conn) error
+	// GenerateSummary generate report for Deployment
 	GenerateSummary(ctx context.Context, out *websocket.Conn) error
+	// ExtractAllEnv extracts all possible key,value from environment variables
 	ExtractAllEnv() map[string]string
+	// ReplaceAll replaces value reference and environment variable to actual value
 	ReplaceAll(str string, dSid string, kv map[string]string) string
+	// ReplaceAllEnv replaces environment variable to actual value
 	ReplaceAllEnv(str string, kv map[string]string) string
+	// ReplaceAllValueRef replaces value reference to actual value
+	ReplaceAllValueRef(str string, dSid string, ti string) string
 }
 
-//ExecutePlan is a orchestrator to run execution plan.
+// ExecutePlan is a orchestrator to run execution plan.
+// Execution plan would only parse and use test data provided by Tile, but no commands would be sent
+// if dryRun is true
 func (ep *ExecutionPlan) ExecutePlan(ctx context.Context, dryRun bool, out *websocket.Conn) error {
 	for e := ep.Plan.Back(); e != nil; e = e.Prev() {
 		stage := e.Value.(*ExecutionStage)
@@ -149,12 +165,19 @@ func (ep *ExecutionPlan) ExtractAllEnv() map[string]string {
 // Replace all possible env & value reference
 func (ep *ExecutionPlan) ReplaceAll(str string, dSid string, kv map[string]string) string {
 	str = ep.ReplaceAllEnv(str, kv)
+	str = ep.ReplaceAllValueRef(str, dSid, ep.CurrentStage.Name) //replace 'self'
+	str = ep.ReplaceAllValueRef(str, dSid, "") //replace 'anything else'
+	return str
+}
+
+// Replace reference by value
+func (ep *ExecutionPlan)ReplaceAllValueRef(str string, dSid string, ti string) string {
 	for {
 		re := regexp.MustCompile(`.*(\$\([[:alnum:]]*\.[[:alnum:]]*\.[[:alnum:]]*\)).*`)
 		s := re.FindStringSubmatch(str)
 		//
 		if len(s) == 2 {
-			if v , err := ValueRef(dSid,s[1],""); err != nil {
+			if v , err := ValueRef(dSid,s[1],ti); err != nil {
 				log.Errorf("Replace value reference was failed : %s \n", err)
 				break
 			} else {
@@ -166,6 +189,7 @@ func (ep *ExecutionPlan) ReplaceAll(str string, dSid string, kv map[string]strin
 	}
 	return str
 }
+
 // Replace env by value
 func (ep *ExecutionPlan) ReplaceAllEnv(str string, allEnv map[string]string) string {
 	for k,v := range allEnv {
@@ -187,8 +211,12 @@ func (ep *ExecutionPlan) CommandExecutor(ctx context.Context,  dryRun bool, cmdT
 		SRf(out, "Failed to save stage log, using default stderr, %s\n", err)
 		return err
 	}
+	defer logFile.Sync()
+	defer logFile.Close()
+
 	stageLog.SetOutput(logFile)
 	stageLog.SetFormatter(&log.JSONFormatter{DisableTimestamp: true})
+
 	SR(out, []byte("Initializing stage log file with success"))
 
 	SRf(out, "cmd => '%s'\n", cmdTxt)
@@ -200,7 +228,6 @@ func (ep *ExecutionPlan) CommandExecutor(ctx context.Context,  dryRun bool, cmdT
 			log.Printf("No testing output for %s\n", ep.CurrentStage.TileName)
 		} else {
 			logFile.Write(testData)
-			//stageLog.Printf("%s", testData)
 		}
 	}
 	return nil
@@ -214,14 +241,17 @@ func (ep *ExecutionPlan) LinuxCommandExecutor(ctx context.Context, cmdTxt []byte
 	stdoutIn, _ := cmd.StdoutPipe()
 	stderrIn, _ := cmd.StderrPipe()
 
+	// Wait for logs flush out
+	wg := new(sync.WaitGroup)
 	err := cmd.Start()
 	if err != nil {
 		SRf(out, "cmd.Start() failed with '%s'\n", err)
 		return err
 	}
-	go ep.WsTail(ctx, stdoutIn, stageLog, out)
-	go ep.WsTail(ctx, stderrIn, stageLog, out)
-
+	go ep.WsTail(ctx, stdoutIn, stageLog, wg, out)
+	wg.Add(1)
+	go ep.WsTail(ctx, stderrIn, stageLog, wg, out)
+	wg.Add(1)
 	go func() {
 		select {
 		case <-ctx.Done():
@@ -231,6 +261,7 @@ func (ep *ExecutionPlan) LinuxCommandExecutor(ctx context.Context, cmdTxt []byte
 	}()
 
 	err = cmd.Wait()
+	wg.Wait()
 
 	if err != nil {
 		SRf(out, "cmd.Run() failed with %s\n", err)
@@ -355,17 +386,10 @@ echo $?
 	// !!! Replace $(value) to actual value !!!
 	for _, kvs := range [][]string{ep.CurrentStage.InjectedEnv,
 									ep.CurrentStage.Preparation,
-									ep.CurrentStage.Commands,
-									ep.CurrentStage.PostRunCommands } {
-		for i, vs := range  kvs {
-			if strings.Contains(vs, "$(") {
-				val, err := ValueRef(dSid, vs[strings.Index(vs,"=")+1:], ep.CurrentStage.Name)
-				if err != nil {
-					SR(out, []byte(err.Error()))
-				} else {
-					ep.CurrentStage.InjectedEnv[i] = vs[0:strings.Index(vs,"=")+1]+val
-				}
-			}
+									ep.CurrentStage.Commands } {
+		for i, _ := range  kvs {
+			kvs[i] = ep.ReplaceAllValueRef(kvs[i], dSid, ep.CurrentStage.Name) //replace 'self'
+			kvs[i] = ep.ReplaceAllValueRef(kvs[i], dSid, "") //replace 'anything else'
 		}
 	}
 	////
@@ -387,7 +411,7 @@ echo $?
 }
 
 // WsTail collect output from stdout/stderr, and also catch up defined output value & persist them.
-func (ep *ExecutionPlan) WsTail(ctx context.Context, reader io.ReadCloser, stageLog *log.Logger, out *websocket.Conn) {
+func (ep *ExecutionPlan) WsTail(ctx context.Context, reader io.ReadCloser, stageLog *log.Logger, wg *sync.WaitGroup, out *websocket.Conn) {
 	scanner := bufio.NewScanner(reader)
 	scanner.Split(bufio.ScanLines)
 	for scanner.Scan() {
@@ -397,6 +421,7 @@ func (ep *ExecutionPlan) WsTail(ctx context.Context, reader io.ReadCloser, stage
 		}
 		SR(out, buf)
 	}
+	if wg!=nil { wg.Done() }
 }
 
 // ExtractValue retrieve values from output logs.
@@ -425,28 +450,31 @@ func (ep *ExecutionPlan) ExtractValue(ctx context.Context, buf []byte, out *webs
 					// Extract dSid, value from CDK outputs
 					if stack, ok := ts.TsStacksMapN[tileInstance]; ok {
 						regx = regexp.MustCompile("^\\{\"level\":\"info\"\\,\"msg\":\"(" +
-							stack.TileName + "." +
+							strcase.ToCamel(stack.TileName) + "." +
 							".*" +
 							outputName +
 							".*?)\"}$")
-
 					}
 				}
-				scanner := bufio.NewScanner(bytes.NewReader(buf))
-				scanner.Split(bufio.ScanLines)
-				for scanner.Scan() {
-					txt := scanner.Text()
-					match := regx.FindStringSubmatch(txt)
-					if len(match) > 0 {
-						kv := strings.Split(match[1], "=")
-						outputDetail.OutputValue = strings.TrimSpace(kv[1])
-						SRf(out, "Extract outputs: [%s] = [%s] ", outputName, strings.TrimSpace(kv[1]))
-						break
+				if regx != nil {
+					scanner := bufio.NewScanner(bytes.NewReader(buf))
+					scanner.Split(bufio.ScanLines)
+					for scanner.Scan() {
+						txt := scanner.Text()
+						match := regx.FindStringSubmatch(txt)
+						if len(match) > 0 {
+							kv := strings.Split(match[1], "=")
+							outputDetail.OutputValue = strings.TrimSpace(kv[1])
+							SRf(out, "Extract outputs: [%s] = [%s] ", outputName, strings.TrimSpace(kv[1]))
+							break
+						}
 					}
-				}
-				// Replace possible ENV in output
-				if strings.Contains(outputDetail.OutputValue,"$") {
-					outputDetail.OutputValue = ep.ReplaceAllEnv(outputDetail.OutputValue, allEnv)
+					// Replace possible ENV in output
+					if strings.Contains(outputDetail.OutputValue,"$") {
+						outputDetail.OutputValue = ep.ReplaceAllEnv(outputDetail.OutputValue, allEnv)
+					}
+				} else {
+					return errors.New("the handler of regular expression wasn't existed")
 				}
 			}
 		}
@@ -507,11 +535,19 @@ echo $?
 		}
 	}
 
+
 	tp := template.New("script")
 	tp, err = tp.Parse(tContent)
 	if err != nil {
 		return err
 	}
+
+	// Replace reference value
+	for i, _ := range  ep.CurrentStage.PostRunCommands {
+		ep.CurrentStage.PostRunCommands[i] = ep.ReplaceAllValueRef(ep.CurrentStage.PostRunCommands[i], dSid, ep.CurrentStage.Name) //replace 'self'
+		ep.CurrentStage.PostRunCommands[i] = ep.ReplaceAllValueRef(ep.CurrentStage.PostRunCommands[i], dSid, "") //replace 'anything else'
+	}
+
 
 	err = tp.Execute(file, stage)
 	if err != nil {

@@ -12,6 +12,7 @@ import (
 	"runtime"
 )
 
+// Router tells all routing definition
 func Router(ctx context.Context) *gin.Engine {
 	r := gin.Default()
 	store := cookie.NewStore([]byte("secret"))
@@ -42,7 +43,6 @@ func Router(ctx context.Context) *gin.Engine {
 
 	})
 
-
 	// Return url of basic templates as per request
 	r.GET("/v1alpha1/template/:what", func(c *gin.Context) {
 		RetrieveTemplate(ctx, c)
@@ -63,7 +63,7 @@ func Router(ctx context.Context) *gin.Engine {
 		AtsContent(ctx, c)
 	})
 
-	// Version
+	// Version of Dice
 	r.GET("/version", func(c *gin.Context) {
 		version := fmt.Sprintf("\tVersion:\t%s\n\tGo version:\t%s\n\tGit commit:\t%s\n\tBuilt:\t%s\n\tOS/Arch:\t%s/%s\n",
 			utils.ServerVersion,
@@ -74,6 +74,7 @@ func Router(ctx context.Context) *gin.Engine {
 		c.String(http.StatusOK, version)
 	})
 
+	// '/toy' is a page for quick testing
 	r.Use(static.Serve("/toy", static.LocalFile("./toy", true)))
 
 	return r

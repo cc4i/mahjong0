@@ -1,0 +1,272 @@
+{"level":"info","msg":"+ export WORK_HOME=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/super"}
+{"level":"info","msg":"+ WORK_HOME=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/super"}
+{"level":"info","msg":"+ export TILE_HOME=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/super/lib/eks-with-spot"}
+{"level":"info","msg":"+ TILE_HOME=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/super/lib/eks-with-spot"}
+{"level":"info","msg":"+ export D_TBD_EKS_WITH_SPOT_PUBLICSUBNETID1=subnet-09354c8f26aeca5a4"}
+{"level":"info","msg":"+ D_TBD_EKS_WITH_SPOT_PUBLICSUBNETID1=subnet-09354c8f26aeca5a4"}
+{"level":"info","msg":"+ export D_TBD_EKS_WITH_SPOT_PUBLICSUBNETID2=subnet-002896430198f2d75"}
+{"level":"info","msg":"+ D_TBD_EKS_WITH_SPOT_PUBLICSUBNETID2=subnet-002896430198f2d75"}
+{"level":"info","msg":"+ export D_TBD_EKS_WITH_SPOT_PRIVATESUBNETID1=subnet-06911cff7611344e7"}
+{"level":"info","msg":"+ D_TBD_EKS_WITH_SPOT_PRIVATESUBNETID1=subnet-06911cff7611344e7"}
+{"level":"info","msg":"+ export D_TBD_EKS_WITH_SPOT_PRIVATESUBNETID2=subnet-03534ed03e6b45bdd"}
+{"level":"info","msg":"+ D_TBD_EKS_WITH_SPOT_PRIVATESUBNETID2=subnet-03534ed03e6b45bdd"}
+{"level":"info","msg":"+ export D_TBD_EKS_WITH_SPOT_VPCID=vpc-0a419b4d52c3d197f"}
+{"level":"info","msg":"+ D_TBD_EKS_WITH_SPOT_VPCID=vpc-0a419b4d52c3d197f"}
+{"level":"info","msg":"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/super"}
+{"level":"info","msg":"+ npm install"}
+{"level":"info","msg":"npm WARN super@0.1.0 No repository field."}
+{"level":"info","msg":"npm WARN super@0.1.0 No license field."}
+{"level":"info","msg":""}
+{"level":"info","msg":"audited 853 packages in 7.406s"}
+{"level":"info","msg":""}
+{"level":"info","msg":"14 packages are looking for funding"}
+{"level":"info","msg":"  run `npm fund` for details"}
+{"level":"info","msg":""}
+{"level":"info","msg":"found 0 vulnerabilities"}
+{"level":"info","msg":""}
+{"level":"info","msg":"+ npm run build"}
+{"level":"info","msg":""}
+{"level":"info","msg":"\u003e super@0.1.0 build /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/super"}
+{"level":"info","msg":"\u003e tsc"}
+{"level":"info","msg":""}
+{"level":"info","msg":"+ cdk list"}
+{"level":"info","msg":"Network0Stack3d10a8fb"}
+{"level":"info","msg":"EksWithSpotStackfc5e4923"}
+{"level":"info","msg":"+ cdk deploy EksWithSpotStackfc5e4923 --require-approval never"}
+{"level":"info","msg":"Including dependency stacks: Network0Stack3d10a8fb"}
+{"level":"info","msg":"Network0Stack3d10a8fb"}
+{"level":"info","msg":"Network0Stack3d10a8fb: deploying..."}
+{"level":"info","msg":""}
+{"level":"info","msg":" ✅  Network0Stack3d10a8fb (no changes)"}
+{"level":"info","msg":""}
+{"level":"info","msg":"Outputs:"}
+{"level":"info","msg":"Network0Stack3d10a8fb.Network0publicSubnetId1AE831B0A = subnet-09354c8f26aeca5a4"}
+{"level":"info","msg":"Network0Stack3d10a8fb.ExportsOutputRefNetwork0BaseVPCPublicSubnet1SubnetA4A58F16534FB2D0 = subnet-09354c8f26aeca5a4"}
+{"level":"info","msg":"Network0Stack3d10a8fb.Network0availabilityZonesuswest2bD55CD48C = us-west-2b"}
+{"level":"info","msg":"Network0Stack3d10a8fb.Network0privateSubnetId15BEF5820 = subnet-06911cff7611344e7"}
+{"level":"info","msg":"Network0Stack3d10a8fb.Network0publicSubnetId26BBC24FE = subnet-002896430198f2d75"}
+{"level":"info","msg":"Network0Stack3d10a8fb.ExportsOutputRefNetwork0BaseVPCPrivateSubnet1Subnet1E8C6EF90CFC05E7 = subnet-06911cff7611344e7"}
+{"level":"info","msg":"Network0Stack3d10a8fb.ExportsOutputRefNetwork0BaseVPCF17C8F455FAB5CE7 = vpc-0a419b4d52c3d197f"}
+{"level":"info","msg":"Network0Stack3d10a8fb.Network0privateSubnetId281C6427A = subnet-03534ed03e6b45bdd"}
+{"level":"info","msg":"Network0Stack3d10a8fb.Network0vpcId7C11C88F = vpc-0a419b4d52c3d197f"}
+{"level":"info","msg":"Network0Stack3d10a8fb.ExportsOutputRefNetwork0BaseVPCPrivateSubnet2SubnetB81072E8264A6F09 = subnet-03534ed03e6b45bdd"}
+{"level":"info","msg":"Network0Stack3d10a8fb.Network0availabilityZonesuswest2a30BA59C6 = us-west-2a"}
+{"level":"info","msg":"Network0Stack3d10a8fb.ExportsOutputRefNetwork0BaseVPCPublicSubnet2Subnet17A8456FB8CAABE0 = subnet-002896430198f2d75"}
+{"level":"info","msg":""}
+{"level":"info","msg":"Stack ARN:"}
+{"level":"info","msg":"EksWithSpotStackfc5e4923"}
+{"level":"info","msg":"EksWithSpotStackfc5e4923: deploying..."}
+{"level":"info","msg":"arn:aws:cloudformation:us-west-2:530820415924:stack/Network0Stack3d10a8fb/6c9fb720-a06c-11ea-9099-06ee5e9000d6"}
+{"level":"info","msg":"[0%] start: Publishing 4745ceb0c1d5244f98a439c192c0a194d2b1da4ac56407975c05eab89fdeaf2b:current"}
+{"level":"info","msg":"[20%] success: Published 4745ceb0c1d5244f98a439c192c0a194d2b1da4ac56407975c05eab89fdeaf2b:current"}
+{"level":"info","msg":"[20%] start: Publishing 4c2988a57571fd4c34de12bae67441541aeea1a59e085f95e5b708922ff45061:current"}
+{"level":"info","msg":"[40%] success: Published 4c2988a57571fd4c34de12bae67441541aeea1a59e085f95e5b708922ff45061:current"}
+{"level":"info","msg":"[40%] start: Publishing a6d508eaaa0d3cddbb47a84123fc878809c8431c5466f360912f70b5b9770afb:current"}
+{"level":"info","msg":"[60%] success: Published a6d508eaaa0d3cddbb47a84123fc878809c8431c5466f360912f70b5b9770afb:current"}
+{"level":"info","msg":"[60%] start: Publishing 30356b12271d136763495e7cd1ca7956e41da81e073260bb7d5f3cf22d12ff6b:current"}
+{"level":"info","msg":"[80%] success: Published 30356b12271d136763495e7cd1ca7956e41da81e073260bb7d5f3cf22d12ff6b:current"}
+{"level":"info","msg":"[80%] start: Publishing 774e1a22657aca2aeea520f7763cc00bced07138e82020232ccaba3f8496bbf4:current"}
+{"level":"info","msg":"[100%] success: Published 774e1a22657aca2aeea520f7763cc00bced07138e82020232ccaba3f8496bbf4:current"}
+{"level":"info","msg":"EksWithSpotStackfc5e4923: creating CloudFormation changeset..."}
+{"level":"info","msg":"  0/22 | 10:55:10 AM | CREATE_IN_PROGRESS   | AWS::CDK::Metadata                    | CDKMetadata "}
+{"level":"info","msg":"  0/22 | 10:55:11 AM | CREATE_IN_PROGRESS   | AWS::IAM::Role                        | EksWithSpot/EksClusterMasterRole (EksWithSpotEksClusterMasterRole9B24AA25) "}
+{"level":"info","msg":"  0/22 | 10:55:11 AM | CREATE_IN_PROGRESS   | AWS::EC2::SecurityGroup               | SpotNodeGroup/NodesSharedSecurityGroup (SpotNodeGroupNodesSharedSecurityGroup5A882567) "}
+{"level":"info","msg":"  0/22 | 10:55:11 AM | CREATE_IN_PROGRESS   | AWS::EC2::SecurityGroup               | SpotNodeGroup/NodesSecurityGroup (SpotNodeGroupNodesSecurityGroupA83A070A) "}
+{"level":"info","msg":"  0/22 | 10:55:11 AM | CREATE_IN_PROGRESS   | AWS::CloudFormation::Stack            | @aws-cdk--aws-eks.KubectlProvider.NestedStack/@aws-cdk--aws-eks.KubectlProvider.NestedStackResource (awscdkawseksKubectlProviderNestedStackawscdkawseksKubectlProviderNestedStackResourceA7AEBA6B) "}
+{"level":"info","msg":"  0/22 | 10:55:11 AM | CREATE_IN_PROGRESS   | AWS::IAM::Role                        | EksWithSpot/EksClusterMasterRole (EksWithSpotEksClusterMasterRole9B24AA25) Resource creation Initiated"}
+{"level":"info","msg":"  0/22 | 10:55:11 AM | CREATE_IN_PROGRESS   | AWS::IAM::Role                        | EksSpotCluster/Role (EksSpotClusterRoleE3D7488E) "}
+{"level":"info","msg":"  0/22 | 10:55:11 AM | CREATE_IN_PROGRESS   | AWS::CloudFormation::Stack            | @aws-cdk--aws-eks.ClusterResourceProvider.NestedStack/@aws-cdk--aws-eks.ClusterResourceProvider.NestedStackResource (awscdkawseksClusterResourceProviderNestedStackawscdkawseksClusterResourceProviderNestedStackResource9827C454) "}
+{"level":"info","msg":"  0/22 | 10:55:11 AM | CREATE_IN_PROGRESS   | AWS::EC2::SecurityGroup               | SpotNodeGroup/EksControlPlaneSG (SpotNodeGroupEksControlPlaneSG74EA60A1) "}
+{"level":"info","msg":"  0/22 | 10:55:11 AM | CREATE_IN_PROGRESS   | AWS::IAM::Role                        | SpotNodeGroup/NodesRole (SpotNodeGroupNodesRole4FA92AB1) "}
+{"level":"info","msg":"  0/22 | 10:55:12 AM | CREATE_IN_PROGRESS   | AWS::CDK::Metadata                    | CDKMetadata Resource creation Initiated"}
+{"level":"info","msg":"  0/22 | 10:55:12 AM | CREATE_IN_PROGRESS   | AWS::IAM::Role                        | EksSpotCluster/Role (EksSpotClusterRoleE3D7488E) Resource creation Initiated"}
+{"level":"info","msg":"  0/22 | 10:55:12 AM | CREATE_IN_PROGRESS   | AWS::CloudFormation::Stack            | @aws-cdk--aws-eks.KubectlProvider.NestedStack/@aws-cdk--aws-eks.KubectlProvider.NestedStackResource (awscdkawseksKubectlProviderNestedStackawscdkawseksKubectlProviderNestedStackResourceA7AEBA6B) Resource creation Initiated"}
+{"level":"info","msg":"  1/22 | 10:55:12 AM | CREATE_COMPLETE      | AWS::CDK::Metadata                    | CDKMetadata "}
+{"level":"info","msg":"  1/22 | 10:55:12 AM | CREATE_IN_PROGRESS   | AWS::CloudFormation::Stack            | @aws-cdk--aws-eks.ClusterResourceProvider.NestedStack/@aws-cdk--aws-eks.ClusterResourceProvider.NestedStackResource (awscdkawseksClusterResourceProviderNestedStackawscdkawseksClusterResourceProviderNestedStackResource9827C454) Resource creation Initiated"}
+{"level":"info","msg":"  1/22 | 10:55:12 AM | CREATE_IN_PROGRESS   | AWS::IAM::Role                        | SpotNodeGroup/NodesRole (SpotNodeGroupNodesRole4FA92AB1) Resource creation Initiated"}
+{"level":"info","msg":"  1/22 | 10:55:16 AM | CREATE_IN_PROGRESS   | AWS::EC2::SecurityGroup               | SpotNodeGroup/NodesSharedSecurityGroup (SpotNodeGroupNodesSharedSecurityGroup5A882567) Resource creation Initiated"}
+{"level":"info","msg":"  1/22 | 10:55:16 AM | CREATE_IN_PROGRESS   | AWS::EC2::SecurityGroup               | SpotNodeGroup/NodesSecurityGroup (SpotNodeGroupNodesSecurityGroupA83A070A) Resource creation Initiated"}
+{"level":"info","msg":"  1/22 | 10:55:16 AM | CREATE_IN_PROGRESS   | AWS::EC2::SecurityGroup               | SpotNodeGroup/EksControlPlaneSG (SpotNodeGroupEksControlPlaneSG74EA60A1) Resource creation Initiated"}
+{"level":"info","msg":"  2/22 | 10:55:17 AM | CREATE_COMPLETE      | AWS::EC2::SecurityGroup               | SpotNodeGroup/NodesSecurityGroup (SpotNodeGroupNodesSecurityGroupA83A070A) "}
+{"level":"info","msg":"  3/22 | 10:55:17 AM | CREATE_COMPLETE      | AWS::EC2::SecurityGroup               | SpotNodeGroup/NodesSharedSecurityGroup (SpotNodeGroupNodesSharedSecurityGroup5A882567) "}
+{"level":"info","msg":"  4/22 | 10:55:17 AM | CREATE_COMPLETE      | AWS::EC2::SecurityGroup               | SpotNodeGroup/EksControlPlaneSG (SpotNodeGroupEksControlPlaneSG74EA60A1) "}
+{"level":"info","msg":"  4/22 | 10:55:20 AM | CREATE_IN_PROGRESS   | AWS::EC2::SecurityGroupIngress        | SpotNodeGroup/NodesSharedSecurityGroup/from EksWithSpotStackfc5e4923SpotNodeGroupNodesSharedSecurityGroup7D467221:ALL PORTS (SpotNodeGroupNodesSharedSecurityGroupfromEksWithSpotStackfc5e4923SpotNodeGroupNodesSharedSecurityGroup7D467221ALLPORTS4EE39CB8) "}
+{"level":"info","msg":"  4/22 | 10:55:21 AM | CREATE_IN_PROGRESS   | AWS::EC2::SecurityGroupIngress        | SpotNodeGroup/NodesSharedSecurityGroup/from EksWithSpotStackfc5e4923SpotNodeGroupNodesSharedSecurityGroup7D467221:ALL PORTS (SpotNodeGroupNodesSharedSecurityGroupfromEksWithSpotStackfc5e4923SpotNodeGroupNodesSharedSecurityGroup7D467221ALLPORTS4EE39CB8) Resource creation Initiated"}
+{"level":"info","msg":"  4/22 | 10:55:21 AM | CREATE_IN_PROGRESS   | AWS::EC2::SecurityGroupIngress        | SpotNodeGroup/NodesSecurityGroup/from EksWithSpotStackfc5e4923SpotNodeGroupEksControlPlaneSGAF1EF3B3:1025-65535 (SpotNodeGroupNodesSecurityGroupfromEksWithSpotStackfc5e4923SpotNodeGroupEksControlPlaneSGAF1EF3B3102565535EBA091EF) "}
+{"level":"info","msg":"  4/22 | 10:55:21 AM | CREATE_IN_PROGRESS   | AWS::EC2::SecurityGroupIngress        | SpotNodeGroup/NodesSecurityGroup/from EksWithSpotStackfc5e4923SpotNodeGroupEksControlPlaneSGAF1EF3B3:443 (SpotNodeGroupNodesSecurityGroupfromEksWithSpotStackfc5e4923SpotNodeGroupEksControlPlaneSGAF1EF3B34438F253A77) "}
+{"level":"info","msg":"  4/22 | 10:55:21 AM | CREATE_IN_PROGRESS   | AWS::EC2::SecurityGroupIngress        | SpotNodeGroup/EksControlPlaneSG/from EksWithSpotStackfc5e4923SpotNodeGroupNodesSecurityGroup3BD0B446:443 (SpotNodeGroupEksControlPlaneSGfromEksWithSpotStackfc5e4923SpotNodeGroupNodesSecurityGroup3BD0B446443993E3361) "}
+{"level":"info","msg":"  5/22 | 10:55:21 AM | CREATE_COMPLETE      | AWS::EC2::SecurityGroupIngress        | SpotNodeGroup/NodesSharedSecurityGroup/from EksWithSpotStackfc5e4923SpotNodeGroupNodesSharedSecurityGroup7D467221:ALL PORTS (SpotNodeGroupNodesSharedSecurityGroupfromEksWithSpotStackfc5e4923SpotNodeGroupNodesSharedSecurityGroup7D467221ALLPORTS4EE39CB8) "}
+{"level":"info","msg":"  5/22 | 10:55:21 AM | CREATE_IN_PROGRESS   | AWS::EC2::SecurityGroupIngress        | SpotNodeGroup/NodesSecurityGroup/from EksWithSpotStackfc5e4923SpotNodeGroupEksControlPlaneSGAF1EF3B3:1025-65535 (SpotNodeGroupNodesSecurityGroupfromEksWithSpotStackfc5e4923SpotNodeGroupEksControlPlaneSGAF1EF3B3102565535EBA091EF) Resource creation Initiated"}
+{"level":"info","msg":"  5/22 | 10:55:21 AM | CREATE_IN_PROGRESS   | AWS::EC2::SecurityGroupIngress        | SpotNodeGroup/NodesSecurityGroup/from EksWithSpotStackfc5e4923SpotNodeGroupEksControlPlaneSGAF1EF3B3:443 (SpotNodeGroupNodesSecurityGroupfromEksWithSpotStackfc5e4923SpotNodeGroupEksControlPlaneSGAF1EF3B34438F253A77) Resource creation Initiated"}
+{"level":"info","msg":"  5/22 | 10:55:21 AM | CREATE_IN_PROGRESS   | AWS::EC2::SecurityGroupIngress        | SpotNodeGroup/EksControlPlaneSG/from EksWithSpotStackfc5e4923SpotNodeGroupNodesSecurityGroup3BD0B446:443 (SpotNodeGroupEksControlPlaneSGfromEksWithSpotStackfc5e4923SpotNodeGroupNodesSecurityGroup3BD0B446443993E3361) Resource creation Initiated"}
+{"level":"info","msg":"  6/22 | 10:55:22 AM | CREATE_COMPLETE      | AWS::EC2::SecurityGroupIngress        | SpotNodeGroup/NodesSecurityGroup/from EksWithSpotStackfc5e4923SpotNodeGroupEksControlPlaneSGAF1EF3B3:1025-65535 (SpotNodeGroupNodesSecurityGroupfromEksWithSpotStackfc5e4923SpotNodeGroupEksControlPlaneSGAF1EF3B3102565535EBA091EF) "}
+{"level":"info","msg":"  7/22 | 10:55:22 AM | CREATE_COMPLETE      | AWS::EC2::SecurityGroupIngress        | SpotNodeGroup/EksControlPlaneSG/from EksWithSpotStackfc5e4923SpotNodeGroupNodesSecurityGroup3BD0B446:443 (SpotNodeGroupEksControlPlaneSGfromEksWithSpotStackfc5e4923SpotNodeGroupNodesSecurityGroup3BD0B446443993E3361) "}
+{"level":"info","msg":"  8/22 | 10:55:22 AM | CREATE_COMPLETE      | AWS::EC2::SecurityGroupIngress        | SpotNodeGroup/NodesSecurityGroup/from EksWithSpotStackfc5e4923SpotNodeGroupEksControlPlaneSGAF1EF3B3:443 (SpotNodeGroupNodesSecurityGroupfromEksWithSpotStackfc5e4923SpotNodeGroupEksControlPlaneSGAF1EF3B34438F253A77) "}
+{"level":"info","msg":"  9/22 | 10:55:26 AM | CREATE_COMPLETE      | AWS::IAM::Role                        | EksWithSpot/EksClusterMasterRole (EksWithSpotEksClusterMasterRole9B24AA25) "}
+{"level":"info","msg":" 10/22 | 10:55:27 AM | CREATE_COMPLETE      | AWS::IAM::Role                        | EksSpotCluster/Role (EksSpotClusterRoleE3D7488E) "}
+{"level":"info","msg":" 11/22 | 10:55:29 AM | CREATE_COMPLETE      | AWS::IAM::Role                        | SpotNodeGroup/NodesRole (SpotNodeGroupNodesRole4FA92AB1) "}
+{"level":"info","msg":" 11/22 | 10:55:30 AM | CREATE_IN_PROGRESS   | AWS::IAM::Policy                      | EksWithSpot/EksClusterMasterRole/DefaultPolicy (EksWithSpotEksClusterMasterRoleDefaultPolicyDDC2171F) "}
+{"level":"info","msg":" 11/22 | 10:55:32 AM | CREATE_IN_PROGRESS   | AWS::IAM::Policy                      | EksWithSpot/EksClusterMasterRole/DefaultPolicy (EksWithSpotEksClusterMasterRoleDefaultPolicyDDC2171F) Resource creation Initiated"}
+{"level":"info","msg":" 11/22 | 10:55:33 AM | CREATE_IN_PROGRESS   | AWS::IAM::InstanceProfile             | SpotNodeGroup/ec2Profile (SpotNodeGroupec2Profile030EF92E) "}
+{"level":"info","msg":" 11/22 | 10:55:33 AM | CREATE_IN_PROGRESS   | AWS::IAM::InstanceProfile             | SpotNodeGroup/ec2Profile (SpotNodeGroupec2Profile030EF92E) Resource creation Initiated"}
+{"level":"info","msg":" 12/22 | 10:55:46 AM | CREATE_COMPLETE      | AWS::IAM::Policy                      | EksWithSpot/EksClusterMasterRole/DefaultPolicy (EksWithSpotEksClusterMasterRoleDefaultPolicyDDC2171F) "}
+{"level":"info","msg":"12/22 Currently in progress: awscdkawseksKubectlProviderNestedStackawscdkawseksKubectlProviderNestedStackResourceA7AEBA6B, awscdkawseksClusterResourceProviderNestedStackawscdkawseksClusterResourceProviderNestedStackResource9827C454, SpotNodeGroupec2Profile030EF92E"}
+{"level":"info","msg":" 13/22 | 10:56:46 AM | CREATE_COMPLETE      | AWS::CloudFormation::Stack            | @aws-cdk--aws-eks.KubectlProvider.NestedStack/@aws-cdk--aws-eks.KubectlProvider.NestedStackResource (awscdkawseksKubectlProviderNestedStackawscdkawseksKubectlProviderNestedStackResourceA7AEBA6B) "}
+{"level":"info","msg":"13/22 Currently in progress: awscdkawseksClusterResourceProviderNestedStackawscdkawseksClusterResourceProviderNestedStackResource9827C454, SpotNodeGroupec2Profile030EF92E"}
+{"level":"info","msg":" 14/22 | 10:57:34 AM | CREATE_COMPLETE      | AWS::IAM::InstanceProfile             | SpotNodeGroup/ec2Profile (SpotNodeGroupec2Profile030EF92E) "}
+{"level":"info","msg":" 14/22 | 10:57:37 AM | CREATE_IN_PROGRESS   | AWS::EC2::LaunchTemplate              | SpotNodeGroup/NodesLaunchTemplate (SpotNodeGroupNodesLaunchTemplateD8C4A332) "}
+{"level":"info","msg":" 14/22 | 10:57:39 AM | CREATE_IN_PROGRESS   | AWS::EC2::LaunchTemplate              | SpotNodeGroup/NodesLaunchTemplate (SpotNodeGroupNodesLaunchTemplateD8C4A332) Resource creation Initiated"}
+{"level":"info","msg":" 15/22 | 10:57:39 AM | CREATE_COMPLETE      | AWS::EC2::LaunchTemplate              | SpotNodeGroup/NodesLaunchTemplate (SpotNodeGroupNodesLaunchTemplateD8C4A332) "}
+{"level":"info","msg":" 15/22 | 10:57:45 AM | CREATE_IN_PROGRESS   | AWS::AutoScaling::AutoScalingGroup    | SpotNodeGroup/NodesAutoScalingGroup (SpotNodeGroupNodesAutoScalingGroupAC3076AE) "}
+{"level":"info","msg":" 15/22 | 10:57:47 AM | CREATE_IN_PROGRESS   | AWS::AutoScaling::AutoScalingGroup    | SpotNodeGroup/NodesAutoScalingGroup (SpotNodeGroupNodesAutoScalingGroupAC3076AE) Resource creation Initiated"}
+{"level":"info","msg":" 16/22 | 10:58:16 AM | CREATE_COMPLETE      | AWS::CloudFormation::Stack            | @aws-cdk--aws-eks.ClusterResourceProvider.NestedStack/@aws-cdk--aws-eks.ClusterResourceProvider.NestedStackResource (awscdkawseksClusterResourceProviderNestedStackawscdkawseksClusterResourceProviderNestedStackResource9827C454) "}
+{"level":"info","msg":" 16/22 | 10:58:20 AM | CREATE_IN_PROGRESS   | AWS::IAM::Role                        | EksSpotCluster/Resource/CreationRole (EksSpotClusterCreationRole461EFD4D) "}
+{"level":"info","msg":" 16/22 | 10:58:20 AM | CREATE_IN_PROGRESS   | AWS::IAM::Role                        | EksSpotCluster/Resource/CreationRole (EksSpotClusterCreationRole461EFD4D) Resource creation Initiated"}
+{"level":"info","msg":" 17/22 | 10:58:35 AM | CREATE_COMPLETE      | AWS::IAM::Role                        | EksSpotCluster/Resource/CreationRole (EksSpotClusterCreationRole461EFD4D) "}
+{"level":"info","msg":" 17/22 | 10:58:39 AM | CREATE_IN_PROGRESS   | AWS::IAM::Policy                      | EksSpotCluster/Resource/CreationRole/DefaultPolicy (EksSpotClusterCreationRoleDefaultPolicyB44A925B) "}
+{"level":"info","msg":" 17/22 | 10:58:40 AM | CREATE_IN_PROGRESS   | AWS::IAM::Policy                      | EksSpotCluster/Resource/CreationRole/DefaultPolicy (EksSpotClusterCreationRoleDefaultPolicyB44A925B) Resource creation Initiated"}
+{"level":"info","msg":" 18/22 | 10:58:54 AM | CREATE_COMPLETE      | AWS::IAM::Policy                      | EksSpotCluster/Resource/CreationRole/DefaultPolicy (EksSpotClusterCreationRoleDefaultPolicyB44A925B) "}
+{"level":"info","msg":" 18/22 | 10:58:58 AM | CREATE_IN_PROGRESS   | Custom::AWSCDK-EKS-Cluster            | EksSpotCluster/Resource/Resource/Default (EksSpotClusterEE09D2D2) "}
+{"level":"info","msg":"18/22 Currently in progress: SpotNodeGroupNodesAutoScalingGroupAC3076AE, EksSpotClusterEE09D2D2"}
+{"level":"info","msg":" 18/22 | 11:09:37 AM | CREATE_IN_PROGRESS   | AWS::AutoScaling::AutoScalingGroup    | SpotNodeGroup/NodesAutoScalingGroup (SpotNodeGroupNodesAutoScalingGroupAC3076AE) Received SUCCESS signal with UniqueId i-0e767c3fa1bf0ae19"}
+{"level":"info","msg":" 18/22 | 11:09:37 AM | CREATE_IN_PROGRESS   | AWS::AutoScaling::AutoScalingGroup    | SpotNodeGroup/NodesAutoScalingGroup (SpotNodeGroupNodesAutoScalingGroupAC3076AE) Received SUCCESS signal with UniqueId i-0144883f5da1f7ecd"}
+{"level":"info","msg":" 18/22 | 11:09:37 AM | CREATE_IN_PROGRESS   | AWS::AutoScaling::AutoScalingGroup    | SpotNodeGroup/NodesAutoScalingGroup (SpotNodeGroupNodesAutoScalingGroupAC3076AE) Received SUCCESS signal with UniqueId i-06b03774aad5d842b"}
+{"level":"info","msg":" 19/22 | 11:09:38 AM | CREATE_COMPLETE      | AWS::AutoScaling::AutoScalingGroup    | SpotNodeGroup/NodesAutoScalingGroup (SpotNodeGroupNodesAutoScalingGroupAC3076AE) "}
+{"level":"info","msg":"19/22 Currently in progress: EksSpotClusterEE09D2D2"}
+{"level":"info","msg":" 19/22 | 11:10:24 AM | CREATE_IN_PROGRESS   | Custom::AWSCDK-EKS-Cluster            | EksSpotCluster/Resource/Resource/Default (EksSpotClusterEE09D2D2) Resource creation Initiated"}
+{"level":"info","msg":" 20/22 | 11:10:25 AM | CREATE_COMPLETE      | Custom::AWSCDK-EKS-Cluster            | EksSpotCluster/Resource/Resource/Default (EksSpotClusterEE09D2D2) "}
+{"level":"info","msg":" 20/22 | 11:10:30 AM | CREATE_IN_PROGRESS   | Custom::AWSCDK-EKS-KubernetesResource | EksSpotCluster/AwsAuth/manifest/Resource/Default (EksSpotClusterAwsAuthmanifest7836A4EF) "}
+{"level":"info","msg":"20/22 Currently in progress: EksSpotClusterAwsAuthmanifest7836A4EF"}
+{"level":"info","msg":"arn:aws:cloudformation:us-west-2:530820415924:stack/EksWithSpotStackfc5e4923/023468d0-a06d-11ea-a043-02e34c33f014"}
+{"level":"info","msg":""}
+{"level":"info","msg":" ✅  EksWithSpotStackfc5e4923"}
+{"level":"info","msg":""}
+{"level":"info","msg":"Outputs:"}
+{"level":"info","msg":"EksWithSpotStackfc5e4923.clusterEndpoint = https://4728D3335BD16F37A87D0D18CCDFCCF5.sk1.us-west-2.eks.amazonaws.com"}
+{"level":"info","msg":"EksWithSpotStackfc5e4923.regionOfCluster = us-west-2"}
+{"level":"info","msg":"EksWithSpotStackfc5e4923.autoScalingGroupMaxSize = 6"}
+{"level":"info","msg":"EksWithSpotStackfc5e4923.capacityInstance = c5.large/r5.large/m5.large"}
+{"level":"info","msg":"EksWithSpotStackfc5e4923.autoScalingGroupDesiredCapacity = 3"}
+{"level":"info","msg":"EksWithSpotStackfc5e4923.EksSpotClusterConfigCommandD4A14174 = aws eks update-kubeconfig --name mahjong-spot-cluster0 --region us-west-2 --role-arn arn:aws:iam::530820415924:role/EksWithSpotStackfc5e4923-EksWithSpotEksClusterMast-1I5WPQ3IGLYXY"}
+{"level":"info","msg":"EksWithSpotStackfc5e4923.masterRoleARN = arn:aws:iam::530820415924:role/EksWithSpotStackfc5e4923-EksWithSpotEksClusterMast-1I5WPQ3IGLYXY"}
+{"level":"info","msg":"EksWithSpotStackfc5e4923.nodesRoleARN = arn:aws:iam::530820415924:role/nodes-for-eks-role-wlijz"}
+{"level":"info","msg":"EksWithSpotStackfc5e4923.clusterVersion = 1.16"}
+{"level":"info","msg":"EksWithSpotStackfc5e4923.clusterArn = arn:aws:eks:us-west-2:530820415924:cluster/mahjong-spot-cluster0"}
+{"level":"info","msg":"EksWithSpotStackfc5e4923.autoScalingGroupName = mahjong-spot-cluster0-nodegroup-wlijz"}
+{"level":"info","msg":"EksWithSpotStackfc5e4923.EksSpotClusterGetTokenCommandA161C1E3 = aws eks get-token --cluster-name mahjong-spot-cluster0 --region us-west-2 --role-arn arn:aws:iam::530820415924:role/EksWithSpotStackfc5e4923-EksWithSpotEksClusterMast-1I5WPQ3IGLYXY"}
+{"level":"info","msg":"EksWithSpotStackfc5e4923.clusterName = mahjong-spot-cluster0"}
+{"level":"info","msg":"EksWithSpotStackfc5e4923.autoScalingGroupMinSize = 3"}
+{"level":"info","msg":""}
+{"level":"info","msg":"Stack ARN:"}
+{"level":"info","msg":"0"}
+{"level":"info","msg":"+ echo 0"}
+{"level":"info","msg":"+ export WORK_HOME=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/super"}
+{"level":"info","msg":"+ WORK_HOME=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/super"}
+{"level":"info","msg":"+ export TILE_HOME=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/super/lib/eks-with-spot"}
+{"level":"info","msg":"+ TILE_HOME=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/super/lib/eks-with-spot"}
+{"level":"info","msg":"+ export D_TBD_EKS_WITH_SPOT_PUBLICSUBNETID1=subnet-09354c8f26aeca5a4"}
+{"level":"info","msg":"+ D_TBD_EKS_WITH_SPOT_PUBLICSUBNETID1=subnet-09354c8f26aeca5a4"}
+{"level":"info","msg":"+ export D_TBD_EKS_WITH_SPOT_PUBLICSUBNETID2=subnet-002896430198f2d75"}
+{"level":"info","msg":"+ D_TBD_EKS_WITH_SPOT_PUBLICSUBNETID2=subnet-002896430198f2d75"}
+{"level":"info","msg":"+ export D_TBD_EKS_WITH_SPOT_PRIVATESUBNETID1=subnet-06911cff7611344e7"}
+{"level":"info","msg":"+ D_TBD_EKS_WITH_SPOT_PRIVATESUBNETID1=subnet-06911cff7611344e7"}
+{"level":"info","msg":"+ export D_TBD_EKS_WITH_SPOT_PRIVATESUBNETID2=subnet-03534ed03e6b45bdd"}
+{"level":"info","msg":"+ D_TBD_EKS_WITH_SPOT_PRIVATESUBNETID2=subnet-03534ed03e6b45bdd"}
+{"level":"info","msg":"+ export D_TBD_EKS_WITH_SPOT_VPCID=vpc-0a419b4d52c3d197f"}
+{"level":"info","msg":"+ D_TBD_EKS_WITH_SPOT_VPCID=vpc-0a419b4d52c3d197f"}
+{"level":"info","msg":"+ export D_TBD_EKS_WITH_SPOT_AUTOSCALINGGROUPMAXSIZE=6"}
+{"level":"info","msg":"+ D_TBD_EKS_WITH_SPOT_AUTOSCALINGGROUPMAXSIZE=6"}
+{"level":"info","msg":"+ export D_TBD_EKS_WITH_SPOT_AUTOSCALINGGROUPMINSIZE=3"}
+{"level":"info","msg":"+ D_TBD_EKS_WITH_SPOT_AUTOSCALINGGROUPMINSIZE=3"}
+{"level":"info","msg":"+ export D_TBD_EKS_WITH_SPOT_NODESROLEARN=arn:aws:iam::530820415924:role/nodes-for-eks-role-wlijz"}
+{"level":"info","msg":"+ D_TBD_EKS_WITH_SPOT_NODESROLEARN=arn:aws:iam::530820415924:role/nodes-for-eks-role-wlijz"}
+{"level":"info","msg":"+ export D_TBD_EKS_WITH_SPOT_CLUSTERENDPOINT=https://4728D3335BD16F37A87D0D18CCDFCCF5.sk1.us-west-2.eks.amazonaws.com"}
+{"level":"info","msg":"+ D_TBD_EKS_WITH_SPOT_CLUSTERENDPOINT=https://4728D3335BD16F37A87D0D18CCDFCCF5.sk1.us-west-2.eks.amazonaws.com"}
+{"level":"info","msg":"+ export D_TBD_EKS_WITH_SPOT_AUTOSCALINGGROUPNAME=mahjong-spot-cluster0-nodegroup-wlijz"}
+{"level":"info","msg":"+ D_TBD_EKS_WITH_SPOT_AUTOSCALINGGROUPNAME=mahjong-spot-cluster0-nodegroup-wlijz"}
+{"level":"info","msg":"+ export D_TBD_EKS_WITH_SPOT_AUTOSCALINGGROUPDESIREDCAPACITY=3"}
+{"level":"info","msg":"+ D_TBD_EKS_WITH_SPOT_AUTOSCALINGGROUPDESIREDCAPACITY=3"}
+{"level":"info","msg":"+ export D_TBD_EKS_WITH_SPOT_PRIVATESUBNETID1=subnet-06911cff7611344e7"}
+{"level":"info","msg":"+ D_TBD_EKS_WITH_SPOT_PRIVATESUBNETID1=subnet-06911cff7611344e7"}
+{"level":"info","msg":"+ export D_TBD_EKS_WITH_SPOT_VPCID=vpc-0a419b4d52c3d197f"}
+{"level":"info","msg":"+ D_TBD_EKS_WITH_SPOT_VPCID=vpc-0a419b4d52c3d197f"}
+{"level":"info","msg":"+ export D_TBD_EKS_WITH_SPOT_REGIONOFCLUSTER=us-west-2"}
+{"level":"info","msg":"+ D_TBD_EKS_WITH_SPOT_REGIONOFCLUSTER=us-west-2"}
+{"level":"info","msg":"+ export D_TBD_EKS_WITH_SPOT_CLUSTERNAME=mahjong-spot-cluster0"}
+{"level":"info","msg":"+ D_TBD_EKS_WITH_SPOT_CLUSTERNAME=mahjong-spot-cluster0"}
+{"level":"info","msg":"+ export D_TBD_EKS_WITH_SPOT_CAPACITYINSTANCE=c5.large/r5.large/m5.large"}
+{"level":"info","msg":"+ D_TBD_EKS_WITH_SPOT_CAPACITYINSTANCE=c5.large/r5.large/m5.large"}
+{"level":"info","msg":"+ export D_TBD_EKS_WITH_SPOT_PUBLICSUBNETID2=subnet-002896430198f2d75"}
+{"level":"info","msg":"+ D_TBD_EKS_WITH_SPOT_PUBLICSUBNETID2=subnet-002896430198f2d75"}
+{"level":"info","msg":"+ export D_TBD_EKS_WITH_SPOT_CLUSTERVERSION=1.16"}
+{"level":"info","msg":"+ D_TBD_EKS_WITH_SPOT_CLUSTERVERSION=1.16"}
+{"level":"info","msg":"+ export D_TBD_EKS_WITH_SPOT_MASTERROLEARN=arn:aws:iam::530820415924:role/EksWithSpotStackfc5e4923-EksWithSpotEksClusterMast-1I5WPQ3IGLYXY"}
+{"level":"info","msg":"+ D_TBD_EKS_WITH_SPOT_MASTERROLEARN=arn:aws:iam::530820415924:role/EksWithSpotStackfc5e4923-EksWithSpotEksClusterMast-1I5WPQ3IGLYXY"}
+{"level":"info","msg":"+ export D_TBD_EKS_WITH_SPOT_PRIVATESUBNETID2=subnet-03534ed03e6b45bdd"}
+{"level":"info","msg":"+ D_TBD_EKS_WITH_SPOT_PRIVATESUBNETID2=subnet-03534ed03e6b45bdd"}
+{"level":"info","msg":"+ export D_TBD_EKS_WITH_SPOT_PUBLICSUBNETID1=subnet-09354c8f26aeca5a4"}
+{"level":"info","msg":"+ D_TBD_EKS_WITH_SPOT_PUBLICSUBNETID1=subnet-09354c8f26aeca5a4"}
+{"level":"info","msg":"+ export D_TBD_EKS_WITH_SPOT_CLUSTERARN=arn:aws:eks:us-west-2:530820415924:cluster/mahjong-spot-cluster0"}
+{"level":"info","msg":"+ D_TBD_EKS_WITH_SPOT_CLUSTERARN=arn:aws:eks:us-west-2:530820415924:cluster/mahjong-spot-cluster0"}
+{"level":"info","msg":"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/super/lib/eks-with-spot"}
+{"level":"info","msg":"++ echo arn:aws:iam::530820415924:role/EksWithSpotStackfc5e4923-EksWithSpotEksClusterMast-1I5WPQ3IGLYXY"}
+{"level":"info","msg":"++ sed -e 's#/#\\\\/#g'"}
+{"level":"info","msg":"+ VALUE='arn:aws:iam::530820415924:role\\/EksWithSpotStackfc5e4923-EksWithSpotEksClusterMast-1I5WPQ3IGLYXY'"}
+{"level":"info","msg":"+ sed -i -e 's/X_EKSClusterMasterRoleARN_X/arn:aws:iam::530820415924:role\\/EksWithSpotStackfc5e4923-EksWithSpotEksClusterMast-1I5WPQ3IGLYXY/g' lib/yaml/aws-auth-cm.yaml"}
+{"level":"info","msg":"++ echo arn:aws:iam::530820415924:role/nodes-for-eks-role-wlijz"}
+{"level":"info","msg":"++ sed -e 's#/#\\\\/#g'"}
+{"level":"info","msg":"+ VALUE='arn:aws:iam::530820415924:role\\/nodes-for-eks-role-wlijz'"}
+{"level":"info","msg":"+ sed -i -e 's/X_NodeGroupRoleARN_X/arn:aws:iam::530820415924:role\\/nodes-for-eks-role-wlijz/g' lib/yaml/aws-auth-cm.yaml"}
+{"level":"info","msg":"+ aws eks update-kubeconfig --name mahjong-spot-cluster0 --region us-west-2 --role-arn arn:aws:iam::530820415924:role/EksWithSpotStackfc5e4923-EksWithSpotEksClusterMast-1I5WPQ3IGLYXY --kubeconfig /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/super/lib/eks-with-spot/kube.config"}
+{"level":"info","msg":"Added new context arn:aws:eks:us-west-2:530820415924:cluster/mahjong-spot-cluster0 to /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/super/lib/eks-with-spot/kube.config"}
+{"level":"info","msg":"+ export KUBECONFIG=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/super/lib/eks-with-spot/kube.config"}
+{"level":"info","msg":"+ KUBECONFIG=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/super/lib/eks-with-spot/kube.config"}
+{"level":"info","msg":"+ kubectl apply -f lib/yaml/aws-auth-cm.yaml"}
+{"level":"info","msg":"configmap/aws-auth configured"}
+{"level":"info","msg":"+ sleep 5"}
+{"level":"info","msg":"+ lib/script/tagec2.sh"}
+{"level":"info","msg":"++ aws ec2 describe-instances --filters Name=instance-state-name,Values=running Name=tag:Name,Values=nodes-asg-mahjong-spot-cluster0 --output json"}
+{"level":"info","msg":"++ jq '.Reservations[].Instances[] | .InstanceId, .InstanceLifecycle, .PrivateDnsName '"}
+{"level":"info","msg":"++ sed -e 's/\"//g'"}
+{"level":"info","msg":"++ exec"}
+{"level":"info","msg":"++ read instanceId"}
+{"level":"info","msg":"+ sed -i -e s/X_CLUSTER_NAME_X/mahjong-spot-cluster0/g lib/yaml/cluster-autoscaler-autodiscover.yaml"}
+{"level":"info","msg":"+ kubectl apply -f lib/yaml/cluster-autoscaler-autodiscover-starter.yaml"}
+{"level":"info","msg":"serviceaccount/cluster-autoscaler created"}
+{"level":"info","msg":"clusterrole.rbac.authorization.k8s.io/cluster-autoscaler created"}
+{"level":"info","msg":"role.rbac.authorization.k8s.io/cluster-autoscaler created"}
+{"level":"info","msg":"clusterrolebinding.rbac.authorization.k8s.io/cluster-autoscaler created"}
+{"level":"info","msg":"rolebinding.rbac.authorization.k8s.io/cluster-autoscaler created"}
+{"level":"info","msg":"deployment.apps/cluster-autoscaler created"}
+{"level":"info","msg":"+ sleep 5"}
+{"level":"info","msg":"+ kubectl apply -f lib/yaml/cluster-autoscaler-autodiscover.yaml"}
+{"level":"info","msg":"serviceaccount/cluster-autoscaler unchanged"}
+{"level":"info","msg":"clusterrole.rbac.authorization.k8s.io/cluster-autoscaler unchanged"}
+{"level":"info","msg":"role.rbac.authorization.k8s.io/cluster-autoscaler unchanged"}
+{"level":"info","msg":"clusterrolebinding.rbac.authorization.k8s.io/cluster-autoscaler unchanged"}
+{"level":"info","msg":"rolebinding.rbac.authorization.k8s.io/cluster-autoscaler unchanged"}
+{"level":"info","msg":"deployment.apps/cluster-autoscaler configured"}
+{"level":"info","msg":"+ kubectl -n kube-system annotate deployment.apps/cluster-autoscaler cluster-autoscaler.kubernetes.io/safe-to-evict=false"}
+{"level":"info","msg":"deployment.apps/cluster-autoscaler annotated"}
+{"level":"info","msg":"+ kubectl -n kube-system set image deployment.apps/cluster-autoscaler cluster-autoscaler=us.gcr.io/k8s-artifacts-prod/autoscaling/cluster-autoscaler:v1.16.5"}
+{"level":"info","msg":"deployment.apps/cluster-autoscaler image updated"}
+{"level":"info","msg":"+ kubectl apply -f lib/yaml/hpa036-components.yaml"}
+{"level":"info","msg":"clusterrole.rbac.authorization.k8s.io/system:aggregated-metrics-reader created"}
+{"level":"info","msg":"clusterrolebinding.rbac.authorization.k8s.io/metrics-server:system:auth-delegator created"}
+{"level":"info","msg":"rolebinding.rbac.authorization.k8s.io/metrics-server-auth-reader created"}
+{"level":"info","msg":"apiservice.apiregistration.k8s.io/v1beta1.metrics.k8s.io created"}
+{"level":"info","msg":"serviceaccount/metrics-server created"}
+{"level":"info","msg":"deployment.apps/metrics-server created"}
+{"level":"info","msg":"service/metrics-server created"}
+{"level":"info","msg":"clusterrole.rbac.authorization.k8s.io/system:metrics-server created"}
+{"level":"info","msg":"clusterrolebinding.rbac.authorization.k8s.io/system:metrics-server created"}
+{"level":"info","msg":"+ kubectl apply -f lib/yaml/termination-handler14-all-resources.yaml"}
+{"level":"info","msg":"podsecuritypolicy.policy/aws-node-termination-handler created"}
+{"level":"info","msg":"serviceaccount/aws-node-termination-handler created"}
+{"level":"info","msg":"clusterrole.rbac.authorization.k8s.io/aws-node-termination-handler created"}
+{"level":"info","msg":"clusterrole.rbac.authorization.k8s.io/aws-node-termination-handler-psp created"}
+{"level":"info","msg":"clusterrolebinding.rbac.authorization.k8s.io/aws-node-termination-handler created"}
+{"level":"info","msg":"rolebinding.rbac.authorization.k8s.io/aws-node-termination-handler-psp created"}
+{"level":"info","msg":"daemonset.apps/aws-node-termination-handler created"}
+{"level":"info","msg":"0"}
+{"level":"info","msg":"+ echo 0"}

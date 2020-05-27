@@ -33,48 +33,23 @@
                     "type": "object",
                     "properties": {
                         "tiles": {
-                            "type":"array",
-                            "items": {
-                                "type": "object",
-                                "properties": {
-                                    "tileReference":{ "type": "string" },
-                                    "tileVersion": { "type": "string" },
-                                    "inputs": {
-                                        "type": "array",
-                                        "items": {
-                                            "type": "object",
-                                            "properties": {
-                                                "name": { "type": "string" },
-                                                "inputValue": { "type": "string" },
-                                                "inputValues": {
-                                                    "type": "array",
-                                                    "items": { "type": "string" }
-                                                }
-                                            }
-                                        }
-                                        
-                                    },
-                                    "manifests": {
-                                        "type": "object",
-                                        "properties": {
-                                            "manifestType": {"type": "string"},
-                                            "namespace": {"type": "string"},
-                                            "files": {
-                                                "type": "array",
-                                                "items": {
-                                                    "type": "string"
-                                                }
-                                            },
-                                            "folders": {
-                                                "type": "array",
-                                                "items": {
-                                                    "type": "string"
-                                                }
+                            "type":"object",
+                            "properties": {
+                                "^.*$": {
+                                    "type": "object",
+                                    "properties": {
+                                        "inputValue": {"type": "string"},
+                                        "valueRef": {"type": "string"},
+                                        "inputValues": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
                                             }
                                         }
                                     }
                                 }
                             }
+
                         }
                     }
                 },
@@ -88,8 +63,7 @@
                                 "type": "object",
                                 "properties": {
                                     "name": {"type": "string"},
-                                    "tileReference": {"type": "string"},
-                                    "outputValueRef": {"type": "string"}
+                                    "valueRef": {"type": "string"}
                                 }
                             }
                         },

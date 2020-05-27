@@ -23,7 +23,7 @@ export interface EksSpotProps {
   
 }
 
-export class EkswithSpot extends cdk.Construct {
+export class EksWithSpot extends cdk.Construct {
   
   /** Directly exposed to other stack */
   public readonly regionOfCluster: string

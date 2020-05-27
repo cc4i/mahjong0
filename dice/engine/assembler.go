@@ -243,13 +243,13 @@ func (d *Deployment) PullTile(ctx context.Context,
 	ti := tileInstance
 	if ti == "" { ti = fmt.Sprintf("%s-%s-%s", tile, id, "generated") }
 	tg := TilesGrid{
-		TileInstance: ti,
-		ExecutableOrder: executableOrder-1,
-		TileName: tile,
-		TileVersion: version,
+		TileInstance:       ti,
+		ExecutableOrder:    executableOrder-1,
+		TileName:           tile,
+		TileVersion:        version,
 		ParentTileInstance: parentTileInstance,
-		rootTileInstance: rootTileInstance,
-		TileCategory: parsedTile.Metadata.Category,
+		RootTileInstance:   rootTileInstance,
+		TileCategory:       parsedTile.Metadata.Category,
 	}
 	if allTG, ok := AllTilesGrids[dSid]; ok && allTG != nil {
 		if !IsDuplicatedCategory(dSid, rootTileInstance, parsedTile.Metadata.Category) {
@@ -323,7 +323,7 @@ func (d *Deployment) PullTile(ctx context.Context,
 		TileInstance: ti,
 		TileName:          parsedTile.Metadata.Name,
 		TileVersion:       parsedTile.Metadata.Version,
-		TileConstructName: strings.ReplaceAll(parsedTile.Metadata.Name, "-", ""),
+		TileConstructName: strcase.ToCamel(parsedTile.Metadata.Name),
 		TileFolder:        strings.ToLower(parsedTile.Metadata.Name),
 		TileCategory:      parsedTile.Metadata.Category,
 	}
@@ -384,7 +384,7 @@ func (d *Deployment) PullTile(ctx context.Context,
 					t.TileVersion,
 					tg.ExecutableOrder,
 					tg.TileInstance,
-					tg.rootTileInstance,
+					tg.RootTileInstance,
 					aTs, override, out); err != nil { return err }
 	}
 	////
@@ -507,7 +507,7 @@ func (d *Deployment) PullTile(ctx context.Context,
 func array2String(array []string, inputType string) string {
 	val := "[ "
 	switch inputType {
-	case String.IOTString():
+	case String.IOTString()+"[]":
 		for _, d := range array {
 			if strings.HasPrefix(d,"$(") {
 				val = val + d + ","
