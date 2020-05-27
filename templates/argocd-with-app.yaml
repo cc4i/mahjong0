@@ -38,7 +38,7 @@ spec:
             valueRef: $(tileArgocd0152A.outputs.password)
 
   summary:
-      description: Argo CD has been installed in $clusterName with success and checking out following notes to get started.
+      description: Argo CD has been installed in $(tileArgocd0152A.outputs.clusterName) with success and checking out following notes to get started.
       outputs:
         - name: EKS Cluster Name
           valueRef: $(tileArgocd0152A.outputs.clusterName)

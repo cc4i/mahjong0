@@ -63,8 +63,6 @@ type TsStack struct {
 	TileCategory      string
 	InputParameters   map[string]TsInputParameter //input name -> TsInputParameter
 	TsManifests       *TsManifests
-	// Caching predefined & default ENV
-	PredefinedEnv map[string]string
 }
 
 type TsInputParameter struct {
@@ -195,7 +193,7 @@ func ValueRef(dSid string, ref string, ti string) (string, error) {
 		tileInstance := str[0]
 		where := str[1]
 		field := str[2]
-		if tileInstance == "self" {
+		if tileInstance == "self" && ti != "" {
 			tileInstance = ti
 		}
 		if at, ok := AllTs[dSid]; ok {
@@ -225,4 +223,13 @@ func ValueRef(dSid string, ref string, ti string) (string, error) {
 		return "", errors.New("expression: "+ref+" was error")
 	}
 	return "", errors.New("referred value wasn't exist")
+}
+
+func ParentTileInstance(dSid string, tileInstance string) string {
+	if allTG, ok := AllTilesGrids[dSid]; ok {
+		if tg, ok := (*allTG)[tileInstance]; ok {
+			return tg.ParentTileInstance
+		}
+	}
+	return ""
 }

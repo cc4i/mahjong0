@@ -75,7 +75,7 @@ spec:
     # FromCommand
     - name: appRepo
       outputType: String
-      defaultValue: https://github.com:$GITHUB_USER/$REPO_NAME.git
+      defaultValue: https://github.com/$GITHUB_USER/$REPO_NAME.git
       description: Custom::Repo        
     - name: appNamespace
       outputType: String

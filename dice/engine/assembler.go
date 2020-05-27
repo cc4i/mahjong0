@@ -613,13 +613,13 @@ func (d *Deployment) GenerateExecutePlan(ctx context.Context, out *websocket.Con
 			stage.Kind = CDK.SKString()
 		}
 		// Caching & injected work_home & tile_home
-		if ts.PredefinedEnv == nil {
-			ts.PredefinedEnv = make(map[string]string)
-		}
+		//if ts.PredefinedEnv == nil {
+		//	ts.PredefinedEnv = make(map[string]string)
+		//}
 		stage.InjectedEnv = append(stage.InjectedEnv, "export WORK_HOME="+DiceConfig.WorkHome+"/super")
-		ts.PredefinedEnv["WORK_HOME"] = DiceConfig.WorkHome + "/super"
+		//ts.PredefinedEnv["WORK_HOME"] = DiceConfig.WorkHome + "/super"
 		stage.InjectedEnv = append(stage.InjectedEnv, "export TILE_HOME="+DiceConfig.WorkHome+"/super/lib/"+strings.ToLower(ts.TileName))
-		ts.PredefinedEnv["TILE_HOME"] = DiceConfig.WorkHome + "/super/lib/" + strings.ToLower(ts.TileName)
+		//ts.PredefinedEnv["TILE_HOME"] = DiceConfig.WorkHome + "/super/lib/" + strings.ToLower(ts.TileName)
 
 		if ts.TileCategory == ContainerApplication.CString() || ts.TileCategory == Application.CString() {
 			// ContainerApplication & Application
@@ -627,10 +627,11 @@ func (d *Deployment) GenerateExecutePlan(ctx context.Context, out *websocket.Con
 			if ts.TsManifests.Namespace != "" && ts.TsManifests.Namespace != "default" {
 				stage.Preparation = append(stage.Preparation, "kubectl create ns "+ts.TsManifests.Namespace+" || true")
 				stage.InjectedEnv = append(stage.InjectedEnv, "export NAMESPACE="+ts.TsManifests.Namespace)
-				ts.PredefinedEnv["NAMESPACE"] = ts.TsManifests.Namespace
+				//ts.PredefinedEnv["NAMESPACE"] = ts.TsManifests.Namespace
 			} else {
 				ts.TsManifests.Namespace = "default"
-				ts.PredefinedEnv["NAMESPACE"] = "default"
+				stage.InjectedEnv = append(stage.InjectedEnv, "export NAMESPACE=default")
+				//ts.PredefinedEnv["NAMESPACE"] = "default"
 			}
 
 			// Process different manifests
@@ -688,14 +689,14 @@ func (d *Deployment) GenerateExecutePlan(ctx context.Context, out *websocket.Con
 				for _, e := range tile.Spec.Global.Env {
 					if e.Value != "" {
 						stage.InjectedEnv = append(stage.InjectedEnv, fmt.Sprintf("export %s=%s", e.Name, e.Value))
-						ts.PredefinedEnv[e.Name] = e.Value
+						//ts.PredefinedEnv[e.Name] = e.Value
 					} else if e.Value == "" && e.ValueRef != "" {
 						//if v, ok := ts.InputParameters[e.ValueRef]; ok {
 						if v, err := ValueRef(dSid, e.ValueRef, ts.TileInstance); err != nil {
 							log.Errorf("Inject Global environment : %s  was failed: %s\n", e.ValueRef, err.Error())
 						} else {
 							stage.InjectedEnv = append(stage.InjectedEnv, fmt.Sprintf("export %s=%s", e.Name, v))
-							ts.PredefinedEnv[e.Name] = v
+							//ts.PredefinedEnv[e.Name] = v
 						}
 
 						//}

@@ -34,11 +34,10 @@ type ExecutionStage struct {
 	// Name
 	Name string `json:"name"` // = Tile Instance
 	// Stage type
-	Kind        string   `json:"kind"`     //CDK/Command
-	WorkHome    string   `json:"workHome"` //root folder for execution
-	InjectedEnv []string `json:"injectedEnv"`
+	Kind        string   `json:"kind"`     // CDK/Command
+	WorkHome    string   `json:"workHome"` // root folder for execution
+	InjectedEnv []string `json:"injectedEnv"` // example: "export variable=value"
 	Preparation []string `json:"preparation"`
-	//Command       *list.List        `json:"command"`
 	Commands        []string `json:"commands"`
 	TileName        string   `json:"tileName"`
 	TileVersion     string   `json:"tileVersion"`
@@ -71,6 +70,9 @@ type BrewerCore interface {
 	ExtractValue(ctx context.Context, buf []byte, out *websocket.Conn) error
 	PostRun(ctx context.Context,  dryRun bool, buf []byte, out *websocket.Conn) error
 	GenerateSummary(ctx context.Context, out *websocket.Conn) error
+	ExtractAllEnv() map[string]string
+	ReplaceAll(str string, dSid string, kv map[string]string) string
+	ReplaceAllEnv(str string, kv map[string]string) string
 }
 
 //ExecutePlan is a orchestrator to run execution plan.
@@ -112,50 +114,66 @@ func (ep *ExecutionPlan) GenerateSummary(ctx context.Context, out *websocket.Con
 	SR(out, []byte("\n"))
 	SR(out, []byte("============================Summary===================================="))
 	dSid := ctx.Value("d-sid").(string)
-	if at, ok := AllTs[dSid]; ok {
-		if ep.OriginDeployment.Spec.Summary.Description != "" {
-			SR(out, []byte(replaceByValue(ep.OriginDeployment.Spec.Summary.Description, at)+"\n"))
-		}
-		SR(out, []byte("\n"))
-		//for _, ot := range ep.OriginDeployment.Spec.Summary.Outputs {
-		//	SR(out, []byte(fmt.Sprintf("%s = %s\n", ot.Name, getValueByRef(ot.TileInstance, ot.OutputValueRef, at.AllOutputsN))))
-		//}
-		SR(out, []byte("\n"))
-		for _, n := range ep.OriginDeployment.Spec.Summary.Notes {
-			SR(out, []byte(replaceByValue(n, at)+"\n"))
-		}
+	kv := ep.ExtractAllEnv()
+	if ep.OriginDeployment.Spec.Summary.Description != "" {
+
+		SR(out, []byte(ep.ReplaceAll(ep.OriginDeployment.Spec.Summary.Description, dSid, kv)+"\n"))
+	}
+	SR(out, []byte("\n"))
+	for _, ot := range ep.OriginDeployment.Spec.Summary.Outputs {
+		SR(out, []byte(fmt.Sprintf("%s = %s\n", ot.Name, ep.ReplaceAll(ot.ValueRef, dSid, kv))))
+	}
+	SR(out, []byte("\n"))
+	for _, n := range ep.OriginDeployment.Spec.Summary.Notes {
+		SR(out, []byte(ep.ReplaceAll(n, dSid, kv)+"\n"))
 	}
 	SR(out, []byte("======================================================================="))
 	return nil
 }
 
-// Replace env & var by values
-func replaceByValue(str string, at Ts) string {
-	for _, ts := range at.TsStacks {
+func (ep *ExecutionPlan) ExtractAllEnv() map[string]string {
+	env := make(map[string]string)
+	for e := ep.Plan.Back(); e != nil; e = e.Prev() {
+		stage := e.Value.(*ExecutionStage)
 		//replace by env value
-		for k, v := range ts.PredefinedEnv {
-			str = strings.ReplaceAll(str, "$"+k, v)
-
-		}
-		//replace by output value
-		if output, ok := at.AllOutputsN[ts.TileInstance]; ok {
-			for k1, v1 := range output.TsOutputs {
-				str = strings.ReplaceAll(str, "$"+k1, v1.OutputValue)
+		for _, val := range stage.InjectedEnv {
+			re := regexp.MustCompile(`^export (.*)=(.*)$`)
+			kv := re.FindStringSubmatch(val)
+			if len(kv) == 3 {
+				env[kv[1]]= kv[2]
 			}
+		}
+	}
+	return env
+}
+// Replace all possible env & value reference
+func (ep *ExecutionPlan) ReplaceAll(str string, dSid string, kv map[string]string) string {
+	str = ep.ReplaceAllEnv(str, kv)
+	for {
+		re := regexp.MustCompile(`.*(\$\([[:alnum:]]*\.[[:alnum:]]*\.[[:alnum:]]*\)).*`)
+		s := re.FindStringSubmatch(str)
+		//
+		if len(s) == 2 {
+			if v , err := ValueRef(dSid,s[1],""); err != nil {
+				log.Errorf("Replace value reference was failed : %s \n", err)
+				break
+			} else {
+				str = strings.ReplaceAll(str,s[1], v)
+			}
+		} else {
+			break
 		}
 	}
 	return str
 }
+// Replace env by value
+func (ep *ExecutionPlan) ReplaceAllEnv(str string, allEnv map[string]string) string {
+	for k,v := range allEnv {
+		str = strings.ReplaceAll(str, "$"+k, v)
+	}
+	return str
+}
 
-// Retrieve output value from cache
-//func getValueByRef(tileInstance string, outputName string, all map[string]*TsOutput) string {
-//	if ts, ok := all[tileInstance]; ok {
-//		if output, ok := ts.TsOutputs[outputName]; ok {
-//			return output.OutputValue
-//		}
-//	}
-//	return ""
-//}
 
 // CommandExecutor exec command and return output.
 func (ep *ExecutionPlan) CommandExecutor(ctx context.Context,  dryRun bool, cmdTxt []byte, out *websocket.Conn) error {
@@ -224,6 +242,8 @@ func (ep *ExecutionPlan) LinuxCommandExecutor(ctx context.Context, cmdTxt []byte
 func (ep *ExecutionPlan) CommandWrapperExecutor(ctx context.Context, dryRun bool, out *websocket.Conn) (string, error) {
 	//stage.WorkHome
 	script := ep.CurrentStage.WorkHome + "/script-" + ep.CurrentStage.Name + "-" + RandString(8) + ".sh"
+	// context id
+	dSid := ctx.Value(`d-sid`).(string)
 	tContent := `#!/bin/bash
 set -xe
 {{range .InjectedEnv}}
@@ -254,8 +274,7 @@ set -xe
 {{end}}
 echo $?
 `
-	//Insert kube.config if need to
-	dSid := ctx.Value(`d-sid`).(string)
+	//Inject kube.config if need to
 	if at, ok := AllTs[dSid]; ok {
 		if stack, ok := at.TsStacksMapN[ep.CurrentStage.Name]; ok {
 			// Looking for initial kube.config. For EKS, require clusterName, masterRoleARN ; For others, not implementing.
@@ -312,7 +331,6 @@ echo $?
 								strings.ToUpper(k),
 								v.OutputValue))
 						}
-
 					}
 				}
 			}
@@ -334,19 +352,23 @@ echo $?
 	}
 	defer file.Close()
 
-	//TODO: transform value to actual value
-	// Global ENV
-	for i, x := range ep.CurrentStage.InjectedEnv {
-		if strings.Contains(x, "$(") {
-
-			v, err := ValueRef(dSid, x[strings.Index(x,"=")+1:], ep.CurrentStage.Name)
-			if err != nil {
-				SR(out, []byte(err.Error()))
-			} else {
-				ep.CurrentStage.InjectedEnv[i] = x[0:strings.Index(x,"=")+1]+v
+	// !!! Replace $(value) to actual value !!!
+	for _, kvs := range [][]string{ep.CurrentStage.InjectedEnv,
+									ep.CurrentStage.Preparation,
+									ep.CurrentStage.Commands,
+									ep.CurrentStage.PostRunCommands } {
+		for i, vs := range  kvs {
+			if strings.Contains(vs, "$(") {
+				val, err := ValueRef(dSid, vs[strings.Index(vs,"=")+1:], ep.CurrentStage.Name)
+				if err != nil {
+					SR(out, []byte(err.Error()))
+				} else {
+					ep.CurrentStage.InjectedEnv[i] = vs[0:strings.Index(vs,"=")+1]+val
+				}
 			}
 		}
 	}
+	////
 
 	err = tp.Execute(file, ep.CurrentStage)
 	if err != nil {
@@ -379,8 +401,9 @@ func (ep *ExecutionPlan) WsTail(ctx context.Context, reader io.ReadCloser, stage
 
 // ExtractValue retrieve values from output logs.
 func (ep *ExecutionPlan) ExtractValue(ctx context.Context, buf []byte, out *websocket.Conn) error {
-	key := ctx.Value(`d-sid`).(string)
-	if ts, ok := AllTs[key]; ok {
+	dSid := ctx.Value(`d-sid`).(string)
+	allEnv := ep.ExtractAllEnv()
+	if ts, ok := AllTs[dSid]; ok {
 		tileInstance := ep.CurrentStage.Name
 		var tileCategory string
 		//var vendorService string
@@ -393,16 +416,16 @@ func (ep *ExecutionPlan) ExtractValue(ctx context.Context, buf []byte, out *webs
 			for outputName, outputDetail := range outputs.TsOutputs {
 				var regx *regexp.Regexp
 				if tileCategory == ContainerApplication.CString() || tileCategory == Application.CString() {
-					// Extract key, value from Command outputs
+					// Extract dSid, value from Command outputs
 					regx = regexp.MustCompile("^\\{\"(" +
 						outputName +
 						"=" +
 						".*?)\"}$")
 				} else {
-					// Extract key, value from CDK outputs
+					// Extract dSid, value from CDK outputs
 					if stack, ok := ts.TsStacksMapN[tileInstance]; ok {
 						regx = regexp.MustCompile("^\\{\"level\":\"info\"\\,\"msg\":\"(" +
-							stack.TileStackName + "." +
+							stack.TileName + "." +
 							".*" +
 							outputName +
 							".*?)\"}$")
@@ -421,11 +444,23 @@ func (ep *ExecutionPlan) ExtractValue(ctx context.Context, buf []byte, out *webs
 						break
 					}
 				}
-
+				// Replace possible ENV in output
+				if strings.Contains(outputDetail.OutputValue,"$") {
+					outputDetail.OutputValue = ep.ReplaceAllEnv(outputDetail.OutputValue, allEnv)
+				}
 			}
-
 		}
 
+		// Pass output values to parent stack
+		if parentTileInstance := ParentTileInstance(dSid, tileInstance); parentTileInstance!="" {
+			if outputs, ok := ts.AllOutputsN[tileInstance]; ok {
+				if parentOutputs, ok := ts.AllOutputsN[parentTileInstance]; ok {
+					for k, v := range outputs.TsOutputs {
+						parentOutputs.TsOutputs[k] = v
+					}
+				}
+			}
+		}
 	}
 
 	return nil
