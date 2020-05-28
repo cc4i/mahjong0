@@ -44,3 +44,18 @@ spec:
             valueRef: $(tileEksWithSpot050.outputs.masterRoleARN)
           - name: accessToken
             inputValue: <GITHUB TOKEN>
+summary:
+      description: |
+        ++++++++++++++++++++++++++++++++++++++++++++++++++++
+        +   Perfect Microservices with Demo Application    +
+        ++++++++++++++++++++++++++++++++++++++++++++++++++++
+      outputs:
+        - name: EKS Cluster Name
+          valueRef: $(tileArgocd0152A.outputs.clusterName)
+        - name: Master role arn for EKS Cluster
+          valueRef: $(tileArgocd0152A.outputs.masterRoleARN)
+        - name: The API endpoint EKS Cluster
+          valueRef: $(tileArgocd0152A.outputs.clusterEndpoint)
+        
+      notes: []
+ 

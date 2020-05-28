@@ -36,6 +36,7 @@ export class EksNodesSpot extends cdk.Construct {
 
     constructor(scope: cdk.Construct, id: string, props: EksNodesProps) {
         super(scope, id)
+        let uuid = Math.random().toString(36).substr(2,5)
 
         /** control panel security group  */ 
         this.controlPlaneSG = new ec2.SecurityGroup(this, `EksControlPlaneSG`, {
@@ -44,7 +45,7 @@ export class EksNodesSpot extends cdk.Construct {
 
         /** work nodes security group */ 
         this.nodesSG = new ec2.SecurityGroup(this, "NodesSecurityGroup",{
-            securityGroupName: "nodes-for-eks-sg",
+            securityGroupName: "nodes-for-eks-sg-"+uuid,
             vpc: props.vpc
         });
         /**s sh access to nodes */
@@ -57,13 +58,13 @@ export class EksNodesSpot extends cdk.Construct {
 
         /** work nodes shared scurity group */
         this.nodesSharedSG = new ec2.SecurityGroup(this, "NodesSharedSecurityGroup",{
-            securityGroupName: "nodes-shared-for-eks-sg",
+            securityGroupName: "nodes-shared-for-eks-sg-"+uuid,
             vpc: props.vpc
         });
         this.nodesSharedSG.addIngressRule(this.nodesSharedSG, ec2.Port.allTcp())
          
         this.nodesRole = new iam.Role(this, "NodesRole", {
-            roleName: "nodes-for-eks-role",
+            roleName: "nodes-for-eks-role-"+uuid,
             assumedBy: new iam.ServicePrincipal('ec2.amazonaws.com'),
             managedPolicies: [
                 {managedPolicyArn: "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"},
@@ -95,7 +96,7 @@ export class EksNodesSpot extends cdk.Construct {
         });
 
         this.nodesLaunchTemplate = new ec2.CfnLaunchTemplate(this, "NodesLaunchTemplate", {
-            launchTemplateName: "NodesLaunchTemplate",
+            launchTemplateName: "NodesLaunchTemplate-"+uuid,
             launchTemplateData: {
                 instanceType: "c5.large",
                 imageId: new eks.EksOptimizedImage({
@@ -130,7 +131,7 @@ export class EksNodesSpot extends cdk.Construct {
 
         this.autoScalingGroup = new autoscaling.CfnAutoScalingGroup(this, "NodesAutoScalingGroup", {
 
-            autoScalingGroupName: "auto-scaling-group-"+props.clusterName,
+            autoScalingGroupName: props.clusterName+"-nodegroup-"+uuid,
             vpcZoneIdentifier: [
                 props.publicSubnetId1,
                 props.publicSubnetId2,

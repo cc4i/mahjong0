@@ -8,7 +8,7 @@ test('EKS Created', () => {
     const stack = new cdk.Stack(app, "TestStack");
     const vpc = new ec2.Vpc(stack, "vpc", {})
     // WHEN
-    new eks.EkswithSpot(stack, 'MyTestConstruct', {
+    new eks.EksWithSpot(stack, 'MyTestConstruct', {
         vpc: vpc,
         clusterName: "testCluster",
         keyPair4EC2: "keypair",

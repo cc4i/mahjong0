@@ -8,41 +8,30 @@ import (
 	"time"
 )
 
-
+// TilesGrid represents relationship table of all Tile for each deployment
 type TilesGrid struct {
-	TileInstance string
-	ExecutableOrder int
-	TileName string
-	TileVersion string
-	TileCategory string
-	rootTileInstance string
-	ParentTileInstance string
+	TileInstance       string 	// TileInstance is unique ID of Tile as instance
+	ExecutableOrder    int    	// ExecutableOrder is execution order of Tile
+	TileName           string 	// TileName is the name of Tile
+	TileVersion        string 	// TileVersion is the version of Tile
+	TileCategory       string 	// TileCategory is the category of Tile
+	RootTileInstance   string 	// RootTileInstance indicates Tiles are in the same group
+	ParentTileInstance string	// ParentTileInstance indicates who's dependent on Me - Tile
 }
 
 
 // Ts is key struct to fulfil super.ts template and key element to generate execution plan.
 type Ts struct {
-	// TsLibs
-	TsLibs []TsLib
-	// TsLibsMap : TileName -> TsLib
-	TsLibsMap map[string]TsLib
-
-	// TsStacks
-	TsStacks []*TsStack
-	// TsStacksMap : TileInstance -> TsStack
-	// 		all initialized values will be store here, include input, env, etc
-	TsStacksMapN map[string]*TsStack
-
-	// AllTiles : TileInstance -> Tile
-	AllTilesN map[string]*Tile
-	// AllOutputs :  TileInstance ->TsOutput
-	// 		all output values will be store here
-	AllOutputsN map[string]*TsOutput
-
-	// Created time
-	CreatedTime time.Time
+	TsLibs []TsLib // TsLibs is only for go template
+	TsLibsMap map[string]TsLib // TsLibsMap : TileName -> TsLib
+	TsStacks []*TsStack // TsStacks is only for go template
+	TsStacksMapN map[string]*TsStack	// TsStacksMap: TileInstance -> TsStack, all initialized values will be store here, include input, env, etc
+	AllTilesN map[string]*Tile // AllTiles: TileInstance -> Tile
+	AllOutputsN map[string]*TsOutput // AllOutputs:  TileInstance ->TsOutput, all output values will be store here
+	CreatedTime time.Time // Created time
 }
 
+// Ts represents all referred CDK resources
 type TsLib struct {
 	TileInstance string
 	TileName          string
@@ -52,6 +41,7 @@ type TsLib struct {
 	TileCategory      string
 }
 
+// TsStack represents all detail for each stack
 type TsStack struct {
 	TileInstance string
 	TileName          string
@@ -65,6 +55,7 @@ type TsStack struct {
 	TsManifests       *TsManifests
 }
 
+// TsInputParameter
 type TsInputParameter struct {
 	InputName       string
 	InputValue      string
@@ -73,6 +64,7 @@ type TsInputParameter struct {
 	DependentTileInputName string
 }
 
+// TsManifests
 type TsManifests struct {
 	ManifestType         string
 	Namespace            string
@@ -82,6 +74,7 @@ type TsManifests struct {
 
 }
 
+// TsOutput
 type TsOutput struct {
 	TileName    string
 	TileVersion string
@@ -89,6 +82,7 @@ type TsOutput struct {
 	TsOutputs   map[string]*TsOutputDetail //OutputName -> TsOutputDetail
 }
 
+// TsOutputDetail
 type TsOutputDetail struct {
 	Name                string
 	OutputType          string
@@ -119,6 +113,7 @@ func SortedTilesGrid(dSid string) []TilesGrid {
 	return nil
 }
 
+// DependentEKSTile return dependent EKS tile in the the group
 func DependentEKSTile(dSid string, tileInstance string) *Tile {
 
 	if allTG, ok := AllTilesGrids[dSid]; ok {
@@ -139,6 +134,7 @@ func DependentEKSTile(dSid string, tileInstance string) *Tile {
 
 }
 
+// AllDependentTiles return all dependent Tiles
 func AllDependentTiles(dSid string, tileInstance string) []Tile {
 
 	if allTG, ok := AllTilesGrids[dSid]; ok {
@@ -156,11 +152,11 @@ func AllDependentTiles(dSid string, tileInstance string) []Tile {
 	}
 	return nil
 }
-
+// IsDuplicatedCategory determine if it's duplicated Tile under same group
 func IsDuplicatedCategory(dSid string, rootTileInstance string, tileCategory string) bool {
 	if allTG, ok := AllTilesGrids[dSid]; ok {
 		for _, v := range *allTG {
-			if v.rootTileInstance == rootTileInstance {
+			if v.RootTileInstance == rootTileInstance {
 				if v.TileCategory == tileCategory {
 					return true
 				}
@@ -170,10 +166,11 @@ func IsDuplicatedCategory(dSid string, rootTileInstance string, tileCategory str
 	return false
 }
 
+// ReferencedTsStack return referred TsStack
 func ReferencedTsStack(dSid string, rootTileInstance string, tileName string) *TsStack {
 	if allTG, ok := AllTilesGrids[dSid]; ok {
 		for _, v := range *allTG {
-			if v.rootTileInstance == rootTileInstance {
+			if v.RootTileInstance == rootTileInstance {
 				if v.TileName == tileName {
 					ts := AllTs[dSid]
 					return ts.TsStacksMapN[v.TileInstance]
@@ -184,7 +181,7 @@ func ReferencedTsStack(dSid string, rootTileInstance string, tileName string) *T
 	return nil
 }
 
-
+// ValueRef return actual value of referred input/output
 func ValueRef(dSid string, ref string, ti string) (string, error) {
 	re := regexp.MustCompile(`^\$\(([[:alnum:]]*\.[[:alnum:]]*\.[[:alnum:]]*)\)$`)
 	ms := re.FindStringSubmatch(ref)
@@ -225,6 +222,7 @@ func ValueRef(dSid string, ref string, ti string) (string, error) {
 	return "", errors.New("referred value wasn't exist")
 }
 
+// ParentTileInstance return Tile instance of parent Tile
 func ParentTileInstance(dSid string, tileInstance string) string {
 	if allTG, ok := AllTilesGrids[dSid]; ok {
 		if tg, ok := (*allTG)[tileInstance]; ok {
