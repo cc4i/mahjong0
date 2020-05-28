@@ -53,7 +53,7 @@ docker-build:
 		-t ${DOCKER_IMAGE}:${DOCKER_TAG_GIT_BRANCH} .
 	@if [ ${DOCKER_TAG_GIT_BRANCH} = "master" ]; then \
 		echo "Tag image with latest label"; \
-		docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest; \
+		docker tag ${DOCKER_IMAGE}:${DOCKER_TAG_GIT_BRANCH} ${DOCKER_IMAGE}:latest; \
 	fi
 
 

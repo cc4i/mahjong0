@@ -25,18 +25,19 @@ export interface EksNodesProps {
 
 export class EksNodesSpot extends cdk.Construct {
 
-    nodesLaunchTemplate: ec2.CfnLaunchTemplate
-    autoScalingGroup: autoscaling.CfnAutoScalingGroup
-    nodesRole: iam.Role
+    nodesLaunchTemplate: ec2.CfnLaunchTemplate;
+    autoScalingGroup: autoscaling.CfnAutoScalingGroup;
+    nodesRole: iam.Role;
     
-    controlPlaneSG: ec2.SecurityGroup
-    nodesSG: ec2.SecurityGroup
-    nodesSharedSG: ec2.SecurityGroup
+    controlPlaneSG: ec2.SecurityGroup;
+    nodesSG: ec2.SecurityGroup;
+    nodesSharedSG: ec2.SecurityGroup;
+
 
 
     constructor(scope: cdk.Construct, id: string, props: EksNodesProps) {
-        super(scope, id)
-        let uuid = Math.random().toString(36).substr(2,5)
+        super(scope, id);
+        let uuid = Math.random().toString(36).substr(2,5);
 
         /** control panel security group  */ 
         this.controlPlaneSG = new ec2.SecurityGroup(this, `EksControlPlaneSG`, {
@@ -135,8 +136,8 @@ export class EksNodesSpot extends cdk.Construct {
             vpcZoneIdentifier: [
                 props.publicSubnetId1,
                 props.publicSubnetId2,
-                props.privateSubnetId1,
-                props.privateSubnetId2
+                //props.privateSubnetId1,
+                //props.privateSubnetId2
             ],
             desiredCapacity: props.desiredCapacityASG,
             cooldown: props.cooldownASG,
@@ -164,8 +165,13 @@ export class EksNodesSpot extends cdk.Construct {
             // would be failed to register into EKS cluster
             tags: [
                 {
+                    key: "Name",
+                    value: props.clusterName+"-nodegroup-"+uuid,
+                    propagateAtLaunch: true
+                },
+                {
                     key: "member",
-                    value: "nodes-asg-"+props.clusterName,
+                    value: props.clusterName+"-nodegroup-"+uuid,
                     propagateAtLaunch: true
                 },
                 {

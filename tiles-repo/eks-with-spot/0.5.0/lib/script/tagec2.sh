@@ -4,7 +4,7 @@ set -x
 
 # List all instance & lifecycle
 aws ec2 describe-instances \
-    --filters Name=instance-state-name,Values=running Name=tag:Name,Values=nodes-asg-mahjong-spot-cluster0  \
+    --filters Name=tag:member,Values=$D_TBD_EKS_WITH_SPOT_AUTOSCALINGGROUPNAME  \
     --output json \
     | jq '.Reservations[].Instances[] | .InstanceId, .InstanceLifecycle, .PrivateDnsName ' | sed -e 's/"//g' > spot.out
 
