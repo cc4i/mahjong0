@@ -1,0 +1,28 @@
+apiVersion: mahjong.io/v1alpha1
+kind: Tile
+metadata:
+    name: Bitnami-Sealed-Secrets
+    category: ContainerApplication
+    version: 0.12.4
+    dependentOnVendorService: EKS
+
+spec:
+  inputs:
+    # String
+    - name: clusterName
+      inputType: String
+      require: true
+    # String
+    - name: masterRoleARN
+      inputType: String
+      require: true
+
+  outputs:
+    # String
+    - name: clusterName
+      outputType: String
+      description: AWS::EFS::FileSystem
+
+  # Notes are description list for addtional information.
+  notes: []
+

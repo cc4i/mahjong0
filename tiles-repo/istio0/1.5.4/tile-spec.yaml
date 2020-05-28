@@ -7,6 +7,27 @@ metadata:
     dependentOnVendorService: EKS
 # Specification
 spec: 
+  preRun:
+    stages:
+      - name: InstallIstio1.6
+        command: |
+           helm template lib/istio-operator-1.6.0/ \
+            --set hub=docker.io/istio \
+            --set tag=1.6.0 \
+            --set operatorNamespace=istio-operator \
+            --set istioNamespace=istio-system | kubectl apply -f -
+            # Create namespace for Istio
+            kubectl create ns istio-system
+            # Active Istio with demo profile
+            kubectl apply -f - <<EOF
+            apiVersion: install.istio.io/v1alpha1
+            kind: IstioOperator
+            metadata:
+              namespace: istio-system
+              name: example-istiocontrolplane
+            spec:
+              profile: demo
+            EOF
   inputs:
     # String
     - name: clusterName
@@ -17,18 +38,14 @@ spec:
       inputType: String
       require: true
 
+  # manifests:
+  #   # Type of manifest
+  #   manifestType: helm
+  #   namespace: istio-system 
+  #   # manifest folder
+  #   folders:
+  #     - k8s
 
-  #aws eks --region <region> update-kubeconfig --name <cluster> --role-arn <master role arn> --kubeconfig <config>
-  manifests:
-    # Type of manifest
-    manifestType: K8s
-    namespace: argocd 
-    # manifest list
-    files:
-      - k8s/install.yaml
-    # manifest folder
-    # folders:
-    #   - k8s
           
   # Ouptputs represnt output value after launched, for 'ContainerApplication' might need leverage specific command to retrive output.
   outputs:

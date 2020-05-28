@@ -1,0 +1,28 @@
+apiVersion: mahjong.io/v1alpha1
+kind: Tile
+metadata:
+    name: AWS-ElasticSearch
+    category: Analysis
+    version: 7.4.0
+spec:
+
+  # Inputs are input parameters when lauching 
+  inputs:
+    # CDKObject
+    - name: vpc
+      inputType: CDKObject
+      description: 'Refer to VPC object on Tile - Network0'
+      dependencies:
+        - name: network
+          field: baseVpc
+      require: false
+
+  outputs:
+    # String
+    - name: clusterName
+      outputType: String
+      description: AWS::EFS::FileSystem
+
+  # Notes are description list for addtional information.
+  notes: []
+

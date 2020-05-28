@@ -75,12 +75,12 @@ spec:
     - name: minSizeASG
       inputType: String
       description: 'Minimun instances'
-      defaultValue: '3'
+      defaultValue: '4'
       require: false
     - name: desiredCapacityASG
       inputType: String
       description: 'Desired instances'
-      defaultValue: '3'
+      defaultValue: '4'
       require: false
     - name: cooldownASG
       inputType: String
@@ -159,13 +159,15 @@ spec:
       - name: TagSpotInstances
         command: |
           # waiting nodes' ready for 5 seconds
-          sleep 5
+          sleep 10
           lib/script/tagec2.sh
       - name: InstallClusterAutoScaler
         command: |
+          sleep 10
           sed -i -e 's/X_CLUSTER_NAME_X/'$D_TBD_EKS_WITH_SPOT_CLUSTERNAME'/g' lib/yaml/cluster-autoscaler-autodiscover.yaml
           kubectl apply -f lib/yaml/cluster-autoscaler-autodiscover-starter.yaml
-          sleep 5
+          kubectl get pods -n kube-system
+          sleep 10
           kubectl apply -f lib/yaml/cluster-autoscaler-autodiscover.yaml
           kubectl -n kube-system annotate deployment.apps/cluster-autoscaler cluster-autoscaler.kubernetes.io/safe-to-evict="false"
           kubectl -n kube-system set image deployment.apps/cluster-autoscaler cluster-autoscaler=us.gcr.io/k8s-artifacts-prod/autoscaling/cluster-autoscaler:v$D_TBD_EKS_WITH_SPOT_CLUSTERVERSION.5          
