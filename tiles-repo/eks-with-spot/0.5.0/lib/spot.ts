@@ -73,6 +73,7 @@ export class EksNodesSpot extends cdk.Construct {
                 {managedPolicyArn: "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"}
             ],
             inlinePolicies: {
+                
                 "autoscaler4eks": new iam.PolicyDocument({
                     statements: [
                         new iam.PolicyStatement({

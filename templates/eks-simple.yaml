@@ -1,18 +1,18 @@
 apiVersion: mahjong.io/v1alpha1
 kind: Deployment 
 metadata:
-  name: mahjong
+  name: eks-simple
 spec:
   template:
     tiles:
-      tileEks0001:
+      tileEks0005:
         tileReference: Eks0
         tileVersion: 0.0.5
         inputs:
           - name: clusterName
             inputValue: mahjong-cluster0
           - name: capacity
-            inputValue: 2
+            inputValue: 3
           - name: capacityInstance
             inputValue: m5.large
           - name: version

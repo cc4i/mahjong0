@@ -18,7 +18,6 @@ func main() {
 
 	cmd.PersistentFlags().Bool("dry-run", false, "Default is false, only print out the yaml that would be executed")
 
-
 	// Initial commands
 	cmd.AddCommand(initial.Init,
 		validate.Validate,

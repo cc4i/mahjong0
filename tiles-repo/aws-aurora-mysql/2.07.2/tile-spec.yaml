@@ -11,11 +11,8 @@ spec:
     # CDKObject
     - name: vpc
       inputType: CDKObject
-      description: 'Refer to VPC object on Tile - Network0'
-      dependencies:
-        - name: network
-          field: baseVpc
-      require: false
+      description: 'Refer to VPC object'
+      require: true
 
   outputs:
     # String

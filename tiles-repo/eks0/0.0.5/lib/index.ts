@@ -66,9 +66,9 @@ export class Eks0 extends cdk.Construct {
     // Prepared subnet for node group
     let vpcSubnets: ec2.SubnetSelection[];
     if (props.vpcSubnets == undefined){
-      vpcSubnets = [{subnets: props.vpc.publicSubnets}, {subnets: props.vpc.privateSubnets}]
+      vpcSubnets = [{subnets: props.vpc.publicSubnets}, {subnets: props.vpc.privateSubnets}];
     } else {
-      vpcSubnets = [{subnets: props.vpcSubnets}]
+      vpcSubnets = [{subnets: props.vpcSubnets}];
     }
     // Innitial EKS cluster
     const cluster = new eks.Cluster (this, "BasicEKSCluster", {
@@ -80,7 +80,8 @@ export class Eks0 extends cdk.Construct {
       version: props.version || '1.16',
       // Master role as initial permission to run Kubectl
       mastersRole: eksRole,
-    })
+    });
+
 
 
     /** Added CF Output */
