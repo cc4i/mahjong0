@@ -101,6 +101,55 @@ func tileFunc(c *cobra.Command, args []string) {
 }
 
 func deploymentFunc(c *cobra.Command, args []string) {
+
+	deploymentExample:=`
+apiVersion: mahjong.io/v1alpha1
+kind: Deployment 
+metadata:
+  name: simple-eks
+spec:
+  template:
+    tiles:
+      tileEKS005:
+        tileReference: Eks0
+        tileVersion: 0.0.5
+        inputs:
+          - name: clusterName
+            inputValue: simple-eks-cluster
+          - name: capacity
+            inputValue: 2
+          - name: capacityInstance
+            inputValue: m5.large
+          - name: version
+            inputValue: 1.16
+  summary:
+    description: 
+    outputs:
+      - name: EKS Cluster Name
+        valueRef: $(tileEKS005.outputs.clusterName)
+      - name: Master role arn for EKS Cluster
+        valueRef: $(tileEKS005.outputs.masterRoleARN)
+      - name: The API endpoint EKS Cluster
+        valueRef: $(tileEKS005.outputs.clusterEndpoint)
+      - name: Instance type of worker node
+        valueRef: $(tileEKS005.outputs.capacityInstance)
+      - name: Default capacity of worker node
+        valueRef: $(tileEKS005.outputs.capacity)
+
+    notes: []
+
+`
+	log.Println("Generating simple example for deployment ... ...")
+	file, err := os.Create("simple-eks.yaml")
+	if err!=nil{
+		log.Printf("Generating simple example for deployment was failed, with error: %s\n", err)
+	}
+	defer file.Close()
+	_, err = file.Write([]byte(deploymentExample))
+	if err != nil {
+		log.Printf("Generating simple example for deployment was failed, with error: %s\n", err)
+	}
+	log.Printf("Generated a simple example. ")
 	log.Printf("Download https://github.com/cc4i/mahjong0/blob/master/templates/deployment-schema.json for schema, and jump to https://github.com/cc4i/mahjong0#examples for more examples.\n")
 }
 
