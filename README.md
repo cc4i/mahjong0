@@ -82,8 +82,7 @@ Click [here](./docs/How-to-Build-Hu.md) for more detail to develop Hu.
 |-----------------|---------|------------------|
 | Simple EKS| [v0.1.0](./templates/eks-simple.yaml)| Quick launch with few lines of yaml.|
 | EKS with Spot instance| [v0.1.0](./templates/eks-spot-simple.yaml)| Quick launch EKS cluster with mixed spot and on-demand instances, as well as handling spot termination, cluster auto scaler and HPA. |
-| Simple ArgoCD | [v0.1.0](./templates/argocd-simple.yaml) | 
-Setup ArgoCD on EKS with simple configuration.|
+| Simple ArgoCD | [v0.1.0](./templates/argocd-simple.yaml) | Setup ArgoCD on EKS with simple configuration.|
 | Basic CD with ArgoCD | [v0.1.0](./templates/argocd-with-app.yaml) | Building a modern CD with example applicaiton on GitHub, all you need is a GitHub token.|
 
 
