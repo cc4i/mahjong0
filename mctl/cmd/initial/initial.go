@@ -33,7 +33,6 @@ var Tile = &cobra.Command{
 	},
 }
 
-
 var Deployment = &cobra.Command{
 	Use:   "deployment",
 	Short: "\tInitial Deployment with basic template.",
@@ -43,26 +42,23 @@ var Deployment = &cobra.Command{
 	},
 }
 
-
 // TileTemplateData used to replace template
 type TileTemplateData struct {
-	TileName string // Tile Name
+	TileName          string // Tile Name
 	TileNameLowerCase string // Tile Name >>> Tile Name with Lower Case
-	TileNameCDK string // TileName >>> Tile Name with Camel Case
+	TileNameCDK       string // TileName >>> Tile Name with Camel Case
 
 }
 
-
 func init() {
-	Init.PersistentFlags().StringP("name", "n","", "The name of building Tile/Deployment")
-	Init.PersistentFlags().StringP("type", "t","cdk", "The type of building Tile, cdk - cdk tiles/app - app tiles.")
+	Init.PersistentFlags().StringP("name", "n", "", "The name of building Tile/Deployment")
+	Init.PersistentFlags().StringP("type", "t", "cdk", "The type of building Tile, cdk - cdk tiles/app - app tiles.")
 	Init.PersistentFlags().StringP("version", "v", "0.1.0", "The version of building Tile/Deployment")
-	Init.PersistentFlags().StringP("directory", "d",".", "Where to place the Tile/Deployment with templates")
+	Init.PersistentFlags().StringP("directory", "d", ".", "Where to place the Tile/Deployment with templates")
 
 	Init.AddCommand(Tile, Deployment)
 
 }
-
 
 func tileFunc(c *cobra.Command, args []string) {
 	name, _ := c.Flags().GetString("name")
@@ -70,10 +66,10 @@ func tileFunc(c *cobra.Command, args []string) {
 		return
 	} else {
 		if name != "sample-tile" {
-			tt := &TileTemplateData {
-				TileName: name,
+			tt := &TileTemplateData{
+				TileName:          name,
 				TileNameLowerCase: strings.ToLower(name),
-				TileNameCDK: strcase.ToCamel(name),
+				TileNameCDK:       strcase.ToCamel(name),
 			}
 			filepath.Walk(destDir, func(path string, info os.FileInfo, err error) error {
 				if !info.IsDir() && strings.HasSuffix(path, ".tp") {
@@ -82,7 +78,7 @@ func tileFunc(c *cobra.Command, args []string) {
 					if err != nil {
 						log.Printf("%s\n", err)
 					}
-					f, err := os.Create(strings.TrimSuffix(path,".tp"))
+					f, err := os.Create(strings.TrimSuffix(path, ".tp"))
 					if err != nil {
 						log.Printf("%s\n", err)
 					}
@@ -102,13 +98,60 @@ func tileFunc(c *cobra.Command, args []string) {
 
 	}
 
-
 }
 
 func deploymentFunc(c *cobra.Command, args []string) {
+
+	deploymentExample:=`
+apiVersion: mahjong.io/v1alpha1
+kind: Deployment 
+metadata:
+  name: simple-eks
+spec:
+  template:
+    tiles:
+      tileEKS005:
+        tileReference: Eks0
+        tileVersion: 0.0.5
+        inputs:
+          - name: clusterName
+            inputValue: simple-eks-cluster
+          - name: capacity
+            inputValue: 2
+          - name: capacityInstance
+            inputValue: m5.large
+          - name: version
+            inputValue: 1.16
+  summary:
+    description: 
+    outputs:
+      - name: EKS Cluster Name
+        valueRef: $(tileEKS005.outputs.clusterName)
+      - name: Master role arn for EKS Cluster
+        valueRef: $(tileEKS005.outputs.masterRoleARN)
+      - name: The API endpoint EKS Cluster
+        valueRef: $(tileEKS005.outputs.clusterEndpoint)
+      - name: Instance type of worker node
+        valueRef: $(tileEKS005.outputs.capacityInstance)
+      - name: Default capacity of worker node
+        valueRef: $(tileEKS005.outputs.capacity)
+
+    notes: []
+
+`
+	log.Println("Generating simple example for deployment ... ...")
+	file, err := os.Create("simple-eks.yaml")
+	if err!=nil{
+		log.Printf("Generating simple example for deployment was failed, with error: %s\n", err)
+	}
+	defer file.Close()
+	_, err = file.Write([]byte(deploymentExample))
+	if err != nil {
+		log.Printf("Generating simple example for deployment was failed, with error: %s\n", err)
+	}
+	log.Printf("Generated a simple example. ")
 	log.Printf("Download https://github.com/cc4i/mahjong0/blob/master/templates/deployment-schema.json for schema, and jump to https://github.com/cc4i/mahjong0#examples for more examples.\n")
 }
-
 
 func download(c *cobra.Command, args []string, name string) (string, error) {
 	log.Printf("Loading %s templates from Tile-Repo started ...", name)

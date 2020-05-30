@@ -11,6 +11,6 @@ do
         done
     else 
         ./sync-super.sh
-        ./sync-tile-template.sh
+        ./sync-tile-base.sh
     fi
 done

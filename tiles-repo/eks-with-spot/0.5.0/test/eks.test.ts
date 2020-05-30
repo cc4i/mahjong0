@@ -1,14 +1,14 @@
 import { expect as expectCDK, haveResource, SynthUtils } from '@aws-cdk/assert';
 import * as cdk from '@aws-cdk/core';
-import * as eks from '../lib/index';
 import * as ec2 from '@aws-cdk/aws-ec2';
+import { EksWithSpot } from '../lib/index';
 
 test('EKS Created', () => {
     const app = new cdk.App();
     const stack = new cdk.Stack(app, "TestStack");
     const vpc = new ec2.Vpc(stack, "vpc", {})
     // WHEN
-    new eks.EksWithSpot(stack, 'MyTestConstruct', {
+    const cluster = new EksWithSpot(stack, "MyTestConstruct", {
         vpc: vpc,
         clusterName: "testCluster",
         keyPair4EC2: "keypair",
@@ -19,7 +19,7 @@ test('EKS Created', () => {
         onDemandPercentage: 25,
     });
     // THEN
-    expectCDK(stack).to(haveResource("AWS::EKS::Cluster"));
+    expectCDK(stack).to(haveResource("AWS::CloudFormation::Stack"));
 });
 
 

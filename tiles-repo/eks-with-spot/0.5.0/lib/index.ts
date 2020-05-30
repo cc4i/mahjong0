@@ -38,6 +38,7 @@ export class EksWithSpot extends cdk.Construct {
   public readonly autoScalingGroupDesiredCapacity: string;
   public readonly nodesRoleARN: string;
   public capacityInstance: string;
+  public controlPlaneSG: ec2.SecurityGroup;
 
   constructor(scope: cdk.Construct, id: string, props: EksSpotProps) {
     super(scope, id);
@@ -46,7 +47,7 @@ export class EksWithSpot extends cdk.Construct {
     let policies = []
     if (region == "cn-north-1" || region == "cn-northwest-1" ) {
       policies = [
-        {managedPolicyArn:  "arn:"+":iam::aws:policy/AmazonEKSServicePolicy"},
+        {managedPolicyArn:  "arn:aws-cn:iam::aws:policy/AmazonEKSServicePolicy"},
         {managedPolicyArn: "arn:aws-cn:iam::aws:policy/AmazonEKSClusterPolicy"}
       ]
     } else {
@@ -62,16 +63,36 @@ export class EksWithSpot extends cdk.Construct {
       managedPolicies: policies
     });
 
-    eksRole.addToPolicy(
-        new iam.PolicyStatement({
-            actions: ["elasticloadbalancing:*","ec2:CreateSecurityGroup","ec2:Describe*"],
-            resources: ["*"]
-        })
-      );
 
+
+    // Prepared subnet for node group
+    let vpcSubnets: ec2.SubnetSelection[];
+    if (props.vpcSubnets == undefined){
+      vpcSubnets = [{subnets: props.vpc.publicSubnets}, {subnets: props.vpc.privateSubnets}]
+    } else {
+      vpcSubnets = [{subnets: props.vpcSubnets}]
+    }
+     /** control panel security group  */ 
+    this.controlPlaneSG = new ec2.SecurityGroup(this, `EksControlPlaneSG`, {
+      vpc: props.vpc
+    });
+
+    // Innitial EKS cluster
+    const cluster = new eks.Cluster(scope, "EksSpotCluster", {
+      vpc: props.vpc,
+      vpcSubnets: vpcSubnets,
+      clusterName: props.clusterName,
+      defaultCapacity: 0,
+      version: props.clusterVersion || '1.16',
+      // Master role as initial permission to run Kubectl
+      mastersRole: eksRole,
+      securityGroup: this.controlPlaneSG,
+    })
 
     const spotNodeGroup = new EksNodesSpot(scope, "SpotNodeGroup", {
       clusterName: props.clusterName,
+      clusterEndpoint: cluster.clusterEndpoint,
+      clusterCertificateAuthorityData: cluster.clusterCertificateAuthorityData,
       clusterVersion: props.clusterVersion || '1.16',
       vpc: props.vpc,
       publicSubnetId1: props.vpc.publicSubnets[0].subnetId,
@@ -85,28 +106,8 @@ export class EksWithSpot extends cdk.Construct {
       desiredCapacityASG: props.desiredCapacityASG || "3",
       cooldownASG: props.cooldownASG || "180",
       onDemandPercentage: props.onDemandPercentage || 25,
-
-    })
-
-
-    // Prepared subnet for node group
-    let vpcSubnets: ec2.SubnetSelection[];
-    if (props.vpcSubnets == undefined){
-      vpcSubnets = [{subnets: props.vpc.publicSubnets}, {subnets: props.vpc.privateSubnets}]
-    } else {
-      vpcSubnets = [{subnets: props.vpcSubnets}]
-    }
-    // Innitial EKS cluster
-    const cluster = new eks.Cluster (scope, "EksSpotCluster", {
-      vpc: props.vpc,
-      vpcSubnets: vpcSubnets,
-      clusterName: props.clusterName,
-      defaultCapacity: 0,
-      version: props.clusterVersion || '1.16',
-      // Master role as initial permission to run Kubectl
-      mastersRole: eksRole,
-      securityGroup: spotNodeGroup.controlPlaneSG,
-    })
+      controlPlaneSG: this.controlPlaneSG,
+    });
 
     this.capacityInstance=""
     props.capacityInstance?.forEach(c => {
@@ -140,6 +141,8 @@ export class EksWithSpot extends cdk.Construct {
     this.autoScalingGroupDesiredCapacity = spotNodeGroup.autoScalingGroup.desiredCapacity || "";
     this.nodesRoleARN = spotNodeGroup.nodesRole.roleArn;
     
+    cluster.clusterEndpoint
+    cluster.clusterCertificateAuthorityData
 
   }
 

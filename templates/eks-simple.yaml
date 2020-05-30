@@ -1,18 +1,18 @@
 apiVersion: mahjong.io/v1alpha1
 kind: Deployment 
 metadata:
-  name: mahjong
+  name: eks-simple
 spec:
   template:
     tiles:
-      tileEks0001:
+      tileEks0005:
         tileReference: Eks0
         tileVersion: 0.0.5
         inputs:
           - name: clusterName
             inputValue: mahjong-cluster0
           - name: capacity
-            inputValue: 2
+            inputValue: 3
           - name: capacityInstance
             inputValue: m5.large
           - name: version
@@ -21,14 +21,14 @@ spec:
     description: 
     outputs:
       - name: EKS Cluster Name
-        valueRef: $(tileEks0001.outputs.clusterName)
+        valueRef: $(tileEks0005.outputs.clusterName)
       - name: Master role arn for EKS Cluster
-        valueRef: $(tileEks0001.outputs.masterRoleARN)
+        valueRef: $(tileEks0005.outputs.masterRoleARN)
       - name: The API endpoint EKS Cluster
-        valueRef: $(tileEks0001.outputs.clusterEndpoint)
+        valueRef: $(tileEks0005.outputs.clusterEndpoint)
       - name: Instance type of worker node
-        valueRef: $(tileEks0001.outputs.capacityInstance)
+        valueRef: $(tileEks0005.outputs.capacityInstance)
       - name: Default capacity of worker node
-        valueRef: $(tileEks0001.outputs.capacity)
+        valueRef: $(tileEks0005.outputs.capacity)
 
     notes: []

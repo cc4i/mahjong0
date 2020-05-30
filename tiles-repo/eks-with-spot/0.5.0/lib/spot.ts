@@ -3,11 +3,14 @@ import ec2 = require('@aws-cdk/aws-ec2');
 import eks = require('@aws-cdk/aws-eks');
 import autoscaling = require('@aws-cdk/aws-autoscaling');
 import iam = require('@aws-cdk/aws-iam');
+import { NodePolicies } from './policy4eks'
 
 
 export interface EksNodesProps {
     clusterName: string;
     clusterVersion: string;
+    clusterEndpoint: string;
+    clusterCertificateAuthorityData: string
     vpc: ec2.Vpc;
     publicSubnetId1: string;
     publicSubnetId2: string;
@@ -21,6 +24,7 @@ export interface EksNodesProps {
     desiredCapacityASG: string;
     cooldownASG: string;
     onDemandPercentage: number;
+    controlPlaneSG: ec2.SecurityGroup;
 }
 
 export class EksNodesSpot extends cdk.Construct {
@@ -29,84 +33,78 @@ export class EksNodesSpot extends cdk.Construct {
     autoScalingGroup: autoscaling.CfnAutoScalingGroup;
     nodesRole: iam.Role;
     
-    controlPlaneSG: ec2.SecurityGroup;
     nodesSG: ec2.SecurityGroup;
-    nodesSharedSG: ec2.SecurityGroup;
-
 
 
     constructor(scope: cdk.Construct, id: string, props: EksNodesProps) {
         super(scope, id);
         let uuid = Math.random().toString(36).substr(2,5);
 
-        /** control panel security group  */ 
-        this.controlPlaneSG = new ec2.SecurityGroup(this, `EksControlPlaneSG`, {
-            vpc: props.vpc
-          });
+       
 
         /** work nodes security group */ 
         this.nodesSG = new ec2.SecurityGroup(this, "NodesSecurityGroup",{
             securityGroupName: "nodes-for-eks-sg-"+uuid,
-            vpc: props.vpc
+            vpc: props.vpc,
         });
-        /**s sh access to nodes */
+        /**ssh access to nodes */
         this.nodesSG.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(22));
         /** control plance access to nodes */ 
-        this.nodesSG.addIngressRule(this.controlPlaneSG, ec2.Port.tcpRange(1025,65535))
-        this.nodesSG.addIngressRule(this.controlPlaneSG, ec2.Port.tcp(443))
+        this.nodesSG.addIngressRule(props.controlPlaneSG, ec2.Port.allTraffic())
+        this.nodesSG.addIngressRule(this.nodesSG, ec2.Port.allTraffic())
         //access to control panel
-        this.controlPlaneSG.addIngressRule(this.nodesSG, ec2.Port.tcp(443))
+        props.controlPlaneSG.addIngressRule(this.nodesSG, ec2.Port.allTraffic())
+        props.controlPlaneSG.addIngressRule(props.controlPlaneSG, ec2.Port.allTraffic())
 
-        /** work nodes shared scurity group */
-        this.nodesSharedSG = new ec2.SecurityGroup(this, "NodesSharedSecurityGroup",{
-            securityGroupName: "nodes-shared-for-eks-sg-"+uuid,
-            vpc: props.vpc
-        });
-        this.nodesSharedSG.addIngressRule(this.nodesSharedSG, ec2.Port.allTcp())
-         
+
+        /** Tag security group  */
+        this.nodesSG.node.applyAspect(new cdk.Tag("kubernetes.io/cluster/"+props.clusterName,"owned"));
+
+        
+        /** organize managed polices */
+        let region = process.env.CDK_DEFAULT_REGION
+        let managedPolicies = []
+        if (region == "cn-north-1" || region == "cn-northwest-1" ) {
+            managedPolicies = [
+                {managedPolicyArn: "arn:aws-cn:iam::aws:policy/AmazonEKSWorkerNodePolicy"},
+                {managedPolicyArn: "arn:aws-cn:iam::aws:policy/AmazonEKS_CNI_Policy"},
+                {managedPolicyArn: "arn:aws-cn:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser"},
+                {managedPolicyArn: "arn:aws-cn:iam::aws:policy/CloudWatchAgentServerPolicy"}
+          ]
+        } else {
+            managedPolicies = [
+                {managedPolicyArn: "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"},
+                {managedPolicyArn: "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"},
+                {managedPolicyArn: "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser"},
+                {managedPolicyArn: "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"}
+          ]
+          
+        }
+        /** create role and attach policies */
         this.nodesRole = new iam.Role(this, "NodesRole", {
             roleName: "nodes-for-eks-role-"+uuid,
             assumedBy: new iam.ServicePrincipal('ec2.amazonaws.com'),
-            managedPolicies: [
-                {managedPolicyArn: "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"},
-                {managedPolicyArn: "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"},
-                {managedPolicyArn: "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"}
-            ],
-            inlinePolicies: {
-                "autoscaler4eks": new iam.PolicyDocument({
-                    statements: [
-                        new iam.PolicyStatement({
-                            actions: [
-                                "autoscaling:DescribeAutoScalingGroups",
-                                "autoscaling:DescribeAutoScalingInstances",
-                                "autoscaling:DescribeLaunchConfigurations",
-                                "autoscaling:DescribeTags",
-                                "autoscaling:SetDesiredCapacity",
-                                "autoscaling:TerminateInstanceInAutoScalingGroup",
-                                "ec2:DescribeLaunchTemplateVersions"
-                            ],
-                            resources: ["*"],
-                            effect: iam.Effect.ALLOW
-                        }),
-                    ]
-                })
-            }
+            managedPolicies: managedPolicies,
+            inlinePolicies: new NodePolicies(this, "policy", {}).eksInlinePolicy
         });
+        /** attach policy to instance profile */
         let ec2Profile = new iam.CfnInstanceProfile(this,"ec2Profile",{
             roles: [this.nodesRole.roleName]
         });
 
+        /** define launch template */
+        let imageId = new eks.EksOptimizedImage({
+            nodeType: eks.NodeType.STANDARD,
+            kubernetesVersion: props.clusterVersion
+        }).getImage(scope).imageId
         this.nodesLaunchTemplate = new ec2.CfnLaunchTemplate(this, "NodesLaunchTemplate", {
             launchTemplateName: "NodesLaunchTemplate-"+uuid,
             launchTemplateData: {
                 instanceType: "c5.large",
-                imageId: new eks.EksOptimizedImage({
-                    nodeType: eks.NodeType.STANDARD,
-                    kubernetesVersion: props.clusterVersion
-                }).getImage(scope).imageId,
+                imageId: imageId,
                 keyName: props.keyPair4EC2,
                 iamInstanceProfile: {arn: ec2Profile.attrArn},
-                securityGroupIds: [this.nodesSG.securityGroupId, this.nodesSharedSG.securityGroupId],
+                securityGroupIds: [this.nodesSG.securityGroupId],
                 blockDeviceMappings: [{
                     deviceName: "/dev/xvda",
                     ebs: {
@@ -129,15 +127,15 @@ export class EksNodesSpot extends cdk.Construct {
             newOverrides = [{instanceType: "c5.large"},{instanceType: "r5.large"},{instanceType: "m5.large"}]
         }
         
-
+        /** define auto scaling group */
         this.autoScalingGroup = new autoscaling.CfnAutoScalingGroup(this, "NodesAutoScalingGroup", {
 
             autoScalingGroupName: props.clusterName+"-nodegroup-"+uuid,
             vpcZoneIdentifier: [
                 props.publicSubnetId1,
                 props.publicSubnetId2,
-                //props.privateSubnetId1,
-                //props.privateSubnetId2
+                props.privateSubnetId1,
+                props.privateSubnetId2
             ],
             desiredCapacity: props.desiredCapacityASG,
             cooldown: props.cooldownASG,
@@ -217,10 +215,10 @@ export class EksNodesSpot extends cdk.Construct {
         /** moved here due to lookup 'logicalId' */ 
         this.nodesLaunchTemplate.addPropertyOverride("LaunchTemplateData.UserData",cdk.Fn.base64([
             `#!/bin/bash`,
-            `set -e`,
-            `sudo yum update -y`,
-            `sudo yum install -y aws-cfn-bootstrap aws-cli jq wget`,
-            `/etc/eks/bootstrap.sh ${props.clusterName}`,
+            `set -ex`,
+            `B64_CLUSTER_CA=${props.clusterCertificateAuthorityData}`,
+            `API_SERVER_URL=${props.clusterEndpoint}`,
+            `/etc/eks/bootstrap.sh ${props.clusterName} --kubelet-extra-args '--node-labels=eks.amazonaws.com/nodegroup-image=${imageId},eks.amazonaws.com/nodegroup=${this.autoScalingGroup.autoScalingGroupName}' --b64-cluster-ca $B64_CLUSTER_CA --apiserver-endpoint $API_SERVER_URL`,
             /* `/opt/aws/bin/cfn-init -v --stack ${cdk.Aws.STACK_NAME} --resource ${this.nodesLaunchTemplate.logicalId} --region ${cdk.Aws.REGION}`, */
             `/opt/aws/bin/cfn-signal -e $? --stack ${cdk.Aws.STACK_NAME} --resource ${this.autoScalingGroup.logicalId} --region ${cdk.Aws.REGION}`,
         ].join('\n')));

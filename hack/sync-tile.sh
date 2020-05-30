@@ -18,6 +18,9 @@ echo "Syncing < ${tile_name} - ${tile_version} > to S3::${s3_bucket}"
 
 cd ../tiles-repo/${tile_dir}/${tile_version}
 tar --exclude='./node_modules' --exclude='.DS_Store' -zcvf ${tile_tgz} ./*
-aws s3 cp ${tile_tgz} s3://${s3_bucket}/tiles-repo/${tile_name_lowercase}/${tile_version}/${tile_name_lowercase}.tgz --profile ${aws_profile}
+aws s3 cp ${tile_tgz} \
+    s3://${s3_bucket}/tiles-repo/${tile_name_lowercase}/${tile_version}/${tile_name_lowercase}.tgz \
+    --profile ${aws_profile} \
+    --acl public-read
 
 echo "Synced < ${tile_name} - ${tile_version} > to S3::${s3_bucket}"

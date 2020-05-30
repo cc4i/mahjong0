@@ -4,6 +4,7 @@ import ec2 = require('@aws-cdk/aws-ec2');
 import iam = require('@aws-cdk/aws-iam');
 import region = require('@aws-cdk/region-info');
 import { CfnOutput } from '@aws-cdk/core';
+import {NodePolicies} from './policy4eks'
 
 /** Input parameters */
 export interface Eks0Props {
@@ -32,7 +33,7 @@ export class Eks0 extends cdk.Construct {
     let policies = []
     if (region == "cn-north-1" || region == "cn-northwest-1" ) {
       policies = [
-        {managedPolicyArn:  "arn:"+":iam::aws:policy/AmazonEKSServicePolicy"},
+        {managedPolicyArn:  "arn:aws-cn:iam::aws:policy/AmazonEKSServicePolicy"},
         {managedPolicyArn: "arn:aws-cn:iam::aws:policy/AmazonEKSClusterPolicy"}
       ]
     } else {
@@ -45,15 +46,10 @@ export class Eks0 extends cdk.Construct {
 
     const eksRole = new iam.Role(this, 'EksClusterMasterRole', {
       assumedBy: new iam.AccountRootPrincipal(),
-      managedPolicies: policies
+      managedPolicies: policies,
+      inlinePolicies: new NodePolicies(scope, "inlinePolicy", {}).eksInlinePolicy
     });
 
-    eksRole.addToPolicy(
-        new iam.PolicyStatement({
-            actions: ["elasticloadbalancing:*","ec2:CreateSecurityGroup","ec2:Describe*"],
-            resources: ["*"]
-        })
-      );
 
     // Instance type for node group
     let capacityInstance: ec2.InstanceType;
@@ -66,9 +62,9 @@ export class Eks0 extends cdk.Construct {
     // Prepared subnet for node group
     let vpcSubnets: ec2.SubnetSelection[];
     if (props.vpcSubnets == undefined){
-      vpcSubnets = [{subnets: props.vpc.publicSubnets}, {subnets: props.vpc.privateSubnets}]
+      vpcSubnets = [{subnets: props.vpc.publicSubnets}, {subnets: props.vpc.privateSubnets}];
     } else {
-      vpcSubnets = [{subnets: props.vpcSubnets}]
+      vpcSubnets = [{subnets: props.vpcSubnets}];
     }
     // Innitial EKS cluster
     const cluster = new eks.Cluster (this, "BasicEKSCluster", {
@@ -80,7 +76,9 @@ export class Eks0 extends cdk.Construct {
       version: props.version || '1.16',
       // Master role as initial permission to run Kubectl
       mastersRole: eksRole,
-    })
+    });
+    // Add tag for beauty
+    cluster.defaultNodegroup!.node.applyAspect(new cdk.Tag("Name",cluster.defaultNodegroup!.nodegroupName));
 
 
     /** Added CF Output */
