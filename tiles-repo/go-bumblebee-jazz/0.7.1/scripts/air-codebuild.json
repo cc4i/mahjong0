@@ -7,7 +7,7 @@
         "gitSubmodulesConfig": {
             "fetchSubmodules": true
         },
-        "buildspec": "src/front/buildspec.yaml",
+        "buildspec": "src/air/buildspec.yaml",
         "reportBuildStatus": false,
         "insecureSsl": false
     },
@@ -25,7 +25,6 @@
         "privilegedMode": true,
         "imagePullCredentialsType": "CODEBUILD"
     },
-    "serviceRole": "<codebuild_role_arn>",
     "timeoutInMinutes": 60,
     "queuedTimeoutInMinutes": 480,
     "badgeEnabled": true,

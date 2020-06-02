@@ -4,57 +4,58 @@ metadata:
     name: Go-Bumblebee-Jazz
     category: Application
     version: 0.7.1
-    dependentOnVendorService: EKS
 spec:
   global:
     env:
       - name: GITHUB_USER
         value: cc4i
-      - name: ACCESS_TOKEN
-        valueRef: accessToken
-      - name: APP_REPO_NAME
-        value: go-bumblebee-jazz
-      - name: CONF_REPO_NAME
+      - name: GIT_ACCESS_TOKEN
+        valueRef: $(self.inputs.gitAccessToken)
+      - name: APP_REPO
+        value: go-bumblebee
+      - name: APP_BRANCH
+        value: new-combo-jazz
+      - name: APP_CONF_REPO
         value: go-bumblebee-jazz-config
   preRun:
     stages:
       - name: CreateRepository
         command: |
-          curl -H "Authorization: token $ACCESS_TOKEN" --data '{"name":"$REPO_NAME"}' https://api.github.com/user/repos
-      - name: SyncConttent2Repository
+          curl -H "Authorization: token $GIT_ACCESS_TOKEN" --data '{"name":"'$APP_CONF_REPO'", "private": true}' https://api.github.com/user/repos
+      - name: SyncContentToRepository
         command: |
-          mkdir $WORK_HOME/$REPO_NAME
-          cp -R $TILE_HOME/apps/* $WORK_HOME/$REPO_NAME
-          cd $WORK_HOME/$REPO_NAME
-          git init
+          cd $TILE_HOME
+          git clone https://$GIT_ACCESS_TOKEN:x-oauth-basic@github.com/$GITHUB_USER/$APP_CONF_REPO.git
+          cd $APP_CONF_REPO
+          cp -r ../manifest/* .
           git add -A
           git commit -m "first commit"
-          git remote add origin git@github.com:$GITHUB_USER/$REPO_NAME.git
-          git push -u origin master
+          # git config --global user.email "robot@codebuild.aws"
+          # git config --global user.name "robot"
+          git push
+      - name: CreateSecrets
+        command: |
+          cd $TILE_HOME/scripts
+          ./create-secrets.sh github-bumblebee $GITHUB_USER $GIT_ACCESS_TOKEN $APP_CONF_REPO
+      - name: RegisterAir2Codebuild
+        command: |
+          cd $TILE_HOME/scripts
+          ./import-source-credential.sh
+          ./create-iam-role.sh
+          ./register-to-codebuild.sh
   inputs:
-    - name: clusterName
-      inputType: String
-      require: true
-    - name: masterRoleARN
-      inputType: String
-      require: true
-    - name: accessToken
+    - name: gitAccessToken
       inputType: String
       require: true
 
-  manifests:
-    manifestType: kustomize
-    namespace: go-bumblebee-jazz
-    folders:
-      - kustomize
           
   # Ouptputs represnt output value after launched, for 'ContainerApplication' might need leverage specific command to retrive output.
   outputs:
     # FromCommand
-    - name: GateUrl
-      outputType: FromCommand
-      defaultValueCommand: kubectl get svc -n $NAMESPACE
-      description: Custom::Url        
+    - name: appConfRepo
+      outputType: String
+      defaultValueCommand: echo https://github.com/$GITHUB_USER/$APP_CONF_REPO.git
+      description: Custom::GitHub        
 
   notes: []
 

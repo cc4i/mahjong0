@@ -90,7 +90,7 @@ spec:
       description: Custom::User
     # FromCommand
     - name: password
-      outputType: FromCommand
+      outputType: String
       defaultValueCommand: kubectl get pods -n $NAMESPACE -l app.kubernetes.io/name=argocd-server -o name | cut -d'/' -f 2
       description: Custom::Password        
 

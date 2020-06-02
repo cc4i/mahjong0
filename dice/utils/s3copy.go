@@ -106,7 +106,9 @@ func (s3 *DiceConfig)CleanJunk() {
 				}
 			}
 		}
+		os.RemoveAll(destDir+"/lib")
 	}
+
 }
 func (s3 *DiceConfig) LoadSuper() (string, error) {
 

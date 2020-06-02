@@ -624,39 +624,42 @@ func (d *Deployment) GenerateExecutePlan(ctx context.Context, out *websocket.Con
 		if ts.TileCategory == ContainerApplication.CString() || ts.TileCategory == Application.CString() {
 			// ContainerApplication & Application
 			// Inject namespace as environment or using default as namespace
-			if ts.TsManifests.Namespace != "" && ts.TsManifests.Namespace != "default" {
-				stage.Preparation = append(stage.Preparation, "kubectl create ns "+ts.TsManifests.Namespace+" || true")
-				stage.InjectedEnv = append(stage.InjectedEnv, "export NAMESPACE="+ts.TsManifests.Namespace)
-				//ts.PredefinedEnv["NAMESPACE"] = ts.TsManifests.Namespace
-			} else {
-				ts.TsManifests.Namespace = "default"
-				stage.InjectedEnv = append(stage.InjectedEnv, "export NAMESPACE=default")
-				//ts.PredefinedEnv["NAMESPACE"] = "default"
+			if ts.TsManifests.ManifestType != "" {
+				if ts.TsManifests.Namespace != "" && ts.TsManifests.Namespace != "default" {
+					stage.Preparation = append(stage.Preparation, "kubectl create ns "+ts.TsManifests.Namespace+" || true")
+					stage.InjectedEnv = append(stage.InjectedEnv, "export NAMESPACE="+ts.TsManifests.Namespace)
+					//ts.PredefinedEnv["NAMESPACE"] = ts.TsManifests.Namespace
+				} else {
+					ts.TsManifests.Namespace = "default"
+					stage.InjectedEnv = append(stage.InjectedEnv, "export NAMESPACE=default")
+					//ts.PredefinedEnv["NAMESPACE"] = "default"
+				}
+
+				// Process different manifests
+				switch ts.TsManifests.ManifestType {
+				case K8s.MTString():
+
+					for _, f := range ts.TsManifests.Files {
+						var cmd string
+						cmd = "kubectl apply -f ./lib/" + strings.ToLower(ts.TileName) + "/lib/" + f + " -n " + ts.TsManifests.Namespace
+						stage.Commands = append(stage.Commands, cmd)
+					}
+				case Helm.MTString():
+					// TODO: not quite yet to support Helm
+					for _, f := range ts.TsManifests.Folders {
+						cmd := "helm install " + ts.TileName + " ./lib/" + strings.ToLower(ts.TileName) + "/lib/" + f + " -n " + ts.TsManifests.Namespace
+						stage.Commands = append(stage.Commands, cmd)
+					}
+
+				case Kustomize.MTString():
+					// TODO: not quite yet to support Kustomize
+					for _, f := range ts.TsManifests.Folders {
+						cmd := "kustomize build -f ./lib/" + strings.ToLower(ts.TileName) + "/lib/" + f + "|kubectl -f - " + " -n " + ts.TsManifests.Namespace
+						stage.Commands = append(stage.Commands, cmd)
+					}
+				}
 			}
 
-			// Process different manifests
-			switch ts.TsManifests.ManifestType {
-			case K8s.MTString():
-
-				for _, f := range ts.TsManifests.Files {
-					var cmd string
-					cmd = "kubectl apply -f ./lib/" + strings.ToLower(ts.TileName) + "/lib/" + f + " -n " + ts.TsManifests.Namespace
-					stage.Commands = append(stage.Commands, cmd)
-				}
-			case Helm.MTString():
-				// TODO: not quite yet to support Helm
-				for _, f := range ts.TsManifests.Folders {
-					cmd := "helm install " + ts.TileName + " ./lib/" + strings.ToLower(ts.TileName) + "/lib/" + f + " -n " + ts.TsManifests.Namespace
-					stage.Commands = append(stage.Commands, cmd)
-				}
-
-			case Kustomize.MTString():
-				// TODO: not quite yet to support Kustomize
-				for _, f := range ts.TsManifests.Folders {
-					cmd := "kustomize build -f ./lib/" + strings.ToLower(ts.TileName) + "/lib/" + f + "|kubectl -f - " + " -n " + ts.TsManifests.Namespace
-					stage.Commands = append(stage.Commands, cmd)
-				}
-			}
 
 			// Commands & output values to output.log
 			fileName := DiceConfig.WorkHome + "/super/" + stage.Name + "-output.log"

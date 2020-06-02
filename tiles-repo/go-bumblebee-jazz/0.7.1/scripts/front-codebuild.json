@@ -1,5 +1,5 @@
 {
-    "name": "air-service-build",
+    "name": "front-service-build",
     "source": {
         "type": "GITHUB",
         "location": "https://github.com/cc4i/go-bumblebee.git",
@@ -7,7 +7,7 @@
         "gitSubmodulesConfig": {
             "fetchSubmodules": true
         },
-        "buildspec": "src/gql/buildspec.yaml",
+        "buildspec": "src/front/buildspec.yaml",
         "reportBuildStatus": false,
         "insecureSsl": false
     },
@@ -25,7 +25,6 @@
         "privilegedMode": true,
         "imagePullCredentialsType": "CODEBUILD"
     },
-    "serviceRole": "<codebuild_role_arn>",
     "timeoutInMinutes": 60,
     "queuedTimeoutInMinutes": 480,
     "badgeEnabled": true,

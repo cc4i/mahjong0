@@ -1,0 +1,22 @@
+apiVersion: mahjong.io/v1alpha1
+kind: Deployment 
+metadata:
+  name: test
+spec:
+  template:
+    tiles:
+      tileGoBumblebeeJazz071:
+        tileReference: Go-Bumblebee-Jazz
+        tileVersion: 0.7.1
+        inputs:
+          - name: gitAccessToken
+            inputValue: 0ba78690f42c5875932df3b2313a303ab4039592      
+
+  summary:
+      description: Testing.
+      outputs:
+        - name: gitRepo
+          valueRef: $(tileGoBumblebeeJazz071.outputs.appConfRepo)
+
+      notes: []
+    

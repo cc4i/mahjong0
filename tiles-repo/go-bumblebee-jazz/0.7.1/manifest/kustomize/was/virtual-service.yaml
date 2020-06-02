@@ -1,0 +1,18 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: was-http
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - was-http-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /air
+    route:
+    - destination:
+        host: was-http
+        port:
+          number: 9010

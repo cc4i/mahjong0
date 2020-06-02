@@ -85,3 +85,4 @@ mctl/mctl
 .vscode
 **/dist
 mctl/sample-tile
+role.arn

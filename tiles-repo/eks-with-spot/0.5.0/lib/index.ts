@@ -88,6 +88,10 @@ export class EksWithSpot extends cdk.Construct {
       mastersRole: eksRole,
       securityGroup: this.controlPlaneSG,
     })
+    /** Tag subnet to allow other cluster to use subnet */
+    props.vpc.publicSubnets.forEach( s => {
+      s.node.applyAspect(new cdk.Tag("kubernetes.io/cluster/"+props.clusterName,"shared"));
+    });
 
     const spotNodeGroup = new EksNodesSpot(scope, "SpotNodeGroup", {
       clusterName: props.clusterName,
