@@ -10,7 +10,7 @@ spec:
         tileVersion: 0.7.1
         inputs:
           - name: gitAccessToken
-            inputValue: 0ba78690f42c5875932df3b2313a303ab4039592      
+            inputValue:       
 
   summary:
       description: Testing.

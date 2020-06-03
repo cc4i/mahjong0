@@ -5,6 +5,7 @@ metadata:
     category: Application
     version: 0.7.1
 spec:
+
   global:
     env:
       - name: GITHUB_USER
@@ -17,6 +18,9 @@ spec:
         value: new-combo-jazz
       - name: APP_CONF_REPO
         value: go-bumblebee-jazz-config
+      - name: KMS_KEY_ID
+        valueRef: $(self.inputs.kmsKeyID)
+
   preRun:
     stages:
       - name: CreateRepository
@@ -45,6 +49,9 @@ spec:
           ./register-to-codebuild.sh
   inputs:
     - name: gitAccessToken
+      inputType: String
+      require: true
+    - name: kmsKeyID
       inputType: String
       require: true
 

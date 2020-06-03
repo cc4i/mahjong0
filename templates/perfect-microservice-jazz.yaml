@@ -5,7 +5,18 @@ metadata:
 spec:
   template:
     tiles:
-      tileEksWithSpot050:
+      # Generating master key
+      tileAwsKmsKeyGenerator010:
+        tileReference: AWS-KMS-KeyGenerator
+        tileVersion: 0.1.0
+        inputs:
+          - name: symmetricKeyAlias
+            inputValue: majhong/symmetric-key_0
+          - name: asymmetricKeyAlias
+            inputValue: majhong/asymmetric-key_0
+
+      # ESK Cluster for Production
+      tileEksWithSpotProd:
         tileReference: Eks-with-Spot
         tileVersion: 0.5.0
         inputs:
@@ -23,39 +34,81 @@ spec:
               - r5.large
               - c5.large
 
-      tileArgocdWithExsitingEks152:
-        tileReference: Argocd-With-Existing-EKS
-        tileVersion: 1.5.2
-        dependsOn: tileEksWithSpot050
+      # EKS Cluster for Stage
+      tileEksWithSpotStage:
+        tileReference: Eks-with-Spot
+        tileVersion: 0.5.0
+        inputs:
+          - name: cidr
+            inputValue: 192.0.0.0/16
+          - name: clusterName
+            inputValue: mahjong-spot-cluster0
+          - name: clusterVersion
+            inputValue: 1.16
+          - name: keyPair4EC2
+            inputValue: ore-keypair
+          - name: capacityInstance
+            inputValues: 
+              - m5.large
+              - r5.large
+              - c5.large
+
+      # Istio 
+      tileIstio0ForProduction:
+        tileReference: Istio0
+        tileVersion: 1.5.4
         inputs:
           - name: clusterName
-            valueRef: $(tileEksWithSpot050.outputs.clusterName)         
+            valueRef: $(tileEksWithSpotProd.outputs.clusterName)
           - name: masterRoleARN
-            valueRef: $(tileEksWithSpot050.outputs.masterRoleARN) 
+            valueRef: $(tileEksWithSpotProd.outputs.masterRoleARN)
+      tileIstio0ForStage:
+        tileReference: Istio0
+        tileVersion: 1.5.4
+        inputs:
+          - name: clusterName
+            valueRef: $(tileEksWithSpotStage.outputs.clusterName)
+          - name: masterRoleARN
+            valueRef: $(tileEksWithSpotStage.outputs.masterRoleARN)
 
+
+      # CI with DEMO Applications
       tileGoBumblebeeJazz071:
         tileReference: Go-Bumblebee-Jazz
         tileVersion: 0.7.1
-        dependsOn: tileEksWithSpot050
+        inputs:
+          - name: gitAccessToken
+            inputValue: <GITHUB TOKEN>
+      
+      # CD with ArgoCD
+      tileArgocdWithExsitingEks152:
+        tileReference: Argocd-With-Existing-EKS
+        tileVersion: 1.5.6
+        dependsOn: tileEksWithSpotStage
         inputs:
           - name: clusterName
-            valueRef: $(tileEksWithSpot050.outputs.clusterName)
+            valueRef: $(tileEksWithSpotStage.outputs.clusterName)         
           - name: masterRoleARN
-            valueRef: $(tileEksWithSpot050.outputs.masterRoleARN)
-          - name: accessToken
-            inputValue: <GITHUB TOKEN>
+            valueRef: $(tileEksWithSpotStage.outputs.masterRoleARN) 
+
 summary:
       description: |
         ++++++++++++++++++++++++++++++++++++++++++++++++++++
         +   Perfect Microservices with Demo Application    +
         ++++++++++++++++++++++++++++++++++++++++++++++++++++
       outputs:
-        - name: EKS Cluster Name
-          valueRef: $(tileArgocd0152A.outputs.clusterName)
-        - name: Master role arn for EKS Cluster
-          valueRef: $(tileArgocd0152A.outputs.masterRoleARN)
-        - name: The API endpoint EKS Cluster
-          valueRef: $(tileArgocd0152A.outputs.clusterEndpoint)
+        - name: EKS Cluster for Production
+          valueRef: $(tileEksWithSpotProd.outputs.clusterName)
+        - name: Master role for Production Cluster
+          valueRef: $(tileEksWithSpotProd.outputs.masterRoleARN)
+        - name: Endpoint for Production Cluster
+          valueRef: $(tileEksWithSpotProd.outputs.clusterEndpoint)
+        - name: EKS Cluster for Staging
+          valueRef: $(tileEksWithSpotStage.outputs.clusterName)
+        - name: Master role for Staging Cluster
+          valueRef: $(tileEksWithSpotStage.outputs.masterRoleARN)
+        - name: Endpoint for Staging Cluster
+          valueRef: $(tileEksWithSpotStage.outputs.clusterEndpoint)
         
       notes: []
  
