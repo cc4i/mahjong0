@@ -52,6 +52,38 @@ spec:
               - m5.large
               - r5.large
               - c5.large
+      
+      # ElsatiCache Redis Cluster
+      tileAWSElastiCacheRedis506Prod:
+        tileReference: AWS-ElastiCache-Redis
+        tileVersion: 5.0.6
+        dependsOn: tileEksWithSpotProd
+        inputs:
+          - name: vpc
+            # tileInstance.tileName.field
+            inputValue: $cdk(tileEksWithSpotProd.Network0.vpc)     
+          - name: subnetIds
+            inputValues:
+              - $cdk(tileEksWithSpotProd.Network0.privateSubnetId1)
+              - $cdk(tileEksWithSpotProd.Network0.privateSubnetId2)
+          - name: redisClusterName
+            inputValue: redis-cluster-prod
+
+      # ElsatiCache Redis Cluster
+      tileAWSElastiCacheRedis506Stage:
+        tileReference: AWS-ElastiCache-Redis
+        tileVersion: 5.0.6
+        dependsOn: tileEksWithSpotStage
+        inputs:
+          - name: vpc
+            # tileInstance.tileName.field
+            inputValue: $cdk(tileEksWithSpotStage.Network0.vpc)     
+          - name: subnetIds
+            inputValues:
+              - $cdk(tileEksWithSpotStage.Network0.privateSubnetId1)
+              - $cdk(tileEksWithSpotStage.Network0.privateSubnetId2)
+          - name: redisClusterName
+            inputValue: redis-cluster-stage
 
       # Istio 
       tileIstio0ForProduction:
@@ -70,17 +102,8 @@ spec:
             valueRef: $(tileEksWithSpotStage.outputs.clusterName)
           - name: masterRoleARN
             valueRef: $(tileEksWithSpotStage.outputs.masterRoleARN)
-
-
-      # CI with DEMO Applications
-      tileGoBumblebeeJazz071:
-        tileReference: Go-Bumblebee-Jazz
-        tileVersion: 0.7.1
-        inputs:
-          - name: gitAccessToken
-            inputValue: <GITHUB TOKEN>
       
-      # CD with ArgoCD
+      # ArgoCD
       tileArgocdWithExsitingEks152:
         tileReference: Argocd-With-Existing-EKS
         tileVersion: 1.5.6
@@ -91,6 +114,21 @@ spec:
           - name: masterRoleARN
             valueRef: $(tileEksWithSpotStage.outputs.masterRoleARN) 
 
+      # Inject DEMO Applications & setup CI+CD
+      tileGoBumblebeeJazz071:
+        tileReference: Go-Bumblebee-Jazz
+        tileVersion: 0.7.1
+        inputs:
+          - name: gitAccessToken
+            inputValue: GITHUB-TOKEN
+          - name: kmsKeyID
+            valueRef: $(tileAwsKmsKeyGenerator010.outputs.symmetricKeyID)
+          - name: argocdBaseUrl
+            valueRef: $(tileArgocdWithExsitingEks152.outputs.argocdBaseUrl)
+          - name: argocdUser
+            valueRef: $(tileArgocdWithExsitingEks152.outputs.user)
+          - name: argocdPassword
+            valueRef: $(tileArgocdWithExsitingEks152.outputs.password)
 summary:
       description: |
         ++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -109,6 +147,12 @@ summary:
           valueRef: $(tileEksWithSpotStage.outputs.masterRoleARN)
         - name: Endpoint for Staging Cluster
           valueRef: $(tileEksWithSpotStage.outputs.clusterEndpoint)
+        - name: Endpoint for AgroCD
+          valueRef: $(tileArgocdWithExsitingEks152.outputs.argocdBaseUrl)
+        - name: Administrator for AgroCD
+          valueRef: $(tileArgocdWithExsitingEks152.outputs.user)
+        - name: Password for AgroCD Administrator
+          valueRef: $(tileArgocdWithExsitingEks152.outputs.password)
         
       notes: []
  

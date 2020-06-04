@@ -150,7 +150,7 @@ func (d *Deployment) ProcessTiles(ctx context.Context, aTs *Ts, override map[str
 							tile.TileVersion,
 							executableOrder,
 							parentTileInstance,
-							tileInstance,
+							parentTileInstance, //set same family with dependent tile if depends on tile
 							aTs,
 							override,
 							out); err != nil {
@@ -191,7 +191,7 @@ func (d *Deployment) ProcessTiles(ctx context.Context, aTs *Ts, override map[str
 			tile.TileVersion,
 			executableOrder,
 			parentTileInstance,
-			tileInstance,
+			parentTileInstance,
 			aTs,
 			override,
 			out); err != nil {
@@ -448,6 +448,12 @@ func (d *Deployment) PullTile(ctx context.Context,
 					input.InputValue = str2string(tileInput.DefaultValue, tileInput.InputType)
 				}
 			}
+
+			// Check out if include $cdk(tileInstance.tileName.field)
+			if input.InputValue, err = CDKAllValueRef(dSid, input.InputValue); err != nil {
+				return nil
+			}
+
 		}
 		//lookup override
 		if or, ok := override[parsedTile.Metadata.Name+"-"+input.InputName]; ok {

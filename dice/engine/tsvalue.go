@@ -152,6 +152,7 @@ func AllDependentTiles(dSid string, tileInstance string) []Tile {
 	}
 	return nil
 }
+
 // IsDuplicatedCategory determine if it's duplicated Tile under same group
 func IsDuplicatedCategory(dSid string, rootTileInstance string, tileCategory string) bool {
 	if allTG, ok := AllTilesGrids[dSid]; ok {
@@ -172,8 +173,9 @@ func ReferencedTsStack(dSid string, rootTileInstance string, tileName string) *T
 		for _, v := range *allTG {
 			if v.RootTileInstance == rootTileInstance {
 				if v.TileName == tileName {
-					ts := AllTs[dSid]
-					return ts.TsStacksMapN[v.TileInstance]
+					if ts, ok  := AllTs[dSid]; ok {
+						return ts.TsStacksMapN[v.TileInstance]
+					}
 				}
 			}
 		}
@@ -231,3 +233,65 @@ func ParentTileInstance(dSid string, tileInstance string) string {
 	}
 	return ""
 }
+
+
+func CDKAllValueRef(dSid string, str string) (string, error) {
+	for {
+		re := regexp.MustCompile(`^.*\$cdk\(([[:alnum:]]*\.[[:alnum:]]*\.[[:alnum:]]*)\).*$`)
+		s := re.FindStringSubmatch(str)
+		//
+		if len(s) == 2 {
+			if def := strings.Split(s[1], "."); len(def)!=3 {
+				return "", errors.New("error cdk reference : " + s[1])
+			} else {
+				tileInstance := def[0]
+				tileName := def[1]
+				field := def[2]
+				str = strings.ReplaceAll(str, "$cdk("+s[1]+")", CDKValueRef(dSid, tileInstance, tileName, field))
+			}
+
+		} else {
+			break
+		}
+	}
+	return str, nil
+}
+
+func CDKValueRef(dSid string, tileInstance string, tileName string, field string) string {
+
+	rootTileInstance := RootTileInstance(dSid, tileInstance)
+	ts := ReferencedTsStack(dSid, rootTileInstance, tileName)
+	if ts != nil {
+		return ts.TileStackVariable+"."+ts.TileVariable+"."+field
+	}
+
+	return ""
+}
+
+// RootTileInstance return root tileInstance as per tileInstance
+func RootTileInstance(dSid string, tileInstance string) string {
+	if allTG, ok := AllTilesGrids[dSid]; ok {
+		for _, v := range *allTG {
+			if v.TileInstance == tileInstance {
+				return v.RootTileInstance
+			}
+		}
+	}
+	return ""
+}
+
+// FamilyTileInstance array of tileInstance as per tileInstance
+func FamilyTileInstance(dSid string, tileInstance string) []string {
+	rootTileInstance := RootTileInstance(dSid, tileInstance)
+	if allTG, ok := AllTilesGrids[dSid]; ok {
+		var tileInstances []string
+		for _, v := range *allTG {
+			if v.RootTileInstance == rootTileInstance {
+				tileInstances = append(tileInstances, v.TileInstance)
+			}
+		}
+		return tileInstances
+	}
+	return nil
+}
+

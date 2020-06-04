@@ -43,6 +43,14 @@ spec:
       outputType: FromCommand
       defaultValueCommand: kubectl get pods -n $NAMESPACE -l app.kubernetes.io/name=argocd-server -o name | cut -d'/' -f 2
       description: Custom::Password        
+    - name: argocdServer
+      outputType: FromCommand
+      defaultValueCommand: kubectl get svc argocd-server -n argocd -o json  |jq -r '.status.loadBalancer.ingress[].hostname'
+      description: Custom::String        
+    - name: argocdBaseUrl
+      outputType: FromCommand
+      defaultValueCommand: echo "https://"`kubectl get svc argocd-server -n argocd -o json  |jq -r '.status.loadBalancer.ingress[].hostname'`"/argocd"
+      description: Custom::String        
 
   notes: []
 

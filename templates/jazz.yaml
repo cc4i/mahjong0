@@ -5,18 +5,37 @@ metadata:
 spec:
   template:
     tiles:
-      tileGoBumblebeeJazz071:
-        tileReference: Go-Bumblebee-Jazz
-        tileVersion: 0.7.1
+      tileEksWithSpot050:
+        tileReference: Eks-with-Spot
+        tileVersion: 0.5.0
         inputs:
-          - name: gitAccessToken
-            inputValue:       
-
+          - name: cidr
+            inputValue: 192.168.0.0/16
+          - name: clusterName
+            inputValue: mahjong-spot-cluster0
+          - name: clusterVersion
+            inputValue: 1.16
+          - name: keyPair4EC2
+            inputValue: ore-keypair
+          - name: capacityInstance
+            inputValues: 
+              - m5.large
+              - r5.large
+              - c5.large    
+      tileAWSElastiCacheRedis506:
+        tileReference: AWS-ElastiCache-Redis
+        tileVersion: 5.0.6
+        dependsOn: tileEksWithSpot050
+        inputs:
+          - name: vpc
+            # tileInstance.tileName.field
+            inputValue: $cdk(tileEksWithSpot050.Network0.vpc)     
+          - name: subnetIds
+            inputValues:
+              - $cdk(tileEksWithSpot050.Network0.privateSubnetId1)
+              - $cdk(tileEksWithSpot050.Network0.privateSubnetId2)
   summary:
       description: Testing.
-      outputs:
-        - name: gitRepo
-          valueRef: $(tileGoBumblebeeJazz071.outputs.appConfRepo)
-
+      outputs: []
       notes: []
     

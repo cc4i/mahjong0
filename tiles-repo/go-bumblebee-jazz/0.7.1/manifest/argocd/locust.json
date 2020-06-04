@@ -1,0 +1,24 @@
+{
+    "metadata": {
+      "name": "go-bumblebee-jazz-locust",
+      "namespace": "argocd"
+    },
+    "spec": {
+      "source": {
+        "repoURL": "https://github.com/cc4i/go-bumblebee",
+        "path": "manifests/kustomize/locust",
+        "targetRevision": "new-combo-jazz"
+      },
+      "destination": {
+        "server": "https://kubernetes.default.svc",
+        "namespace": "go-bumblebee"
+      },
+      "project": "default",
+      "syncPolicy": {
+        "automated": {
+          "prune": true,
+          "selfHeal": true
+        }
+      }
+    }
+  }

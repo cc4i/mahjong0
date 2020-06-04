@@ -2332,6 +2332,8 @@ metadata:
     app.kubernetes.io/part-of: argocd
   name: argocd-server
 spec:
+  # setup public
+  type: LoadBalancer
   ports:
   - name: http
     port: 80
@@ -2541,6 +2543,9 @@ spec:
         - argocd-server
         - --staticassets
         - /shared/app
+        # add root path for UI and API server
+        - --rootpath
+        - /argocd
         image: argoproj/argocd:v1.5.6
         imagePullPolicy: Always
         livenessProbe:
