@@ -73,6 +73,12 @@ Click [here](./docs/How-to-Build-Hu.md) for more detail to develop Hu.
 |ArgoCD | [v1.5.2](./tiles-repo/argocd0/1.5.2)|The Argocd0 is basic component to help build up GitOps based CI/CD capability, which depends on Tile - Eks0 & Network0.|
 |Go-Bumblebee-ONLY| [v0.0.1](./tiles-repo/go-bumblebee-only/0.0.1) | This is demo application, which can be deploy to Kubernetes cluster to demostrate rich capabilities.|
 |Istio | [v1.5.4](./tiles-repo/istio0/1.5.4) | Setup Istio 1.6 on EKS with all necessary features. Managed by Istio operator and Egress Gateway was off by default. |
+|AWS KMS | [v0.1.0](./tiles-repo/aws-kms-keygenerator/0.1.0) | Generate both symmetric key and asymmetric key for down stream applications or services |
+|AWS ElastiCache Redis | [v5.0.6](./tiles-repo/aws-elasticache-redis/5.0.6) | Setup a redis cluster with replcation group with flexiable options. |
+|AWS Aurora Mtsql | [v2.07.2](./tiles-repo/aws-aurora-mysql/2.07.2) | Provision a Aurora MySQL cluster and integrated with Secret Manager to automate secret ratation. |
+| Go-BumbleBee-Jazz | [v0.7.1](./tiles-repo/go-bumblebee-jazz/0.7.1) | Modern cloud native application with tipycal features to try out how great your Kubernetes cluster are.|
+
+
 
 
 
@@ -84,6 +90,7 @@ Click [here](./docs/How-to-Build-Hu.md) for more detail to develop Hu.
 | EKS with Spot instance| [v0.1.0](./templates/eks-spot-simple.yaml)| Quick launch EKS cluster with mixed spot and on-demand instances, as well as handling spot termination, cluster auto scaler and HPA. |
 | Simple ArgoCD | [v0.1.0](./templates/argocd-simple.yaml) | Setup ArgoCD on EKS with simple configuration.|
 | Basic CD with ArgoCD | [v0.1.0](./templates/argocd-with-app.yaml) | Building a modern CD with example applicaiton on GitHub, all you need is a GitHub token.|
+| Perfect Microservice on EKS | [v0.1.0]() |  Implement a handy containerized Microsercices architecture on EKS with all major componnets and demo applications. (!!! In progress ... Coming soon ...!!!)|
 
 
 ## What to Next
