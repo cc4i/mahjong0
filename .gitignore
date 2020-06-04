@@ -1,5 +1,7 @@
 *.js
 !jest.config.js
+!dice/toy/index.js
+!dice/toy/jquery-1.4.3.min.js
 *.d.ts
 node_modules
 

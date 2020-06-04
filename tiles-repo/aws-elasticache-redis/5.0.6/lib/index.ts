@@ -2,7 +2,7 @@ import * as cdk from '@aws-cdk/core';
 import * as ec from '@aws-cdk/aws-elasticache'
 import ec2 = require('@aws-cdk/aws-ec2');
 
-export interface AwsElasticacheRedisProps {
+export interface AWSElastiCacheRedisProps {
   vpc: ec2.Vpc;
   subnetIds: string[];
   redisClusterName?: string;
@@ -12,12 +12,12 @@ export interface AwsElasticacheRedisProps {
   autoMinorVersionUpgrade?: boolean;
 }
 
-export class AwsElasticacheRedis extends cdk.Construct {
+export class AWSElastiCacheRedis extends cdk.Construct {
 
   public readonly redisClusterName:string;
   public readonly redisEndpoint: string;
 
-  constructor(scope: cdk.Construct, id: string, props: AwsElasticacheRedisProps) {
+  constructor(scope: cdk.Construct, id: string, props: AWSElastiCacheRedisProps) {
     super(scope, id);
     let uuid = Math.random().toString(36).substr(2,5);
 
@@ -56,7 +56,7 @@ export class AwsElasticacheRedis extends cdk.Construct {
     });
     redis.addDependsOn(subnetGroup);
 
-    this.redisClusterName = redis.replicationGroupId
+    this.redisClusterName = redis.replicationGroupId!
     this.redisEndpoint = redis.attrConfigurationEndPointAddress+":"+redis.attrConfigurationEndPointPort
     
     /** Output from CF */
