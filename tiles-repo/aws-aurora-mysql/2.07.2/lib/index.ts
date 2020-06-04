@@ -4,17 +4,17 @@ import rds = require('@aws-cdk/aws-rds');
 import ssm = require('@aws-cdk/aws-ssm');
 import ec2 = require('@aws-cdk/aws-ec2');
 
-export interface AwsAuroraMysqlProps {
+export interface AWSAuroraMysqlProps {
   vpc: ec2.IVpc;
   username: string;
   dbname: string;
 
 }
 
-export class AwsAuroraMysql extends cdk.Construct {
+export class AWSAuroraMysql extends cdk.Construct {
 
 
-  constructor(scope: cdk.Construct, id: string, props: AwsAuroraMysqlProps) {
+  constructor(scope: cdk.Construct, id: string, props: AWSAuroraMysqlProps) {
     super(scope, id);
 
     const databaseCredentialsSecret = new secretsManager.Secret(this, 'DBCredentialsSecret', {

@@ -67,11 +67,15 @@ export class Network0 extends cdk.Construct {
     this.publicSubnetId2 = this.baseVpc.publicSubnets[1].subnetId;
     this.privateSubnetId1 = this.baseVpc.privateSubnets[0].subnetId;
     this.privateSubnetId2 = this.baseVpc.privateSubnets[1].subnetId;
+    this.isolatedSubnetId1 = this.baseVpc.isolatedSubnets[0].subnetId;
+    this.isolatedSubnetId2 = this.baseVpc.isolatedSubnets[1].subnetId;
     this.availabilityZones = this.baseVpc.availabilityZones;
     this.publicSubnet1 = this.baseVpc.publicSubnets[0]
     this.publicSubnet2 = this.baseVpc.publicSubnets[1];
     this.privateSubnet1 = this.baseVpc.privateSubnets[0];
     this.privateSubnet2 = this.baseVpc.privateSubnets[1];
+    this.isolatedSubnet1 = this.baseVpc.isolatedSubnets[0];
+    this.isolatedSubnet2 = this.baseVpc.isolatedSubnets[1];
 
     /** Added CF Output */
     new cdk.CfnOutput(this,"vpcId", {value: this.vpcId})
