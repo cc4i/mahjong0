@@ -10,30 +10,29 @@ import (
 
 // TilesGrid represents relationship table of all Tile for each deployment
 type TilesGrid struct {
-	TileInstance       string 	// TileInstance is unique ID of Tile as instance
-	ExecutableOrder    int    	// ExecutableOrder is execution order of Tile
-	TileName           string 	// TileName is the name of Tile
-	TileVersion        string 	// TileVersion is the version of Tile
-	TileCategory       string 	// TileCategory is the category of Tile
-	RootTileInstance   string 	// RootTileInstance indicates Tiles are in the same group
-	ParentTileInstance string	// ParentTileInstance indicates who's dependent on Me - Tile
+	TileInstance       string // TileInstance is unique ID of Tile as instance
+	ExecutableOrder    int    // ExecutableOrder is execution order of Tile
+	TileName           string // TileName is the name of Tile
+	TileVersion        string // TileVersion is the version of Tile
+	TileCategory       string // TileCategory is the category of Tile
+	RootTileInstance   string // RootTileInstance indicates Tiles are in the same group
+	ParentTileInstance string // ParentTileInstance indicates who's dependent on Me - Tile
 }
-
 
 // Ts is key struct to fulfil super.ts template and key element to generate execution plan.
 type Ts struct {
-	TsLibs []TsLib // TsLibs is only for go template
-	TsLibsMap map[string]TsLib // TsLibsMap : TileName -> TsLib
-	TsStacks []*TsStack // TsStacks is only for go template
-	TsStacksMapN map[string]*TsStack	// TsStacksMap: TileInstance -> TsStack, all initialized values will be store here, include input, env, etc
-	AllTilesN map[string]*Tile // AllTiles: TileInstance -> Tile
-	AllOutputsN map[string]*TsOutput // AllOutputs:  TileInstance ->TsOutput, all output values will be store here
-	CreatedTime time.Time // Created time
+	TsLibs       []TsLib              // TsLibs is only for go template
+	TsLibsMap    map[string]TsLib     // TsLibsMap : TileName -> TsLib
+	TsStacks     []*TsStack           // TsStacks is only for go template
+	TsStacksMapN map[string]*TsStack  // TsStacksMap: TileInstance -> TsStack, all initialized values will be store here, include input, env, etc
+	AllTilesN    map[string]*Tile     // AllTiles: TileInstance -> Tile
+	AllOutputsN  map[string]*TsOutput // AllOutputs:  TileInstance ->TsOutput, all output values will be store here
+	CreatedTime  time.Time            // Created time
 }
 
 // Ts represents all referred CDK resources
 type TsLib struct {
-	TileInstance string
+	TileInstance      string
 	TileName          string
 	TileVersion       string
 	TileConstructName string
@@ -43,7 +42,7 @@ type TsLib struct {
 
 // TsStack represents all detail for each stack
 type TsStack struct {
-	TileInstance string
+	TileInstance      string
 	TileName          string
 	TileVersion       string
 	TileConstructName string
@@ -57,21 +56,20 @@ type TsStack struct {
 
 // TsInputParameter
 type TsInputParameter struct {
-	InputName       string
-	InputValue      string
-	IsOverrideField string
-	DependentTileInstance string
+	InputName              string
+	InputValue             string
+	IsOverrideField        string
+	DependentTileInstance  string
 	DependentTileInputName string
 }
 
 // TsManifests
 type TsManifests struct {
-	ManifestType         string
-	Namespace            string
-	Files                []string
-	Folders              []string
+	ManifestType string
+	Namespace    string
+	Files        []string
+	Folders      []string
 	TileInstance string
-
 }
 
 // TsOutput
@@ -94,9 +92,9 @@ type TsOutputDetail struct {
 
 // AllTs represents all information about tiles, input, output, etc.,  id(uuid) -> Ts
 var AllTs = make(map[string]Ts)
+
 // AllTilesGrid store all Tiles relationship, id(uuid) -> (tile-instance -> TilesGrid)
 var AllTilesGrids = make(map[string]*map[string]TilesGrid)
-
 
 // SortedTilesGrid return sorted TilesGrid array from AllTilesGrid
 func SortedTilesGrid(dSid string) []TilesGrid {
@@ -173,7 +171,7 @@ func ReferencedTsStack(dSid string, rootTileInstance string, tileName string) *T
 		for _, v := range *allTG {
 			if v.RootTileInstance == rootTileInstance {
 				if v.TileName == tileName {
-					if ts, ok  := AllTs[dSid]; ok {
+					if ts, ok := AllTs[dSid]; ok {
 						return ts.TsStacksMapN[v.TileInstance]
 					}
 				}
@@ -187,7 +185,7 @@ func ReferencedTsStack(dSid string, rootTileInstance string, tileName string) *T
 func ValueRef(dSid string, ref string, ti string) (string, error) {
 	re := regexp.MustCompile(`^\$\(([[:alnum:]]*\.[[:alnum:]]*\.[[:alnum:]]*)\)$`)
 	ms := re.FindStringSubmatch(ref)
-	if len(ms)==2 {
+	if len(ms) == 2 {
 		str := strings.Split(ms[1], ".")
 		tileInstance := str[0]
 		where := str[1]
@@ -197,29 +195,29 @@ func ValueRef(dSid string, ref string, ti string) (string, error) {
 		}
 		if at, ok := AllTs[dSid]; ok {
 
-				switch where {
-				case "inputs":
-					if tsStack, ok := at.TsStacksMapN[tileInstance]; ok {
-						for _, input := range tsStack.InputParameters {
-							if field == input.InputName {
-								return input.InputValue, nil
-							}
+			switch where {
+			case "inputs":
+				if tsStack, ok := at.TsStacksMapN[tileInstance]; ok {
+					for _, input := range tsStack.InputParameters {
+						if field == input.InputName {
+							return input.InputValue, nil
 						}
 					}
-				case "outputs":
-					if outputs, ok := at.AllOutputsN[tileInstance]; ok {
-						for name, output := range outputs.TsOutputs {
-							if name == field {
-								return output.OutputValue, nil
-							}
-						}
-					}
-
 				}
+			case "outputs":
+				if outputs, ok := at.AllOutputsN[tileInstance]; ok {
+					for name, output := range outputs.TsOutputs {
+						if name == field {
+							return output.OutputValue, nil
+						}
+					}
+				}
+
+			}
 		}
 
 	} else {
-		return "", errors.New("expression: "+ref+" was error")
+		return "", errors.New("expression: " + ref + " was error")
 	}
 	return "", errors.New("referred value wasn't exist")
 }
@@ -234,14 +232,13 @@ func ParentTileInstance(dSid string, tileInstance string) string {
 	return ""
 }
 
-
 func CDKAllValueRef(dSid string, str string) (string, error) {
 	for {
 		re := regexp.MustCompile(`^.*\$cdk\(([[:alnum:]]*\.[[:alnum:]]*\.[[:alnum:]]*)\).*$`)
 		s := re.FindStringSubmatch(str)
 		//
 		if len(s) == 2 {
-			if def := strings.Split(s[1], "."); len(def)!=3 {
+			if def := strings.Split(s[1], "."); len(def) != 3 {
 				return "", errors.New("error cdk reference : " + s[1])
 			} else {
 				tileInstance := def[0]
@@ -262,7 +259,7 @@ func CDKValueRef(dSid string, tileInstance string, tileName string, field string
 	rootTileInstance := RootTileInstance(dSid, tileInstance)
 	ts := ReferencedTsStack(dSid, rootTileInstance, tileName)
 	if ts != nil {
-		return ts.TileStackVariable+"."+ts.TileVariable+"."+field
+		return ts.TileStackVariable + "." + ts.TileVariable + "." + field
 	}
 
 	return ""
@@ -294,4 +291,3 @@ func FamilyTileInstance(dSid string, tileInstance string) []string {
 	}
 	return nil
 }
-

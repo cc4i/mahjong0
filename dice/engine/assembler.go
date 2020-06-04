@@ -88,11 +88,10 @@ func init() {
 // GenerateCdkApp return path where the base CDK App was generated.
 func (d *Deployment) GenerateCdkApp(ctx context.Context, out *websocket.Conn) (*ExecutionPlan, error) {
 
-
 	var aTs = &Ts{
-		AllTilesN: make(map[string]*Tile),
-		CreatedTime: time.Now(),
-		TsLibsMap: make(map[string]TsLib),
+		AllTilesN:    make(map[string]*Tile),
+		CreatedTime:  time.Now(),
+		TsLibsMap:    make(map[string]TsLib),
 		TsStacksMapN: make(map[string]*TsStack),
 		AllOutputsN:  make(map[string]*TsOutput),
 	}
@@ -134,15 +133,15 @@ func (d *Deployment) ProcessTiles(ctx context.Context, aTs *Ts, override map[str
 
 	// Process by reversed order / revered order = right order we see in yaml
 	for tileInstance, _ := range d.Spec.Template.Tiles {
-		reversedTileInstance=append(reversedTileInstance, tileInstance)
+		reversedTileInstance = append(reversedTileInstance, tileInstance)
 	}
-	for i:=len(reversedTileInstance)-1; i>=0; i-- {
+	for i := len(reversedTileInstance) - 1; i >= 0; i-- {
 		tileInstance := reversedTileInstance[i]
 		if tile, ok := d.Spec.Template.Tiles[tileInstance]; ok {
 			parentTileInstance := "root"
 			if tile.DependsOn != "" {
 				parentTileInstance = tile.DependsOn
-				if allTG,ok := AllTilesGrids[ctx.Value("d-sid").(string)]; ok && allTG!=nil {
+				if allTG, ok := AllTilesGrids[ctx.Value("d-sid").(string)]; ok && allTG != nil {
 					if _, ok := (*allTG)[parentTileInstance]; ok {
 						if err := d.PullTile(ctx,
 							tileInstance,
@@ -204,15 +203,15 @@ func (d *Deployment) ProcessTiles(ctx context.Context, aTs *Ts, override map[str
 
 // PullTile pulls Tile from Tile Repo and extract & setup data along the way
 func (d *Deployment) PullTile(ctx context.Context,
-		tileInstance string,
-		tile string,
-		version string,
-		executableOrder int,
-		parentTileInstance string,
-		rootTileInstance string,
-		aTs *Ts,
-		override map[string]*TileInputOverride,
-		out *websocket.Conn) error {
+	tileInstance string,
+	tile string,
+	version string,
+	executableOrder int,
+	parentTileInstance string,
+	rootTileInstance string,
+	aTs *Ts,
+	override map[string]*TileInputOverride,
+	out *websocket.Conn) error {
 
 	dSid := ctx.Value("d-sid").(string)
 	id := generateAId()
@@ -241,10 +240,12 @@ func (d *Deployment) PullTile(ctx context.Context,
 
 	// Pre-Process 3: Caching TilesGrid, which presents relation between Tiles
 	ti := tileInstance
-	if ti == "" { ti = fmt.Sprintf("%s-%s-%s", tile, id, "generated") }
+	if ti == "" {
+		ti = fmt.Sprintf("%s-%s-%s", tile, id, "generated")
+	}
 	tg := TilesGrid{
 		TileInstance:       ti,
-		ExecutableOrder:    executableOrder-1,
+		ExecutableOrder:    executableOrder - 1,
 		TileName:           tile,
 		TileVersion:        version,
 		ParentTileInstance: parentTileInstance,
@@ -253,14 +254,14 @@ func (d *Deployment) PullTile(ctx context.Context,
 	}
 	if allTG, ok := AllTilesGrids[dSid]; ok && allTG != nil {
 		if !IsDuplicatedCategory(dSid, rootTileInstance, parsedTile.Metadata.Category) {
-			(*allTG)[ti]=tg
+			(*allTG)[ti] = tg
 		} else {
-			log.Debugf("It's duplicated Tile under same group, Ignore : %s / %s / %s\n", tile, version, parsedTile.Metadata.Category )
+			log.Debugf("It's duplicated Tile under same group, Ignore : %s / %s / %s\n", tile, version, parsedTile.Metadata.Category)
 			return nil
 		}
 	} else {
 		val := make(map[string]TilesGrid)
-		val[ti]=tg
+		val[ti] = tg
 		AllTilesGrids[dSid] = &val
 
 	}
@@ -277,12 +278,12 @@ func (d *Deployment) PullTile(ctx context.Context,
 		for _, input := range dt.Inputs {
 
 			if len(input.InputValues) > 0 {
-				deploymentInputs[dt.TileReference + "-" + input.Name] = input.InputValues
+				deploymentInputs[dt.TileReference+"-"+input.Name] = input.InputValues
 			} else {
-				deploymentInputs[dt.TileReference + "-" + input.Name] = []string{input.InputValue}
+				deploymentInputs[dt.TileReference+"-"+input.Name] = []string{input.InputValue}
 			}
 			if input.ValueRef != "" {
-				deploymentInputs[dt.TileReference + "-" + input.Name] = []string{input.ValueRef}
+				deploymentInputs[dt.TileReference+"-"+input.Name] = []string{input.ValueRef}
 			}
 		}
 	}
@@ -300,9 +301,9 @@ func (d *Deployment) PullTile(ctx context.Context,
 		if ov.Override.Name != "" {
 			if tileName, ok := tileDependencies[ov.Override.Name]; ok {
 				if val, ok := deploymentInputs[tile+"-"+ov.Override.Field]; ok {
-					 tlo := &TileInputOverride{
-						Name:      ov.Override.Name,
-						Field:     ov.Override.Field,
+					tlo := &TileInputOverride{
+						Name:  ov.Override.Name,
+						Field: ov.Override.Field,
 						//OverrideValue: deploymentInputs
 						//InputName: ov.Name,
 					}
@@ -320,7 +321,7 @@ func (d *Deployment) PullTile(ctx context.Context,
 
 	// Step 5. Store import libs && avoid to add repeated one
 	newTsLib := TsLib{
-		TileInstance: ti,
+		TileInstance:      ti,
 		TileName:          parsedTile.Metadata.Name,
 		TileVersion:       parsedTile.Metadata.Version,
 		TileConstructName: strcase.ToCamel(parsedTile.Metadata.Name),
@@ -331,7 +332,6 @@ func (d *Deployment) PullTile(ctx context.Context,
 		aTs.TsLibsMap[parsedTile.Metadata.Name] = newTsLib
 	}
 	////
-
 
 	// Step 6. Caching manifest & overwrite
 	// Overwrite namespace as deployment
@@ -375,17 +375,18 @@ func (d *Deployment) PullTile(ctx context.Context,
 	}
 	////
 
-
 	// Step 7. recurred call for all dependent Tiles
 	for _, t := range parsedTile.Spec.Dependencies {
 		if err = d.PullTile(ctx,
 			"",
-					t.TileReference,
-					t.TileVersion,
-					tg.ExecutableOrder,
-					tg.TileInstance,
-					tg.RootTileInstance,
-					aTs, override, out); err != nil { return err }
+			t.TileReference,
+			t.TileVersion,
+			tg.ExecutableOrder,
+			tg.TileInstance,
+			tg.RootTileInstance,
+			aTs, override, out); err != nil {
+			return err
+		}
 	}
 	////
 
@@ -405,7 +406,7 @@ func (d *Deployment) PullTile(ctx context.Context,
 					input.InputName = tileInput.Name
 					refTileName := tileDependencies[tileInput.Dependencies[0].Name]
 					tsStack := ReferencedTsStack(dSid, rootTileInstance, refTileName)
-					if tsStack!=nil {
+					if tsStack != nil {
 						input.InputValue = tsStack.TileStackVariable + "." + tsStack.TileVariable + "." + tileInput.Dependencies[0].Field
 					}
 				} else {
@@ -468,10 +469,9 @@ func (d *Deployment) PullTile(ctx context.Context,
 	}
 	////
 
-
 	// Step 9. Store import Stacks && avoid repeated one
 	ts := &TsStack{
-		TileInstance: ti,
+		TileInstance:      ti,
 		TileName:          parsedTile.Metadata.Name,
 		TileVersion:       parsedTile.Metadata.Version,
 		TileConstructName: strcase.ToCamel(parsedTile.Metadata.Name),
@@ -513,9 +513,9 @@ func (d *Deployment) PullTile(ctx context.Context,
 func array2String(array []string, inputType string) string {
 	val := "[ "
 	switch inputType {
-	case String.IOTString()+"[]":
+	case String.IOTString() + "[]":
 		for _, d := range array {
-			if strings.HasPrefix(d,"$(") {
+			if strings.HasPrefix(d, "$(") {
 				val = val + d + ","
 			} else {
 				val = val + "'" + d + "',"
@@ -523,7 +523,7 @@ func array2String(array []string, inputType string) string {
 		}
 	default:
 		for _, d := range array {
-			val = val + d+ ","
+			val = val + d + ","
 		}
 
 	}
@@ -532,10 +532,10 @@ func array2String(array []string, inputType string) string {
 }
 
 func str2string(str string, inputType string) string {
-	val :=""
+	val := ""
 	switch inputType {
 	case String.IOTString():
-		if strings.HasPrefix(str,"$(") {
+		if strings.HasPrefix(str, "$(") {
 			val = str
 		} else {
 			val = "'" + str + "'"
@@ -564,7 +564,7 @@ func (d *Deployment) ApplyMainTs(ctx context.Context, out *websocket.Conn, aTs *
 
 	//!!! re-order aTs.TsStacks due to CDK require!!!
 	stg := SortedTilesGrid(dSid)
-	for  _, s := range stg {
+	for _, s := range stg {
 		aTs.TsStacks = append(aTs.TsStacks, aTs.TsStacksMapN[s.TileInstance])
 	}
 	for _, tl := range aTs.TsLibsMap {
@@ -666,7 +666,6 @@ func (d *Deployment) GenerateExecutePlan(ctx context.Context, out *websocket.Con
 				}
 			}
 
-
 			// Commands & output values to output.log
 			fileName := DiceConfig.WorkHome + "/super/" + stage.Name + "-output.log"
 			//Sleep 5 seconds to waiting pod's ready
@@ -736,4 +735,3 @@ func (d *Deployment) GenerateExecutePlan(ctx context.Context, out *websocket.Con
 func generateAId() string {
 	return uuid.New().String()[0:8]
 }
-

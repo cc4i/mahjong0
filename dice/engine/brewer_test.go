@@ -7,8 +7,8 @@ import (
 
 func TestRandString(t *testing.T) {
 	tests := []struct {
-		name string
-		input int
+		name   string
+		input  int
 		output int
 	}{
 		{"Testing length = 0", 0, 0},

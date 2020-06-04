@@ -10,8 +10,8 @@ type DiceConfig struct {
 		prod - Production and looking for Tiles in remote repo only.
 		dev - Local development and looking for Tiles in local & remote repo.
 	*/
-	Mode       string // Mode represents mode for different purpose: dev/prod.
+	Mode string // Mode represents mode for different purpose: dev/prod.
 
-	LocalRepo  string // LocalRepo is folder to store Tiles on 'dev' mode
+	LocalRepo string // LocalRepo is folder to store Tiles on 'dev' mode
 
 }

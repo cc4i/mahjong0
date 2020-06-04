@@ -35,10 +35,10 @@ type ExecutionStage struct {
 	// Name
 	Name string `json:"name"` // = Tile Instance
 	// Stage type
-	Kind        string   `json:"kind"`     // CDK/Command
-	WorkHome    string   `json:"workHome"` // root folder for execution
-	InjectedEnv []string `json:"injectedEnv"` // example: "export variable=value"
-	Preparation []string `json:"preparation"`
+	Kind            string   `json:"kind"`        // CDK/Command
+	WorkHome        string   `json:"workHome"`    // root folder for execution
+	InjectedEnv     []string `json:"injectedEnv"` // example: "export variable=value"
+	Preparation     []string `json:"preparation"`
 	Commands        []string `json:"commands"`
 	TileName        string   `json:"tileName"`
 	TileVersion     string   `json:"tileVersion"`
@@ -66,7 +66,7 @@ type BrewerCore interface {
 	// ExecutePlan executes the generated plan
 	ExecutePlan(ctx context.Context, dryRun bool, out *websocket.Conn) error
 	// CommandExecutor executes the generated script or wire simulated data
-	CommandExecutor(ctx context.Context,  dryRun bool, cmd []byte, out *websocket.Conn) error
+	CommandExecutor(ctx context.Context, dryRun bool, cmd []byte, out *websocket.Conn) error
 	// LinuxCommandExecutor run a command/script
 	LinuxCommandExecutor(ctx context.Context, cmdTxt []byte, stageLog *log.Logger, out *websocket.Conn) error
 	// CommandWrapperExecutor wrap all parameters and commands into a script
@@ -76,7 +76,7 @@ type BrewerCore interface {
 	// ExtractValue extract output data from logs
 	ExtractValue(ctx context.Context, buf []byte, out *websocket.Conn) error
 	// PostRun execute post jobs after major work
-	PostRun(ctx context.Context,  dryRun bool, buf []byte, out *websocket.Conn) error
+	PostRun(ctx context.Context, dryRun bool, buf []byte, out *websocket.Conn) error
 	// GenerateSummary generate report for Deployment
 	GenerateSummary(ctx context.Context, out *websocket.Conn) error
 	// ExtractAllEnv extracts all possible key,value from environment variables
@@ -156,32 +156,33 @@ func (ep *ExecutionPlan) ExtractAllEnv() map[string]string {
 			re := regexp.MustCompile(`^export (.*)=(.*)$`)
 			kv := re.FindStringSubmatch(val)
 			if len(kv) == 3 {
-				env[kv[1]]= kv[2]
+				env[kv[1]] = kv[2]
 			}
 		}
 	}
 	return env
 }
+
 // Replace all possible env & value reference
 func (ep *ExecutionPlan) ReplaceAll(str string, dSid string, kv map[string]string) string {
 	str = ep.ReplaceAllEnv(str, kv)
 	str = ep.ReplaceAllValueRef(str, dSid, ep.CurrentStage.Name) //replace 'self'
-	str = ep.ReplaceAllValueRef(str, dSid, "") //replace 'anything else'
+	str = ep.ReplaceAllValueRef(str, dSid, "")                   //replace 'anything else'
 	return str
 }
 
 // Replace reference by value
-func (ep *ExecutionPlan)ReplaceAllValueRef(str string, dSid string, ti string) string {
+func (ep *ExecutionPlan) ReplaceAllValueRef(str string, dSid string, ti string) string {
 	for {
 		re := regexp.MustCompile(`.*(\$\([[:alnum:]]*\.[[:alnum:]]*\.[[:alnum:]]*\)).*`)
 		s := re.FindStringSubmatch(str)
 		//
 		if len(s) == 2 {
-			if v , err := ValueRef(dSid,s[1],ti); err != nil {
+			if v, err := ValueRef(dSid, s[1], ti); err != nil {
 				log.Errorf("Replace value reference was failed : %s \n", err)
 				break
 			} else {
-				str = strings.ReplaceAll(str,s[1], v)
+				str = strings.ReplaceAll(str, s[1], v)
 			}
 		} else {
 			break
@@ -192,15 +193,14 @@ func (ep *ExecutionPlan)ReplaceAllValueRef(str string, dSid string, ti string) s
 
 // Replace env by value
 func (ep *ExecutionPlan) ReplaceAllEnv(str string, allEnv map[string]string) string {
-	for k,v := range allEnv {
+	for k, v := range allEnv {
 		str = strings.ReplaceAll(str, "$"+k, v)
 	}
 	return str
 }
 
-
 // CommandExecutor exec command and return output.
-func (ep *ExecutionPlan) CommandExecutor(ctx context.Context,  dryRun bool, cmdTxt []byte, out *websocket.Conn) error {
+func (ep *ExecutionPlan) CommandExecutor(ctx context.Context, dryRun bool, cmdTxt []byte, out *websocket.Conn) error {
 
 	var stageLog *log.Logger
 	SR(out, []byte("Initializing stage log file ..."))
@@ -385,11 +385,11 @@ echo $?
 
 	// !!! Replace $(value) to actual value !!!
 	for _, kvs := range [][]string{ep.CurrentStage.InjectedEnv,
-									ep.CurrentStage.Preparation,
-									ep.CurrentStage.Commands } {
-		for i, _ := range  kvs {
+		ep.CurrentStage.Preparation,
+		ep.CurrentStage.Commands} {
+		for i, _ := range kvs {
 			kvs[i] = ep.ReplaceAllValueRef(kvs[i], dSid, ep.CurrentStage.Name) //replace 'self'
-			kvs[i] = ep.ReplaceAllValueRef(kvs[i], dSid, "") //replace 'anything else'
+			kvs[i] = ep.ReplaceAllValueRef(kvs[i], dSid, "")                   //replace 'anything else'
 		}
 	}
 	////
@@ -421,7 +421,9 @@ func (ep *ExecutionPlan) WsTail(ctx context.Context, reader io.ReadCloser, stage
 		}
 		SR(out, buf)
 	}
-	if wg!=nil { wg.Done() }
+	if wg != nil {
+		wg.Done()
+	}
 }
 
 // ExtractValue retrieve values from output logs.
@@ -470,7 +472,7 @@ func (ep *ExecutionPlan) ExtractValue(ctx context.Context, buf []byte, out *webs
 						}
 					}
 					// Replace possible ENV in output
-					if strings.Contains(outputDetail.OutputValue,"$") {
+					if strings.Contains(outputDetail.OutputValue, "$") {
 						outputDetail.OutputValue = ep.ReplaceAllEnv(outputDetail.OutputValue, allEnv)
 					}
 				} else {
@@ -480,7 +482,7 @@ func (ep *ExecutionPlan) ExtractValue(ctx context.Context, buf []byte, out *webs
 		}
 
 		// Pass output values to parent stack
-		if parentTileInstance := ParentTileInstance(dSid, tileInstance); parentTileInstance!="" {
+		if parentTileInstance := ParentTileInstance(dSid, tileInstance); parentTileInstance != "" {
 			if outputs, ok := ts.AllOutputsN[tileInstance]; ok {
 				if parentOutputs, ok := ts.AllOutputsN[parentTileInstance]; ok {
 					for k, v := range outputs.TsOutputs {
@@ -495,7 +497,7 @@ func (ep *ExecutionPlan) ExtractValue(ctx context.Context, buf []byte, out *webs
 }
 
 // PostRun manages and executes commands after provision
-func (ep *ExecutionPlan) PostRun(ctx context.Context,  dryRun bool, buf []byte, out *websocket.Conn) error {
+func (ep *ExecutionPlan) PostRun(ctx context.Context, dryRun bool, buf []byte, out *websocket.Conn) error {
 	stage := ep.CurrentStage
 	script := stage.WorkHome + "/script-" + stage.Name + "-Post-" + RandString(8) + ".sh"
 	file, err := os.OpenFile(script, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755) //Create(script)
@@ -535,7 +537,6 @@ echo $?
 		}
 	}
 
-
 	tp := template.New("script")
 	tp, err = tp.Parse(tContent)
 	if err != nil {
@@ -543,11 +544,10 @@ echo $?
 	}
 
 	// Replace reference value
-	for i, _ := range  ep.CurrentStage.PostRunCommands {
+	for i, _ := range ep.CurrentStage.PostRunCommands {
 		ep.CurrentStage.PostRunCommands[i] = ep.ReplaceAllValueRef(ep.CurrentStage.PostRunCommands[i], dSid, ep.CurrentStage.Name) //replace 'self'
-		ep.CurrentStage.PostRunCommands[i] = ep.ReplaceAllValueRef(ep.CurrentStage.PostRunCommands[i], dSid, "") //replace 'anything else'
+		ep.CurrentStage.PostRunCommands[i] = ep.ReplaceAllValueRef(ep.CurrentStage.PostRunCommands[i], dSid, "")                   //replace 'anything else'
 	}
-
 
 	err = tp.Execute(file, stage)
 	if err != nil {
@@ -568,6 +568,9 @@ echo $?
 // RandString return random string as per length 'n'
 func RandString(n int) string {
 	const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	if n < 0 {
+		n = 0
+	}
 	b := make([]byte, n)
 	for i := range b {
 		b[i] = letterBytes[rand.Int63()%int64(len(letterBytes))]
