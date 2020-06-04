@@ -95,18 +95,20 @@ func (s3 *DiceConfig) LoadTileDev(tile string, version string) (string, error) {
 }
 
 // CleanJunk removes all *.log / *.sh under super/
-func (s3 *DiceConfig)CleanJunk() {
+func (s3 *DiceConfig) CleanJunk() {
 	destDir := s3.WorkHome + "/super"
-	if f, err := os.Stat(destDir); err==nil && f.IsDir() {
+	if f, err := os.Stat(destDir); err == nil && f.IsDir() {
 		for _, suffix := range []string{"*.sh", "*.log"} {
-			files, err := filepath.Glob(destDir+"/"+suffix)
+			files, err := filepath.Glob(destDir + "/" + suffix)
 			if err == nil {
 				for _, f := range files {
 					os.Remove(f)
 				}
 			}
 		}
+		os.RemoveAll(destDir + "/lib")
 	}
+
 }
 func (s3 *DiceConfig) LoadSuper() (string, error) {
 
@@ -151,9 +153,8 @@ func (s3 *DiceConfig) LoadSuperDev() (string, error) {
 	return destDir, Copy(repoDir, destDir)
 }
 
-
 func (s3 *DiceConfig) LoadTestOutput(tile string) ([]byte, error) {
-	testOutputFile := s3.WorkHome + "/super/lib/"+strings.ToLower(tile)+"/test/"+tile+".output"
+	testOutputFile := s3.WorkHome + "/super/lib/" + strings.ToLower(tile) + "/test/" + tile + ".output"
 	f, err := os.Open(testOutputFile)
 	if err != nil {
 		return nil, err

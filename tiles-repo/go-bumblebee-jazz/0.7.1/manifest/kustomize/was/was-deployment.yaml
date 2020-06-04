@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment 
+metadata:
+  name: was
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: was 
+      version: v1
+  template:
+    metadata:
+      labels: 
+        app: was 
+        version: v1
+    spec:
+      terminationGracePeriodSeconds: 5
+      serviceAccountName: was-service-account
+      containers:
+      - name: was-go-bumblebee
+        image:  herochinese/go-bumblebee-was:new-combo-jazz
+        livenessProbe:
+          failureThreshold: 5
+          httpGet:
+            path: /ping
+            port: 9010
+            scheme: HTTP
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5        
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /ping
+            port: 9010
+            scheme: HTTP
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        env:
+          - name: AIR_SERVICE_ENDPOINT
+            value: air:9011
+        ports:
+          - name: http
+            containerPort: 9010
+          - name: websocket
+            containerPort: 9040
+        resources:
+          requests: 
+            cpu: 100m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 128Mi

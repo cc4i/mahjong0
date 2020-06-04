@@ -1,0 +1,18 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: gql
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - gql-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /gql
+    route:
+    - destination:
+        host: gql
+        port:
+          number: 9030

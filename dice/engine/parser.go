@@ -102,7 +102,7 @@ type DeploymentSummary struct {
 
 // DeploymentSummaryOutput deployment.spec.summary.outputs
 type DeploymentSummaryOutput struct {
-	Name           string `json:"name"`
+	Name     string `json:"name"`
 	ValueRef string `json:"valueRef"`
 }
 
@@ -110,18 +110,18 @@ type DeploymentSummaryOutput struct {
 type DeploymentTemplateDetail struct {
 	TileReference string       `json:"tileReference"`
 	TileVersion   string       `json:"tileVersion"`
-	DependsOn string `json:"dependsOn"`
+	DependsOn     string       `json:"dependsOn"`
 	Inputs        []TileInput  `json:"inputs"`
 	Manifests     TileManifest `json:"manifests"`
 }
 
 // Tile specification
 type Tile struct {
-	TileInstance string `json:"tileInstance"`
-	ApiVersion string   `json:"apiVersion"`
-	Kind       string   `json:"kind" valid:"in(Tile)"`
-	Metadata   Metadata `json:"metadata"`
-	Spec       TileSpec `json:"spec"`
+	TileInstance string   `json:"tileInstance"`
+	ApiVersion   string   `json:"apiVersion"`
+	Kind         string   `json:"kind" valid:"in(Tile)"`
+	Metadata     Metadata `json:"metadata"`
+	Spec         TileSpec `json:"spec"`
 }
 
 // Metadata for Tile & Deployment
@@ -152,8 +152,8 @@ type GlobalDetail struct {
 
 // GlobalDetailEnv tile.spec.global.env
 type GlobalDetailEnv struct {
-	Name     string `json:"name"`
-	Value    string `json:"value"`
+	Name  string `json:"name"`
+	Value string `json:"value"`
 	// ValueRef means value from referred field
 	ValueRef string `json:"valueRef"`
 }
@@ -194,8 +194,8 @@ type TileInput struct {
 
 // TileInputOverride tile.spec.input.override
 type TileInputOverride struct {
-	Name          string `json:"name"`
-	Field         string `json:"field"`
+	Name  string `json:"name"`
+	Field string `json:"field"`
 	//InputName     string
 	OverrideValue string
 }

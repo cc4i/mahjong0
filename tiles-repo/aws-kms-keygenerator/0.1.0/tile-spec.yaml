@@ -1,0 +1,45 @@
+apiVersion: mahjong.io/v1alpha1
+kind: Tile
+metadata:
+    name: AWS-KMS
+    category: Application
+    version: 0.1.0
+spec:
+  global:
+    env:
+      - name: SYMMETRIC_KEY_ALIAS
+        valueRef: $(self.inputs.symmetricKeyAlias)
+      - name: ASYMMETRIC_KEY_ALIAS
+        valueRef: $(self.inputs.asymmetricKeyAlias)
+        
+  preRun:
+    stages:
+      - name: CreateMasterKey
+        command: |
+          cd $TILE_HOME/lib
+          ./create-masterkey.sh
+  inputs:
+    - name: symmetricKeyAlias
+      inputType: String
+      require: false
+    - name: asymmetricKeyAlias
+      inputType: String
+      require: false
+
+          
+  outputs:
+    - name: symmetricKeyID
+      outputType: String
+    - name: symmetricKeyArn
+      outputType: String
+    - name: symmetricKeyAlias
+      outputType: String
+    - name: asymmetricKeyID
+      outputType: String
+    - name: asymmetricKeyArn
+      outputType: String
+    - name: asymmetricKeyAlias
+      outputType: String
+
+  notes: []
+

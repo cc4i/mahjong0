@@ -1,0 +1,56 @@
+apiVersion: mahjong.io/v1alpha1
+kind: Tile
+metadata:
+    name: Argocd-With-Existing-EKS
+    category: ContainerApplication
+    version: 1.5.2
+    # Dependent on what kind of vendor service, to determine what input parameters are required. 
+    # For example, dependentOnVendorService: EKS, that's required 'clusterName', 'masterRoleARN'
+    dependentOnVendorService: EKS
+# Specification
+spec:
+  inputs:
+    # String
+    - name: clusterName
+      inputType: String
+      require: true
+    # String
+    - name: masterRoleARN
+      inputType: String
+      require: true
+    # String
+    - name: namespace
+      inputType: String
+      require: false
+      defaultValue: argocd
+
+  manifests:
+    manifestType: K8s
+    namespace: argocd 
+    files:
+      - k8s/install.yaml
+
+          
+  # Ouptputs represnt output value after launched, for 'ContainerApplication' might need leverage specific command to retrive output.
+  outputs:
+    # String
+    - name: user
+      outputType: String
+      defaultValue: admin
+      description: Custom::User
+    # FromCommand
+    - name: password
+      outputType: FromCommand
+      defaultValueCommand: kubectl get pods -n $NAMESPACE -l app.kubernetes.io/name=argocd-server -o name | cut -d'/' -f 2
+      description: Custom::Password        
+    - name: argocdServer
+      outputType: FromCommand
+      defaultValueCommand: kubectl get svc argocd-server -n argocd -o json  |jq -r '.status.loadBalancer.ingress[].hostname'
+      description: Custom::String        
+    - name: argocdBaseUrl
+      outputType: FromCommand
+      defaultValueCommand: echo "https://"`kubectl get svc argocd-server -n argocd -o json  |jq -r '.status.loadBalancer.ingress[].hostname'`"/argocd"
+      description: Custom::String        
+
+  notes: []
+

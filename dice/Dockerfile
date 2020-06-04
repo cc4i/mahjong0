@@ -46,11 +46,13 @@ ENV M_S3_BUCKET_REGION="ap-southeast-1"
 ENV M_S3_BUCKET="cc-mahjong-0"
 ENV M_LOCAL_TILE_REPO="/workspace/tiles-repo"
 
+# Install: bash/git/openssh/curl/nodejs/npm/kubectl/kustomize/kubeseal/awscli/jq
 RUN apk add --no-cache ca-certificates \
         bash \
         git \
         openssh \
         curl \
+        jq \
         nodejs \
         nodejs-npm \
     && wget -q https://storage.googleapis.com/kubernetes-release/release/${KUBE_LATEST_VERSION}/bin/linux/amd64/kubectl -O /usr/local/bin/kubectl \
@@ -61,6 +63,8 @@ RUN apk add --no-cache ca-certificates \
     && chmod +x /usr/local/bin/helm \
     && wget https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv3.5.5/kustomize_v3.5.5_linux_amd64.tar.gz -O - | tar -xzO kustomize > /usr/local/bin/kustomize \
     && chmod +x /usr/local/bin/kustomize \
+    && wget https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.12.4/kubeseal-linux-amd64 -O /usr/local/bin/kubeseal \
+    && chmod +x /usr/local/bin/kubeseal \
     && curl -sL https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub -o /etc/apk/keys/sgerrand.rsa.pub \
     && curl -sLO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VER}/glibc-${GLIBC_VER}.apk \
     && curl -sLO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VER}/glibc-bin-${GLIBC_VER}.apk \

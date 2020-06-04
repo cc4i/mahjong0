@@ -10,7 +10,7 @@ spec:
           inputType: String
           description: 'CIDR for VPC'
           defaultValue: '10.0.0.0/16'
-          require: true
+          require: false
 
     outputs:
         - name: baseVpc
@@ -43,7 +43,12 @@ spec:
         - name: privateSubnetId2
           outputType: String
           description: AWS::EC2::Subnet.ID
-
+        - name: isolatedSubnetId1
+          outputType: String
+          description: AWS::EC2::Subnet.ID
+        - name: isolatedSubnetId2
+          outputType: String
+          description: AWS::EC2::Subnet.ID          
     notes: 
       - 'Resources: vpc, internet gateway, subnets, nat, route table, EIP'
 

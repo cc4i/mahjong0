@@ -25,7 +25,7 @@ manager: fmt vet
 		  -osarch=linux/amd64 \
 		  -osarch=darwin/386 \
 		  -osarch=darwin/amd64 \
-		  -osarch=windows/amd64
+		  -osarch=windows/amd64 \
 		  -output=dist/mctl_{{.OS}}_{{.Arch}} \
 		  -ldflags="-X 'dice/utils.ServerVersion=${VERSION}' -X 'dice/utils.GitCommit=${GIT_COMMIT}' -X 'dice/utils.Built=${BUILT}'"
 	cd dist/ && gzip *
