@@ -1,6 +1,7 @@
 package main
 
 import (
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"mctl/cmd/deploy"
 	"mctl/cmd/initial"
@@ -8,6 +9,12 @@ import (
 	"mctl/cmd/validate"
 	"mctl/cmd/version"
 )
+
+func init() {
+	log.SetFormatter(&log.TextFormatter{
+		ForceColors: true,
+	})
+}
 
 func main() {
 	var cmd = &cobra.Command{Use: "mctl"}

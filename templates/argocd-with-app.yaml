@@ -16,7 +16,7 @@ spec:
           - name: capacity
             inputValue: 2
           - name: capacityInstance
-            inputValue: m5.large
+            inputValue: c5.large
           - name: version
             inputValue: 1.16
         manifests:

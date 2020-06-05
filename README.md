@@ -15,7 +15,7 @@ People can use Hu to quickly spin up full solutions or resources on AWS with ind
 - Install [Docker](https://docs.docker.com/desktop/#download-and-install)
 - Install [CDK](https://github.com/aws/aws-cdk)
 - [Setup AWS configuration and credential file](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html)
-- Download latest [mctl](https://github.com/cc4i/mahjong0/releases) [ Linux / Darwin / Windows ]
+- Download latest [mj](https://github.com/cc4i/mahjong0/releases) [ Linux / Darwin / Windows ]
 
 ## Quick Start
 
@@ -43,11 +43,11 @@ docker run -it -v ~/mywork/mylabs/csdc/mahjong-0/tiles-repo:/workspace/tiles-rep
     herochinese/dice
 
 # Initial a Tile project with your favorite name
-mctl init tile -n sample-tile
+mj init tile -n sample-tile
 
 # Deploy Tiles with your very first try. 
 cd sample-tile
-mctl deploy -f ./eks-simple.yaml
+mj deploy -f ./eks-simple.yaml
 
 # Make your own bespoke Tiles ...
 
