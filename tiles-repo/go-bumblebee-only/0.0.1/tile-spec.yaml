@@ -32,15 +32,14 @@ spec:
           curl -H "Authorization: token $ACCESS_TOKEN" --data '{"name":"'$REPO_NAME'"}' https://api.github.com/user/repos
       - name: SyncConttent2Repository
         command: |
-          cd $WORK_HOME
+          cd $TILE_HOME
           git clone https://$ACCESS_TOKEN:x-oauth-basic@github.com/$GITHUB_USER/$REPO_NAME.git
           cd $REPO_NAME
-          cp -r $TILE_HOME/* .
+          cp -r ../kustomize .
           git add -A
           git commit -m "first commit"
           git config --global user.email "robot@codebuild.aws"
           git config --global user.name "robot"
-          git remote add origin git@github.com:$GITHUB_USER/$REPO_NAME.git
           git push -u origin master
       - name: RegisterWithArgoCD
         command: |

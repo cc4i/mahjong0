@@ -88,3 +88,4 @@ mctl/mctl
 **/dist
 mctl/sample-tile
 role.arn
+templates/demo.yaml

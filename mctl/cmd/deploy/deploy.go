@@ -1,9 +1,9 @@
 package deploy
 
 import (
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"io/ioutil"
-	"log"
 	"mctl/cmd"
 )
 

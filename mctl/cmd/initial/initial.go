@@ -4,8 +4,8 @@ import (
 	"bufio"
 	"crypto/tls"
 	"github.com/iancoleman/strcase"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"log"
 	"mctl/cmd"
 	"net/http"
 	"os"
@@ -102,7 +102,7 @@ func tileFunc(c *cobra.Command, args []string) {
 
 func deploymentFunc(c *cobra.Command, args []string) {
 
-	deploymentExample:=`
+	deploymentExample := `
 apiVersion: mahjong.io/v1alpha1
 kind: Deployment 
 metadata:
@@ -141,7 +141,7 @@ spec:
 `
 	log.Println("Generating simple example for deployment ... ...")
 	file, err := os.Create("simple-eks.yaml")
-	if err!=nil{
+	if err != nil {
 		log.Printf("Generating simple example for deployment was failed, with error: %s\n", err)
 	}
 	defer file.Close()
