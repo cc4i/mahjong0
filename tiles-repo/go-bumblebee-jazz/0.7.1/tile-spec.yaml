@@ -58,6 +58,9 @@ spec:
           curl -s -k $(self.inputs.argocdBaseUrl)/api/v1/applications -H "Authorization: Bearer $ARGOCD_TOKEN" -d "@redis.json"
           curl -s -k $(self.inputs.argocdBaseUrl)/api/v1/applications -H "Authorization: Bearer $ARGOCD_TOKEN" -d "@was.json"
 
+          # add production cluster
+          # add production deployment
+
   inputs:
     - name: gitAccessToken
       inputType: String

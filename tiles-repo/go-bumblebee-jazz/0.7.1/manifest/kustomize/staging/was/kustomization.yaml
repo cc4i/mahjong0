@@ -6,13 +6,7 @@
 namespace: go-bumblebee
 
 resources:
-- ns.yaml
-- air
-- front
-- gql
-- locust
-- redis
-- was
+- ../../was
 
 
 # all with following *kustomization*
