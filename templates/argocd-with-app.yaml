@@ -31,27 +31,27 @@ spec:
             inputValue: <GITHUB TOKEN>
           - name: argocdNamespace
             # <tileInstance.outputs.name>
-            valueRef: $(tileArgocd0152A.outputs.installedNamespace) 
+            value: $(tileArgocd0152A.outputs.installedNamespace) 
           - name: argocdUser
-            valueRef: $(tileArgocd0152A.outputs.user)
+            value: $(tileArgocd0152A.outputs.user)
           - name: argocdPassword
-            valueRef: $(tileArgocd0152A.outputs.password)
+            value: $(tileArgocd0152A.outputs.password)
 
   summary:
       description: Argo CD has been installed in $(tileArgocd0152A.outputs.clusterName) with success and checking out following notes to get started.
       outputs:
         - name: EKS Cluster Name
-          valueRef: $(tileArgocd0152A.outputs.clusterName)
+          value: $(tileArgocd0152A.outputs.clusterName)
         - name: Master role arn for EKS Cluster
-          valueRef: $(tileArgocd0152A.outputs.masterRoleARN)
+          value: $(tileArgocd0152A.outputs.masterRoleARN)
         - name: The API endpoint EKS Cluster
-          valueRef: $(tileArgocd0152A.outputs.clusterEndpoint)
+          value: $(tileArgocd0152A.outputs.clusterEndpoint)
         - name: ArgoCD admin
-          valueRef: $(tileArgocd0152A.outputs.user)
+          value: $(tileArgocd0152A.outputs.user)
         - name: ArgoCD password
-          valueRef: $(tileArgocd0152A.outputs.password)
+          value: $(tileArgocd0152A.outputs.password)
         - name: Application Repository
-          valueRef: $(goBumblebeeOnly001.outputs.appRepo)
+          value: $(goBumblebeeOnly001.outputs.appRepo)
         
       notes:
         - 1.Get all services information, 

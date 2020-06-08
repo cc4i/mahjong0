@@ -5,23 +5,29 @@ import ssm = require('@aws-cdk/aws-ssm');
 import ec2 = require('@aws-cdk/aws-ec2');
 
 export interface AWSAuroraMysqlProps {
-  vpc: ec2.IVpc;
-  username: string;
-  dbname: string;
+  vpc: ec2.Vpc;
+  masterUser: string;
+  clusterIdentifier: string;
+  defaultDatabaseName?: string;
 
 }
 
 export class AWSAuroraMysql extends cdk.Construct {
 
+  public readonly clusterIdentifier: string;
+  public readonly clusterEndpoint: string;
+  public readonly clusterReadEndpoint: string;
+  public readonly defaultDatabaseName: string;
 
   constructor(scope: cdk.Construct, id: string, props: AWSAuroraMysqlProps) {
     super(scope, id);
-
+    let uuid = Math.random().toString(36).substr(2,5);
+    
     const databaseCredentialsSecret = new secretsManager.Secret(this, 'DBCredentialsSecret', {
-      secretName: props.dbname+`-aurora-mysql-credentials`,
+      secretName: props.clusterIdentifier+`-aurora-mysql-credentials`,
       generateSecretString: {
         secretStringTemplate: JSON.stringify({
-          username: props.username,
+          username: props.masterUser,
         }),
         excludePunctuation: true,
         includeSpace: false,
@@ -30,24 +36,42 @@ export class AWSAuroraMysql extends cdk.Construct {
     });
 
     new ssm.StringParameter(this, 'DBCredentialsArn', {
-      parameterName: props.dbname+`-aurora-mysql-credentials-arn`,
+      parameterName: props.clusterIdentifier+`-aurora-mysql-credentials-arn`,
       stringValue: databaseCredentialsSecret.secretArn,
     });
 
     const mysql = new rds.DatabaseCluster(scope, "AuroraMySQL", {
+      clusterIdentifier: props.clusterIdentifier,
       engine: rds.DatabaseClusterEngine.AURORA_MYSQL,
       engineVersion: '2.07.2',
       instanceProps: {
         instanceType: ec2.InstanceType.of(ec2.InstanceClass.R5, ec2.InstanceSize.LARGE),
+        vpcSubnets: {
+          subnetType: ec2.SubnetType.PRIVATE
+        },
         vpc: props.vpc,
       },
       masterUser: {
         username: databaseCredentialsSecret.secretValueFromJson('username').toString(),
         password: databaseCredentialsSecret.secretValueFromJson('password'),
 
-      }
-      
+      },
+      defaultDatabaseName: props.defaultDatabaseName || uuid
     })
+
+    
+    
+    new cdk.CfnOutput(this,"clusterIdentifier", {value: mysql.clusterIdentifier})
+    new cdk.CfnOutput(this,"clusterEndpoint", {value: mysql.clusterEndpoint.hostname +":"+ mysql.clusterEndpoint.port})
+    new cdk.CfnOutput(this,"clusterReadEndpoint", {value: mysql.clusterReadEndpoint.hostname +":"+ mysql.clusterReadEndpoint.port})
+    new cdk.CfnOutput(this,"defaultDatabaseName", {value: props.defaultDatabaseName || uuid})
+
+    this.clusterIdentifier = mysql.clusterIdentifier;
+    this.clusterEndpoint = mysql.clusterEndpoint.hostname +":"+ mysql.clusterEndpoint.port;
+    this.clusterReadEndpoint = mysql.clusterReadEndpoint.hostname +":"+ mysql.clusterReadEndpoint.port;
+    this.defaultDatabaseName = props.defaultDatabaseName || uuid
+    
+    
 
   }
 }

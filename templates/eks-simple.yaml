@@ -21,14 +21,14 @@ spec:
     description: 
     outputs:
       - name: EKS Cluster Name
-        valueRef: $(tileEks0005.outputs.clusterName)
+        value: $(tileEks0005.outputs.clusterName)
       - name: Master role arn for EKS Cluster
-        valueRef: $(tileEks0005.outputs.masterRoleARN)
+        value: $(tileEks0005.outputs.masterRoleARN)
       - name: The API endpoint EKS Cluster
-        valueRef: $(tileEks0005.outputs.clusterEndpoint)
+        value: $(tileEks0005.outputs.clusterEndpoint)
       - name: Instance type of worker node
-        valueRef: $(tileEks0005.outputs.capacityInstance)
+        value: $(tileEks0005.outputs.capacityInstance)
       - name: Default capacity of worker node
-        valueRef: $(tileEks0005.outputs.capacity)
+        value: $(tileEks0005.outputs.capacity)
 
     notes: []

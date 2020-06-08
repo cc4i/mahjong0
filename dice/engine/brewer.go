@@ -137,7 +137,7 @@ func (ep *ExecutionPlan) GenerateSummary(ctx context.Context, out *websocket.Con
 	}
 	SR(out, []byte("\n"))
 	for _, ot := range ep.OriginDeployment.Spec.Summary.Outputs {
-		SR(out, []byte(fmt.Sprintf("%s = %s\n", ot.Name, ep.ReplaceAll(ot.ValueRef, dSid, kv))))
+		SR(out, []byte(fmt.Sprintf("%s = %s\n", ot.Name, ep.ReplaceAll(ot.Value, dSid, kv))))
 	}
 	SR(out, []byte("\n"))
 	for _, n := range ep.OriginDeployment.Spec.Summary.Notes {

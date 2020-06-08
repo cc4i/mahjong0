@@ -8,9 +8,9 @@ spec:
   global:
     env:
       - name: SYMMETRIC_KEY_ALIAS
-        valueRef: $(self.inputs.symmetricKeyAlias)
+        value: $(self.inputs.symmetricKeyAlias)
       - name: ASYMMETRIC_KEY_ALIAS
-        valueRef: $(self.inputs.asymmetricKeyAlias)
+        value: $(self.inputs.asymmetricKeyAlias)
         
   preRun:
     stages:

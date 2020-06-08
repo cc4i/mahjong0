@@ -42,7 +42,7 @@ spec:
     env:
       - name: 
         value:
-        valueRef: 
+        value: 
   preRun:
     stages:
       - name: 

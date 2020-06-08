@@ -3,15 +3,16 @@ package initial
 import (
 	"bufio"
 	"crypto/tls"
-	"github.com/iancoleman/strcase"
-	log "github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
 	"mctl/cmd"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"text/template"
+
+	"github.com/iancoleman/strcase"
+	log "github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
 )
 
 var Init = &cobra.Command{
@@ -126,15 +127,15 @@ spec:
     description: 
     outputs:
       - name: EKS Cluster Name
-        valueRef: $(tileEKS005.outputs.clusterName)
+        value: $(tileEKS005.outputs.clusterName)
       - name: Master role arn for EKS Cluster
-        valueRef: $(tileEKS005.outputs.masterRoleARN)
+        value: $(tileEKS005.outputs.masterRoleARN)
       - name: The API endpoint EKS Cluster
-        valueRef: $(tileEKS005.outputs.clusterEndpoint)
+        value: $(tileEKS005.outputs.clusterEndpoint)
       - name: Instance type of worker node
-        valueRef: $(tileEKS005.outputs.capacityInstance)
+        value: $(tileEKS005.outputs.capacityInstance)
       - name: Default capacity of worker node
-        valueRef: $(tileEKS005.outputs.capacity)
+        value: $(tileEKS005.outputs.capacity)
 
     notes: []
 

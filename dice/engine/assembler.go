@@ -282,9 +282,6 @@ func (d *Deployment) PullTile(ctx context.Context,
 			} else {
 				deploymentInputs[dt.TileReference+"-"+input.Name] = []string{input.InputValue}
 			}
-			if input.ValueRef != "" {
-				deploymentInputs[dt.TileReference+"-"+input.Name] = []string{input.ValueRef}
-			}
 		}
 	}
 	////
@@ -696,18 +693,12 @@ func (d *Deployment) GenerateExecutePlan(ctx context.Context, out *websocket.Con
 				// Inject Global environment variables
 				for _, e := range tile.Spec.Global.Env {
 					if e.Value != "" {
-						stage.InjectedEnv = append(stage.InjectedEnv, fmt.Sprintf("export %s=%s", e.Name, e.Value))
-						//ts.PredefinedEnv[e.Name] = e.Value
-					} else if e.Value == "" && e.ValueRef != "" {
-						//if v, ok := ts.InputParameters[e.ValueRef]; ok {
-						if v, err := ValueRef(dSid, e.ValueRef, ts.TileInstance); err != nil {
-							log.Errorf("Inject Global environment : %s  was failed: %s\n", e.ValueRef, err.Error())
+						if v, err := ValueRef(dSid, e.Value, ts.TileInstance); err != nil {
+							log.Errorf("Inject Global environment : %s  was failed: %s\n", e.Value, err.Error())
 						} else {
 							stage.InjectedEnv = append(stage.InjectedEnv, fmt.Sprintf("export %s=%s", e.Name, v))
-							//ts.PredefinedEnv[e.Name] = v
 						}
 
-						//}
 					}
 				}
 				// Adding PreRun's commands into stage.Preparation

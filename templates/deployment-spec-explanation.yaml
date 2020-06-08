@@ -34,8 +34,7 @@ spec:
     description: 
     outputs:
       - name: 
-        tileReference: 
-        outputValueRef: 
+        value: 
    notes: []        
     # Nework:
     #       # {{ vpc/ cidr / subnet / internet gateway / NAT / ... }}

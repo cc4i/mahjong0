@@ -11,7 +11,7 @@ spec:
       - name: GITHUB_USER
         value: cc4i
       - name: GIT_ACCESS_TOKEN
-        valueRef: $(self.inputs.gitAccessToken)
+        value: $(self.inputs.gitAccessToken)
       - name: APP_REPO
         value: go-bumblebee
       - name: APP_BRANCH
@@ -19,7 +19,7 @@ spec:
       - name: APP_CONF_REPO
         value: go-bumblebee-jazz-config
       - name: KMS_KEY_ID
-        valueRef: $(self.inputs.kmsKeyID)
+        value: $(self.inputs.kmsKeyID)
 
   preRun:
     stages:

@@ -91,17 +91,17 @@ spec:
         tileVersion: 1.5.4
         inputs:
           - name: clusterName
-            valueRef: $(tileEksWithSpotProd.outputs.clusterName)
+            value: $(tileEksWithSpotProd.outputs.clusterName)
           - name: masterRoleARN
-            valueRef: $(tileEksWithSpotProd.outputs.masterRoleARN)
+            value: $(tileEksWithSpotProd.outputs.masterRoleARN)
       tileIstio0ForStage:
         tileReference: Istio0
         tileVersion: 1.5.4
         inputs:
           - name: clusterName
-            valueRef: $(tileEksWithSpotStage.outputs.clusterName)
+            value: $(tileEksWithSpotStage.outputs.clusterName)
           - name: masterRoleARN
-            valueRef: $(tileEksWithSpotStage.outputs.masterRoleARN)
+            value: $(tileEksWithSpotStage.outputs.masterRoleARN)
       
       # ArgoCD
       tileArgocdWithExsitingEks152:
@@ -110,9 +110,9 @@ spec:
         dependsOn: tileEksWithSpotStage
         inputs:
           - name: clusterName
-            valueRef: $(tileEksWithSpotStage.outputs.clusterName)         
+            value: $(tileEksWithSpotStage.outputs.clusterName)         
           - name: masterRoleARN
-            valueRef: $(tileEksWithSpotStage.outputs.masterRoleARN) 
+            value: $(tileEksWithSpotStage.outputs.masterRoleARN) 
 
       # Inject DEMO Applications & setup CI+CD
       tileGoBumblebeeJazz071:
@@ -122,19 +122,19 @@ spec:
           - name: gitAccessToken
             inputValue: GITHUB-TOKEN
           - name: kmsKeyID
-            valueRef: $(tileAwsKmsKeyGenerator010.outputs.symmetricKeyID)
+            value: $(tileAwsKmsKeyGenerator010.outputs.symmetricKeyID)
           - name: argocdBaseUrl
-            valueRef: $(tileArgocdWithExsitingEks152.outputs.argocdBaseUrl)
+            value: $(tileArgocdWithExsitingEks152.outputs.argocdBaseUrl)
           - name: argocdUser
-            valueRef: $(tileArgocdWithExsitingEks152.outputs.user)
+            value: $(tileArgocdWithExsitingEks152.outputs.user)
           - name: argocdPassword
-            valueRef: $(tileArgocdWithExsitingEks152.outputs.password)
+            value: $(tileArgocdWithExsitingEks152.outputs.password)
           - name: prodClusterCertificateAuthorityData
-            valueRef: $(tileEksWithSpotProd.outputs.clusterCertificateAuthorityData)
+            value: $(tileEksWithSpotProd.outputs.clusterCertificateAuthorityData)
           - name: prodClusterArn
-            valueRef: $(tileEksWithSpotProd.outputs.clusterArn)
+            value: $(tileEksWithSpotProd.outputs.clusterArn)
           - name: prodClusterEndpoint
-            valueRef: $(tileEksWithSpotProd.outputs.clusterEndpoint)
+            value: $(tileEksWithSpotProd.outputs.clusterEndpoint)
 summary:
       description: |
         ++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -142,23 +142,23 @@ summary:
         ++++++++++++++++++++++++++++++++++++++++++++++++++++
       outputs:
         - name: EKS Cluster for Production
-          valueRef: $(tileEksWithSpotProd.outputs.clusterName)
+          value: $(tileEksWithSpotProd.outputs.clusterName)
         - name: Master role for Production Cluster
-          valueRef: $(tileEksWithSpotProd.outputs.masterRoleARN)
+          value: $(tileEksWithSpotProd.outputs.masterRoleARN)
         - name: Endpoint for Production Cluster
-          valueRef: $(tileEksWithSpotProd.outputs.clusterEndpoint)
+          value: $(tileEksWithSpotProd.outputs.clusterEndpoint)
         - name: EKS Cluster for Staging
-          valueRef: $(tileEksWithSpotStage.outputs.clusterName)
+          value: $(tileEksWithSpotStage.outputs.clusterName)
         - name: Master role for Staging Cluster
-          valueRef: $(tileEksWithSpotStage.outputs.masterRoleARN)
+          value: $(tileEksWithSpotStage.outputs.masterRoleARN)
         - name: Endpoint for Staging Cluster
-          valueRef: $(tileEksWithSpotStage.outputs.clusterEndpoint)
+          value: $(tileEksWithSpotStage.outputs.clusterEndpoint)
         - name: Endpoint for AgroCD
-          valueRef: $(tileArgocdWithExsitingEks152.outputs.argocdBaseUrl)
+          value: $(tileArgocdWithExsitingEks152.outputs.argocdBaseUrl)
         - name: Administrator for AgroCD
-          valueRef: $(tileArgocdWithExsitingEks152.outputs.user)
+          value: $(tileArgocdWithExsitingEks152.outputs.user)
         - name: Password for AgroCD Administrator
-          valueRef: $(tileArgocdWithExsitingEks152.outputs.password)
+          value: $(tileArgocdWithExsitingEks152.outputs.password)
         
       notes: []
  
