@@ -129,6 +129,12 @@ spec:
             valueRef: $(tileArgocdWithExsitingEks152.outputs.user)
           - name: argocdPassword
             valueRef: $(tileArgocdWithExsitingEks152.outputs.password)
+          - name: prodClusterCertificateAuthorityData
+            valueRef: $(tileEksWithSpotProd.outputs.clusterCertificateAuthorityData)
+          - name: prodClusterArn
+            valueRef: $(tileEksWithSpotProd.outputs.clusterArn)
+          - name: prodClusterEndpoint
+            valueRef: $(tileEksWithSpotProd.outputs.clusterEndpoint)
 summary:
       description: |
         ++++++++++++++++++++++++++++++++++++++++++++++++++++
