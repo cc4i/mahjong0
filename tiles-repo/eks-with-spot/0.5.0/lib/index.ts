@@ -39,6 +39,7 @@ export class EksWithSpot extends cdk.Construct {
   public readonly nodesRoleARN: string;
   public capacityInstance: string;
   public controlPlaneSG: ec2.SecurityGroup;
+  public readonly clusterCertificateAuthorityData: string;
 
   constructor(scope: cdk.Construct, id: string, props: EksSpotProps) {
     super(scope, id);
@@ -132,6 +133,7 @@ export class EksWithSpot extends cdk.Construct {
     new cdk.CfnOutput(scope,"autoScalingGroupDesiredCapacity", {value: spotNodeGroup.autoScalingGroup.desiredCapacity || "" })
     new cdk.CfnOutput(scope,"nodesRoleARN", {value: spotNodeGroup.nodesRole.roleArn})
     new cdk.CfnOutput(scope,"capacityInstance", {value: this.capacityInstance})
+    new cdk.CfnOutput(scope,"clusterCertificateAuthorityData", {value: cluster.clusterCertificateAuthorityData})
     
     this.regionOfCluster = process.env.CDK_DEFAULT_REGION || "";
     this.clusterName = cluster.clusterName;
@@ -144,9 +146,7 @@ export class EksWithSpot extends cdk.Construct {
     this.autoScalingGroupMinSize = spotNodeGroup.autoScalingGroup.minSize;
     this.autoScalingGroupDesiredCapacity = spotNodeGroup.autoScalingGroup.desiredCapacity || "";
     this.nodesRoleARN = spotNodeGroup.nodesRole.roleArn;
-    
-    cluster.clusterEndpoint
-    cluster.clusterCertificateAuthorityData
+    this.clusterCertificateAuthorityData = cluster.clusterCertificateAuthorityData
 
   }
 

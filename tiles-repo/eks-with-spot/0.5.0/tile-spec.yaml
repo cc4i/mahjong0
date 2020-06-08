@@ -116,6 +116,10 @@ spec:
       outputType: String
       description: AWS::EKS::Cluster.Endpoint
     # String
+    - name: clusterCertificateAuthorityData
+      outputType: String
+      description: AWS::EKS::Cluster.clusterCertificateAuthorityData
+    # String
     - name: masterRoleARN
       outputType: String
       description: AWS::IAM::Role.ARN
@@ -181,9 +185,4 @@ spec:
   notes:
     - "Tag public subnets with 'kubernetes.io/role/elb=1'"
     - "Tag priavte subnets with 'kubernetes.io/role/internal-elb=1'"
-    - |
-      TODO for next relaese : 
-        1. install CSI driver for EBS/EFS
-        2. install spot instance handler
-        3. install Cluster autoscaler
 

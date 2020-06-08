@@ -1,0 +1,14 @@
+{
+
+  "config": {
+
+    "tlsClientConfig": {
+      "caData": "__caData__",
+      "insecure": false
+    }
+
+  },
+  "name": "__name__",
+  "server": "__server__"
+
+}

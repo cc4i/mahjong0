@@ -6,12 +6,12 @@
     "spec": {
       "source": {
         "repoURL": "https://github.com/cc4i/go-bumblebee",
-        "path": "manifests/kustomize",
+        "path": "manifests/kustomize/production",
         "targetRevision": "new-combo-jazz"
       },
       "destination": {
-        "server": "https://kubernetes.default.svc",
-        "namespace": "go-bumblebee-all"
+        "server": "__server__",
+        "namespace": "go-bumblebee"
       },
       "project": "default",
       "syncPolicy": {
