@@ -32,6 +32,7 @@ type WsWorker interface {
 
 // WsHandler handle all coming request from WebSocket
 func WsHandler(ctx context.Context, c *gin.Context) {
+	log.Printf("%s connected to %s \n", c.Request.RemoteAddr, c.Request.RequestURI)
 	ws, err := upGrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		log.Print("upgrade error:", err)

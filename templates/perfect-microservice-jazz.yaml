@@ -84,7 +84,35 @@ spec:
               - $cdk(tileEksWithSpotStage.Network0.privateSubnetId2)
           - name: redisClusterName
             inputValue: redis-cluster-stage
+      # AuroraMySQL for Production
+      tileAuroraMysqlProd:
+        tileReference: AWS-Aurora-Mysql
+        tileVersion: 2.07.2
+        dependsOn: tileNetwork0
+        inputs:
+          - name: vpc
+            inputValue: $cdk(tileEksWithSpotProd.Network0.baseVpc)        
+          - name: clusterIdentifier
+            inputValue: aurora-mysql-prod        
+          - name: masterUser
+            inputValue: admin        
+          - name: defaultDatabaseName
+            inputValue: testDb     
 
+      # AuroraMySQL for Stage
+      tileAuroraMysqlStage:
+        tileReference: AWS-Aurora-Mysql
+        tileVersion: 2.07.2
+        dependsOn: tileEksWithSpotStage
+        inputs:
+          - name: vpc
+            inputValue: $cdk(tileEksWithSpotStage.Network0.baseVpc)        
+          - name: clusterIdentifier
+            inputValue: aurora-mysql-stage       
+          - name: masterUser
+            inputValue: admin        
+          - name: defaultDatabaseName
+            inputValue: testDb   
       # Istio 
       tileIstio0ForProduction:
         tileReference: Istio0

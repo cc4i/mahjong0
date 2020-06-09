@@ -1,7 +1,7 @@
 apiVersion: mahjong.io/v1alpha1
 kind: Tile
 metadata:
-    name: AWS-Aurora-MySQL
+    name: AWS-Aurora-Mysql
     category: Database
     version: 2.07.2
 spec:

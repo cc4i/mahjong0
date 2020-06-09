@@ -512,7 +512,7 @@ func array2String(array []string, inputType string) string {
 	switch inputType {
 	case String.IOTString() + "[]":
 		for _, d := range array {
-			if strings.HasPrefix(d, "$(") {
+			if strings.HasPrefix(d, "$(") || strings.HasPrefix(d, "$cdk(") {
 				val = val + d + ","
 			} else {
 				val = val + "'" + d + "',"
@@ -532,7 +532,7 @@ func str2string(str string, inputType string) string {
 	val := ""
 	switch inputType {
 	case String.IOTString():
-		if strings.HasPrefix(str, "$(") {
+		if strings.HasPrefix(str, "$(") || strings.HasPrefix(str, "$cdk(") {
 			val = str
 		} else {
 			val = "'" + str + "'"

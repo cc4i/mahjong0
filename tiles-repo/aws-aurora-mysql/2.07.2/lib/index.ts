@@ -40,10 +40,18 @@ export class AWSAuroraMysql extends cdk.Construct {
       stringValue: databaseCredentialsSecret.secretArn,
     });
 
+    const p = new rds.ClusterParameterGroup(scope, "ClusterParameterGroup", {
+      family: "aurora-mysql5.7",
+      parameters: {
+        "max_connections": "200"
+      }
+    })
+
     const mysql = new rds.DatabaseCluster(scope, "AuroraMySQL", {
       clusterIdentifier: props.clusterIdentifier,
       engine: rds.DatabaseClusterEngine.AURORA_MYSQL,
-      engineVersion: '2.07.2',
+      engineVersion: '5.7.mysql_aurora.2.08.0',
+      parameterGroup: p,
       instanceProps: {
         instanceType: ec2.InstanceType.of(ec2.InstanceClass.R5, ec2.InstanceSize.LARGE),
         vpcSubnets: {
@@ -58,7 +66,7 @@ export class AWSAuroraMysql extends cdk.Construct {
       },
       defaultDatabaseName: props.defaultDatabaseName || uuid
     })
-
+    mysql.node.addDependency(p)
     
     
     new cdk.CfnOutput(this,"clusterIdentifier", {value: mysql.clusterIdentifier})
