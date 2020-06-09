@@ -20,7 +20,7 @@ manager: fmt vet
 		  -osarch=darwin/386 \
 		  -osarch=darwin/amd64 \
 		  -osarch=windows/amd64 \
-		  -output=dist/mj_{{.OS}}_{{.Arch}} \
+		  -output=dist/mctl_{{.OS}}_{{.Arch}} \
 		  -ldflags="-X 'mctl/cmd/version.ClientVersion=${VERSION}' -X 'mctl/cmd/version.GitCommit=${GIT_COMMIT}' -X 'mctl/cmd/version.Built=${BUILT}'"
 	cd dist/ && gzip *
 
