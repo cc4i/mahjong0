@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-type s3Functions interface {
+type S3Functions interface {
 	LoadTile(tile string, version string) (string, error)
 	LoadTileDev(tile string, version string) (string, error)
 	LoadSuper() (string, error)
@@ -28,15 +28,15 @@ type HttpClient interface {
 
 var Client HttpClient
 
-func (s3 *DiceConfig) LoadTile(tile string, version string) (string, error) {
-	if s3.Mode == "dev" {
-		dest, err := s3.LoadTileDev(tile, version)
+func (dc *DiceConfig) LoadTile(tile string, version string, folder string) (string, error) {
+	if dc.Mode == "dev" {
+		dest, err := dc.LoadTileDev(tile, version, folder)
 		if err != nil {
-			dest, err = s3.LoadTileS3(tile, version)
+			dest, err = dc.LoadTileS3(tile, version, folder)
 		}
 		return dest, err
 	} else {
-		return s3.LoadTileS3(tile, version)
+		return dc.LoadTileS3(tile, version, folder)
 	}
 }
 
@@ -49,18 +49,18 @@ func initHttpClient() {
 
 }
 
-func (s3 *DiceConfig) LoadTileS3(tile string, version string) (string, error) {
+func (dc *DiceConfig) LoadTileS3(tile string, version string, folder string) (string, error) {
 	//https://<bucket-name>.s3-<region>.amazonaws.com/tiles-repo/<tile name>/<tile version>/<tile name>.tgz
 	tileUrl := fmt.Sprintf("https://%s.s3-%s.amazonaws.com/tiles-repo/%s/%s/%s.tgz",
-		s3.BucketName,
-		s3.Region,
+		dc.BucketName,
+		dc.Region,
 		strings.ToLower(tile),
 		version,
 		strings.ToLower(tile))
 	if Client == nil {
 		initHttpClient()
 	}
-	destDir := s3.WorkHome + "/super/lib/" + strings.ToLower(tile)
+	destDir := dc.WorkHome + folder + "/lib/" + strings.ToLower(tile)
 	tileSpecFile := destDir + "/tile-spec.yaml"
 
 	req, err := http.NewRequest(http.MethodGet, tileUrl, nil)
@@ -74,13 +74,13 @@ func (s3 *DiceConfig) LoadTileS3(tile string, version string) (string, error) {
 
 }
 
-func (s3 *DiceConfig) LoadTileDev(tile string, version string) (string, error) {
+func (dc *DiceConfig) LoadTileDev(tile string, version string, folder string) (string, error) {
 
-	repoDir := s3.LocalRepo
+	repoDir := dc.LocalRepo
 	srcDir := repoDir + "/" + strings.ToLower(tile) + "/" + strings.ToLower(version)
-	destDir := s3.WorkHome + "/super/lib/" + strings.ToLower(tile)
+	destDir := dc.WorkHome + folder + "/lib/" + strings.ToLower(tile)
 	tileSpecFile := destDir + "/tile-spec.yaml"
-	log.Printf("Load Tile < %s - %s > ... from < %s >\n", tile, version, s3.LocalRepo)
+	log.Printf("Load Tile < %s - %s > ... from < %s >\n", tile, version, dc.LocalRepo)
 
 	return tileSpecFile, Copy(srcDir, destDir,
 		Options{
@@ -94,9 +94,9 @@ func (s3 *DiceConfig) LoadTileDev(tile string, version string) (string, error) {
 
 }
 
-// CleanJunk removes all *.log / *.sh under super/
-func (s3 *DiceConfig) CleanJunk() {
-	destDir := s3.WorkHome + "/super"
+// CleanJunk removes all *.log / *.sh under super-*/
+func (dc *DiceConfig) CleanJunk(folder string) {
+	destDir := dc.WorkHome + folder
 	if f, err := os.Stat(destDir); err == nil && f.IsDir() {
 		for _, suffix := range []string{"*.sh", "*.log"} {
 			files, err := filepath.Glob(destDir + "/" + suffix)
@@ -110,31 +110,31 @@ func (s3 *DiceConfig) CleanJunk() {
 	}
 
 }
-func (s3 *DiceConfig) LoadSuper() (string, error) {
+func (dc *DiceConfig) LoadSuper(folder string) (string, error) {
 
-	s3.CleanJunk()
-	if s3.Mode == "dev" {
-		dest, err := s3.LoadSuperDev()
+	dc.CleanJunk(folder)
+	if dc.Mode == "dev" {
+		dest, err := dc.LoadSuperDev(folder)
 		if err != nil {
-			dest, err = s3.LoadSuperS3()
+			dest, err = dc.LoadSuperS3(folder)
 		}
 		return dest, err
 	} else {
-		return s3.LoadSuperS3()
+		return dc.LoadSuperS3(folder)
 	}
 }
 
-func (s3 *DiceConfig) LoadSuperS3() (string, error) {
+func (dc *DiceConfig) LoadSuperS3(folder string) (string, error) {
 	//https://<bucket-name>.s3-<region>.amazonaws.com/tiles-repo/<tile name>/<tile version>/<tile name>.tgz
 	tileUrl := fmt.Sprintf("https://%s.s3-%s.amazonaws.com/tiles-repo/%s/%s.tgz",
-		s3.BucketName,
-		s3.Region,
+		dc.BucketName,
+		dc.Region,
 		"super",
 		"super")
 	if Client == nil {
 		initHttpClient()
 	}
-	destDir := s3.WorkHome + "/super"
+	destDir := dc.WorkHome + folder
 
 	req, err := http.NewRequest(http.MethodGet, tileUrl, nil)
 	resp, err := Client.Do(req)
@@ -147,14 +147,14 @@ func (s3 *DiceConfig) LoadSuperS3() (string, error) {
 
 }
 
-func (s3 *DiceConfig) LoadSuperDev() (string, error) {
-	repoDir := s3.LocalRepo + "/super"
-	destDir := s3.WorkHome + "/super"
+func (dc *DiceConfig) LoadSuperDev(folder string) (string, error) {
+	repoDir := dc.LocalRepo + "/super"
+	destDir := dc.WorkHome + folder
 	return destDir, Copy(repoDir, destDir)
 }
 
-func (s3 *DiceConfig) LoadTestOutput(tile string) ([]byte, error) {
-	testOutputFile := s3.WorkHome + "/super/lib/" + strings.ToLower(tile) + "/test/" + tile + ".output"
+func (dc *DiceConfig) LoadTestOutput(tile string, folder string) ([]byte, error) {
+	testOutputFile := dc.WorkHome + folder + "/lib/" + strings.ToLower(tile) + "/test/" + tile + ".output"
 	f, err := os.Open(testOutputFile)
 	if err != nil {
 		return nil, err

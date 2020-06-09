@@ -30,7 +30,7 @@ func main() {
 		validate.Validate,
 		deploy.Deploy,
 		version.Version,
-		list.ListRepo)
+		list.Repo)
 	cmd.TraverseChildren = true
 
 	// Running mctl

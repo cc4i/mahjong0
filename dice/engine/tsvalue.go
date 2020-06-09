@@ -8,6 +8,20 @@ import (
 	"time"
 )
 
+// Status of deployment
+type DeploymentStatus int
+
+const (
+	Created DeploymentStatus = iota
+	Progress
+	Done
+	Interrupted
+)
+
+func (c DeploymentStatus) DSString() string {
+	return [...]string{"Created", "Progress", "Done", "Interrupted"}[c]
+}
+
 // TilesGrid represents relationship table of all Tile for each deployment
 type TilesGrid struct {
 	TileInstance       string // TileInstance is unique ID of Tile as instance
@@ -19,15 +33,13 @@ type TilesGrid struct {
 	ParentTileInstance string // ParentTileInstance indicates who's dependent on Me - Tile
 }
 
-// Ts is key struct to fulfil super.ts template and key element to generate execution plan.
-type Ts struct {
-	TsLibs       []TsLib              // TsLibs is only for go template
-	TsLibsMap    map[string]TsLib     // TsLibsMap : TileName -> TsLib
-	TsStacks     []*TsStack           // TsStacks is only for go template
-	TsStacksMapN map[string]*TsStack  // TsStacksMap: TileInstance -> TsStack, all initialized values will be store here, include input, env, etc
-	AllTilesN    map[string]*Tile     // AllTiles: TileInstance -> Tile
-	AllOutputsN  map[string]*TsOutput // AllOutputs:  TileInstance ->TsOutput, all output values will be store here
+// DeploymentR is a record of each deployment
+type DeploymentR struct {
+	SID string // session ID for each deployment
+	Name string	//Unique name for each deployment
 	CreatedTime  time.Time            // Created time
+	SuperFolder	string	// Main folder for all stuff per deployment
+	Status string	// Status of deployment
 }
 
 // Ts represents all referred CDK resources
@@ -89,6 +101,19 @@ type TsOutputDetail struct {
 	OutputValue         string
 	Description         string
 }
+
+
+// Ts is key struct to fulfil super.ts template and key element to generate execution plan.
+type Ts struct {
+	Dr           *DeploymentR         // Dr is a deployment record
+	TsLibs       []TsLib              // TsLibs is only for go template
+	TsLibsMap    map[string]TsLib     // TsLibsMap : TileName -> TsLib
+	TsStacks     []*TsStack           // TsStacks is only for go template
+	TsStacksMapN map[string]*TsStack  // TsStacksMap: TileInstance -> TsStack, all initialized values will be store here, include input, env, etc
+	AllTilesN    map[string]*Tile     // AllTiles: TileInstance -> Tile
+	AllOutputsN  map[string]*TsOutput // AllOutputs:  TileInstance ->TsOutput, all output values will be store here
+}
+
 
 // AllTs represents all information about tiles, input, output, etc.,  id(uuid) -> Ts
 var AllTs = make(map[string]Ts)
@@ -290,4 +315,30 @@ func FamilyTileInstance(dSid string, tileInstance string) []string {
 		return tileInstances
 	}
 	return nil
+}
+
+// DepName return unique name for Ts
+func DepName(name string) string {
+	for _, ts := range AllTs {
+		if ts.Dr.Name == name {
+			name = name + "-" + RandString(8)
+		}
+	}
+	return name
+}
+
+
+func TsContent(sid string) *Ts {
+	if ts, ok := AllTs[sid]; ok {
+		return &ts
+	}
+	return nil
+}
+
+func AllTsContent() map[string]DeploymentR {
+	ds := make(map[string]DeploymentR)
+	for sid, ts := range AllTs {
+		ds[sid]=*ts.Dr
+	}
+	return ds
 }

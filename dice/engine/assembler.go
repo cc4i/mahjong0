@@ -19,12 +19,12 @@ import (
 
 // AssemblerCore represents a group of functions to assemble CDK App.
 type AssemblerCore interface {
-	// Generate CDK App from base template with necessary tiles
-	GenerateCdkApp(ctx context.Context, out *websocket.Conn) (*ExecutionPlan, error)
+	// GenerateMainApp generate main app from base template with necessary tiles
+	GenerateMainApp(ctx context.Context, out *websocket.Conn) (*ExecutionPlan, error)
 
-	// Control Tile processing
+	// ProcessTiles controls Tile processing
 	ProcessTiles(ctx context.Context, aTs *Ts, override map[string]*TileInputOverride, out *websocket.Conn)
-	// Pull Tile from repo
+	// PullTile pulls Tile from repo
 	PullTile(ctx context.Context,
 		tileInstance string,
 		tile string,
@@ -36,11 +36,11 @@ type AssemblerCore interface {
 		override map[string]*TileInputOverride,
 		out *websocket.Conn) error
 
-	//Generate Main Ts inside of CDK app
-	ApplyMainTs(ctx context.Context, out *websocket.Conn, aTs *Ts) error
+	// ApplyMainTs applies Ts to main CDK app
+	ApplyMainTs(ctx context.Context, aTs *Ts, out *websocket.Conn) error
 
-	//Generate execution plan to direct provision resources
-	GenerateExecutePlan(ctx context.Context, out *websocket.Conn, aTs *Ts) (*ExecutionPlan, error)
+	//GenerateExecutePlan generates execution plan to direct provision resources
+	GenerateExecutePlan(ctx context.Context, aTs *Ts, out *websocket.Conn) (*ExecutionPlan, error)
 }
 
 var DiceConfig *utils.DiceConfig
@@ -85,12 +85,17 @@ func init() {
 	log.Printf("Loaded configuration: \n%s\n", c)
 }
 
-// GenerateCdkApp return path where the base CDK App was generated.
-func (d *Deployment) GenerateCdkApp(ctx context.Context, out *websocket.Conn) (*ExecutionPlan, error) {
-
-	var aTs = &Ts{
+// GenerateMainApp return path where the base CDK App was generated.
+func (d *Deployment) GenerateMainApp(ctx context.Context, out *websocket.Conn) (*ExecutionPlan, error) {
+	dn := DepName(d.Metadata.Name)
+	var aTs = &Ts {
+		Dr: &DeploymentR{
+			Name: dn,
+			CreatedTime:  time.Now(),
+			SuperFolder: "/"+dn,
+			Status: Created.DSString(),
+		},
 		AllTilesN:    make(map[string]*Tile),
-		CreatedTime:  time.Now(),
 		TsLibsMap:    make(map[string]TsLib),
 		TsStacksMapN: make(map[string]*TsStack),
 		AllOutputsN:  make(map[string]*TsOutput),
@@ -100,28 +105,38 @@ func (d *Deployment) GenerateCdkApp(ctx context.Context, out *websocket.Conn) (*
 	AllTs[ctx.Value("d-sid").(string)] = *aTs
 
 	// 2. Loading Super from s3 & unzip
+	aTs.Dr.Status = Progress.DSString()
 	var override = make(map[string]*TileInputOverride) //TileName->TileInputOverride
 	var ep *ExecutionPlan
 	SR(out, []byte("Loading Super ... from RePO."))
-	_, err := DiceConfig.LoadSuper()
+	_, err := DiceConfig.LoadSuper(aTs.Dr.SuperFolder)
 	if err != nil {
+		aTs.Dr.Status = Interrupted.DSString()
 		return ep, err
 	}
 	SR(out, []byte("Loading Super ... from RePO with success."))
 
+
+
 	// 3. Loading Tiles from s3 & unzip
 	if err := d.ProcessTiles(ctx, aTs, override, out); err != nil {
+		aTs.Dr.Status = Interrupted.DSString()
 		return ep, err
 	}
 
 	// 4. Generate super.ts
-	if err := d.ApplyMainTs(ctx, out, aTs); err != nil {
+	if err := d.ApplyMainTs(ctx, aTs, out); err != nil {
+		aTs.Dr.Status = Interrupted.DSString()
 		return ep, err
 	}
 
 	// 5. Generate execution plan
-	return d.GenerateExecutePlan(ctx, out, aTs)
-
+	plan, err := d.GenerateExecutePlan(ctx, aTs, out)
+	if err !=nil {
+		aTs.Dr.Status = Interrupted.DSString()
+		return nil, err
+	}
+	return plan, nil
 }
 
 // ProcessTiles controls Tiles processing
@@ -218,7 +233,7 @@ func (d *Deployment) PullTile(ctx context.Context,
 	rStack := "Stack" + id
 
 	// Pre-Process 1: Loading Tile from s3 & unzip
-	tileSpecFile, err := DiceConfig.LoadTile(tile, version)
+	tileSpecFile, err := DiceConfig.LoadTile(tile, version, aTs.Dr.SuperFolder)
 	if err != nil {
 		SRf(out, "Failed to pulling Tile < %s - %s > ... from RePO\n", tile, version)
 		return err
@@ -546,9 +561,9 @@ func str2string(str string, inputType string) string {
 }
 
 // ApplyMainTs apply values with super.ts template
-func (d *Deployment) ApplyMainTs(ctx context.Context, out *websocket.Conn, aTs *Ts) error {
+func (d *Deployment) ApplyMainTs(ctx context.Context, aTs *Ts, out *websocket.Conn) error {
 	dSid := ctx.Value("d-sid").(string)
-	sts := DiceConfig.WorkHome + "/super/bin/super.ts"
+	sts := DiceConfig.WorkHome + aTs.Dr.SuperFolder + "/bin/super.ts"
 	SR(out, []byte("Generating main.ts for Super ..."))
 
 	tp, _ := template.ParseFiles(sts)
@@ -592,7 +607,7 @@ func (d *Deployment) ApplyMainTs(ctx context.Context, out *websocket.Conn, aTs *
 	return nil
 }
 
-func (d *Deployment) GenerateExecutePlan(ctx context.Context, out *websocket.Conn, aTs *Ts) (*ExecutionPlan, error) {
+func (d *Deployment) GenerateExecutePlan(ctx context.Context, aTs *Ts, out *websocket.Conn) (*ExecutionPlan, error) {
 	SR(out, []byte("Generating execution plan... "))
 	var p = ExecutionPlan{
 		Plan:             list.New(),
@@ -600,7 +615,7 @@ func (d *Deployment) GenerateExecutePlan(ctx context.Context, out *websocket.Con
 		OriginDeployment: d,
 	}
 	for _, ts := range aTs.TsStacks {
-		workHome := DiceConfig.WorkHome + "/super"
+		workHome := DiceConfig.WorkHome + aTs.Dr.SuperFolder
 		stage := ExecutionStage{
 			Name:        ts.TileInstance,
 			Kind:        ts.TileCategory,
@@ -615,14 +630,8 @@ func (d *Deployment) GenerateExecutePlan(ctx context.Context, out *websocket.Con
 		} else {
 			stage.Kind = CDK.SKString()
 		}
-		// Caching & injected work_home & tile_home
-		//if ts.PredefinedEnv == nil {
-		//	ts.PredefinedEnv = make(map[string]string)
-		//}
-		stage.InjectedEnv = append(stage.InjectedEnv, "export WORK_HOME="+DiceConfig.WorkHome+"/super")
-		//ts.PredefinedEnv["WORK_HOME"] = DiceConfig.WorkHome + "/super"
-		stage.InjectedEnv = append(stage.InjectedEnv, "export TILE_HOME="+DiceConfig.WorkHome+"/super/lib/"+strings.ToLower(ts.TileName))
-		//ts.PredefinedEnv["TILE_HOME"] = DiceConfig.WorkHome + "/super/lib/" + strings.ToLower(ts.TileName)
+		stage.InjectedEnv = append(stage.InjectedEnv, "export WORK_HOME="+DiceConfig.WorkHome+aTs.Dr.SuperFolder)
+		stage.InjectedEnv = append(stage.InjectedEnv, "export TILE_HOME="+DiceConfig.WorkHome+aTs.Dr.SuperFolder+"/lib/"+strings.ToLower(ts.TileName))
 
 		if ts.TileCategory == ContainerApplication.CString() || ts.TileCategory == Application.CString() {
 			// ContainerApplication & Application
@@ -664,7 +673,7 @@ func (d *Deployment) GenerateExecutePlan(ctx context.Context, out *websocket.Con
 			}
 
 			// Commands & output values to output.log
-			fileName := DiceConfig.WorkHome + "/super/" + stage.Name + "-output.log"
+			fileName := DiceConfig.WorkHome + aTs.Dr.SuperFolder + "/" + stage.Name + "-output.log"
 			//Sleep 5 seconds to waiting pod's ready
 			stage.Commands = append(stage.Commands, "sleep 10")
 			if tile, ok := aTs.AllTilesN[ts.TileInstance]; ok {

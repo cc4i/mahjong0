@@ -15,7 +15,7 @@ spec:
           - name: asymmetricKeyAlias
             inputValue: majhong/asymmetric-key_0
 
-      # ESK Cluster for Production
+      # ESK Cluster for Prod
       tileEksWithSpotProd:
         tileReference: Eks-with-Spot
         tileVersion: 0.5.0
@@ -33,7 +33,6 @@ spec:
               - m5.large
               - r5.large
               - c5.large
-
       # EKS Cluster for Stage
       tileEksWithSpotStage:
         tileReference: Eks-with-Spot
@@ -53,7 +52,7 @@ spec:
               - r5.large
               - c5.large
       
-      # ElsatiCache Redis Cluster
+      # ElsatiCache Redis for Prod
       tileAWSElastiCacheRedis506Prod:
         tileReference: AWS-ElastiCache-Redis
         tileVersion: 5.0.6
@@ -68,8 +67,7 @@ spec:
               - $cdk(tileEksWithSpotProd.Network0.privateSubnetId2)
           - name: redisClusterName
             inputValue: redis-cluster-prod
-
-      # ElsatiCache Redis Cluster
+      # ElsatiCache Redis for Stage
       tileAWSElastiCacheRedis506Stage:
         tileReference: AWS-ElastiCache-Redis
         tileVersion: 5.0.6
@@ -84,7 +82,8 @@ spec:
               - $cdk(tileEksWithSpotStage.Network0.privateSubnetId2)
           - name: redisClusterName
             inputValue: redis-cluster-stage
-      # AuroraMySQL for Production
+
+      # AuroraMySQL for Prod
       tileAuroraMysqlProd:
         tileReference: AWS-Aurora-Mysql
         tileVersion: 2.07.2
@@ -98,7 +97,6 @@ spec:
             inputValue: admin        
           - name: defaultDatabaseName
             inputValue: testDb     
-
       # AuroraMySQL for Stage
       tileAuroraMysqlStage:
         tileReference: AWS-Aurora-Mysql
@@ -113,7 +111,8 @@ spec:
             inputValue: admin        
           - name: defaultDatabaseName
             inputValue: testDb   
-      # Istio 
+
+      # Istio for Prod
       tileIstio0ForProduction:
         tileReference: Istio0
         tileVersion: 1.5.4
@@ -122,6 +121,7 @@ spec:
             value: $(tileEksWithSpotProd.outputs.clusterName)
           - name: masterRoleARN
             value: $(tileEksWithSpotProd.outputs.masterRoleARN)
+      # Istio for Stage
       tileIstio0ForStage:
         tileReference: Istio0
         tileVersion: 1.5.4
