@@ -22,7 +22,14 @@ func RunGet(addr string, uri string) ([]byte, error) {
 	return ioutil.ReadAll(resp.Body)
 }
 
-func RunPost(addr string, uri string, body []byte) (int, error) {
+func RunGetByVersion(addr string, uri string) ([]byte, error) {
+
+	uri = fmt.Sprintf("%s/%s",apiVersion, uri)
+	return RunGet(addr, uri)
+}
+
+
+func RunPostByVersion(addr string, uri string, body []byte) (int, error) {
 	u := &url.URL{
 		Scheme: "http",
 		Host:   addr,

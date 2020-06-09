@@ -160,7 +160,7 @@ func download(c *cobra.Command, args []string, name string) (string, error) {
 	addr, _ := c.Flags().GetString("addr")
 
 	t, _ := c.Flags().GetString("type")
-	uri := "v1alpha1/template/"
+	uri := "template/"
 	if name == "sample-tile" {
 		uri = uri + name
 	} else {
@@ -182,7 +182,7 @@ func download(c *cobra.Command, args []string, name string) (string, error) {
 	version, _ := c.Flags().GetString("version")
 	destDir = destDir + version
 
-	url, err := cmd.RunGet(addr, uri)
+	url, err := cmd.RunGetByVersion(addr, uri)
 	if err != nil {
 		log.Printf("Loading %s was failed with Err: %s. %s\n", name, err, url)
 		return destDir, err

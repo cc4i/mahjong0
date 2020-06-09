@@ -19,6 +19,7 @@ import (
 	"strings"
 	"sync"
 	"text/template"
+	"time"
 )
 
 // ExecutionPlan represents complete plan.
@@ -93,6 +94,8 @@ type BrewerCore interface {
 // Execution plan would only parse and use test data provided by Tile, but no commands would be sent
 // if dryRun is true
 func (ep *ExecutionPlan) ExecutePlan(ctx context.Context, dryRun bool, out *websocket.Conn) error {
+	dSid := ctx.Value("d-sid").(string)
+	aTs := AllTs[dSid]
 	for e := ep.Plan.Back(); e != nil; e = e.Prev() {
 		stage := e.Value.(*ExecutionStage)
 		ep.CurrentStage = stage
@@ -108,7 +111,7 @@ func (ep *ExecutionPlan) ExecutePlan(ctx context.Context, dryRun bool, out *webs
 		}
 
 		// Extract output values & caching results
-		buf, err := ioutil.ReadFile(DiceConfig.WorkHome + "/super/" + stage.Name + "-output.log")
+		buf, err := ioutil.ReadFile(DiceConfig.WorkHome + aTs.Dr.SuperFolder + "/" + stage.Name + "-output.log")
 		if err != nil {
 			return err
 		}
@@ -201,11 +204,12 @@ func (ep *ExecutionPlan) ReplaceAllEnv(str string, allEnv map[string]string) str
 
 // CommandExecutor exec command and return output.
 func (ep *ExecutionPlan) CommandExecutor(ctx context.Context, dryRun bool, cmdTxt []byte, out *websocket.Conn) error {
-
+	dSid := ctx.Value("d-sid").(string)
+	aTs := AllTs[dSid]
 	var stageLog *log.Logger
 	SR(out, []byte("Initializing stage log file ..."))
 	stageLog = log.New()
-	fileName := DiceConfig.WorkHome + "/super/" + ep.CurrentStage.Name + "-output.log"
+	fileName := DiceConfig.WorkHome + aTs.Dr.SuperFolder + "/" + ep.CurrentStage.Name + "-output.log"
 	logFile, err := os.OpenFile(fileName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
 		SRf(out, "Failed to save stage log, using default stderr, %s\n", err)
@@ -223,7 +227,7 @@ func (ep *ExecutionPlan) CommandExecutor(ctx context.Context, dryRun bool, cmdTx
 	if !dryRun {
 		return ep.LinuxCommandExecutor(ctx, cmdTxt, stageLog, out)
 	} else {
-		testData, err := DiceConfig.LoadTestOutput(ep.CurrentStage.TileName)
+		testData, err := DiceConfig.LoadTestOutput(ep.CurrentStage.TileName, aTs.Dr.SuperFolder)
 		if err != nil {
 			log.Printf("No testing output for %s\n", ep.CurrentStage.TileName)
 		} else {
@@ -343,8 +347,8 @@ echo $?
 					fmt.Sprintf("aws eks update-kubeconfig --name %s --role-arn %s --kubeconfig %s\nexport KUBECONFIG=%s",
 						clusterName,
 						masterRoleARN,
-						DiceConfig.WorkHome+"/super/kube.config",
-						DiceConfig.WorkHome+"/super/kube.config",
+						DiceConfig.WorkHome+at.Dr.SuperFolder+"/kube.config",
+						DiceConfig.WorkHome+at.Dr.SuperFolder+"/kube.config",
 					))
 				tContent = tContent4K8s
 			}
@@ -567,13 +571,13 @@ echo $?
 
 // RandString return random string as per length 'n'
 func RandString(n int) string {
-	const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	const letterBytes = "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	if n < 0 {
 		n = 0
 	}
 	b := make([]byte, n)
 	for i := range b {
-		b[i] = letterBytes[rand.Int63()%int64(len(letterBytes))]
+		b[i] = letterBytes[rand.NewSource(time.Now().UnixNano()).Int63()%int64(len(letterBytes))]
 	}
 	return string(b)
 }

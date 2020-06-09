@@ -59,9 +59,14 @@ func Router(ctx context.Context) *gin.Engine {
 	})
 
 	// AllTs content in memory
-	r.GET("/v1alpha1/ats/:sid", func(c *gin.Context) {
-		AtsContent(ctx, c)
+	r.GET("/v1alpha1/ts/:sid", func(c *gin.Context) {
+		Ts(ctx, c)
 	})
+	// List deployments in memory
+	r.GET("/v1alpha1/ts", func(c *gin.Context) {
+		AllTsD(ctx, c)
+	})
+
 
 	// Version of Dice
 	r.GET("/version", func(c *gin.Context) {

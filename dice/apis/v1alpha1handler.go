@@ -27,7 +27,10 @@ type WsBox struct {
 
 // WsWorker interface for all Websocket handlers
 type WsWorker interface {
+	// Processor acts as core interface between client and engine
 	Processor(ctx context.Context, messageType int, p []byte, dryRun bool) error
+	// SaveStatus persists the status of each deployment
+	SaveStatus(ctx context.Context)
 }
 
 // WsHandler handle all coming request from WebSocket
@@ -101,18 +104,25 @@ func (wb *WsBox) Processor(ctx context.Context, messageType int, p []byte, dryRu
 	//
 	// 2. assemble super app with base templates +
 	engine.SR(wb.out, []byte("Generating CDK App..."))
-	ep, err = deploy.GenerateCdkApp(ctx, wb.out)
+	ep, err = deploy.GenerateMainApp(ctx, wb.out)
 	if err != nil {
-		engine.SRf(wb.out, "GenerateCdkApp error : %s \n", err)
+		engine.SRf(wb.out, "GenerateMainApp error : %s \n", err)
 		return err
 	}
 	engine.SR(wb.out, []byte("Generating CDK App was success."))
 
 	//
 	// 3. execute cdk / manifest +
-	return ep.ExecutePlan(ctx, dryRun, wb.out)
+	err = ep.ExecutePlan(ctx, dryRun, wb.out)
+	if err != nil {
+		if aTs, ok := engine.AllTs[sid]; ok {
+			aTs.Dr.Status = engine.Interrupted.DSString()
+		}
+	}
+	return err
 
 }
+
 
 // RetrieveTemplate download template from S3 repo.
 func RetrieveTemplate(ctx context.Context, c *gin.Context) {
@@ -144,11 +154,11 @@ func RetrieveTemplate(ctx context.Context, c *gin.Context) {
 	}
 }
 
-// AtsContent shows recorded key content in memory
-func AtsContent(ctx context.Context, c *gin.Context) {
+// Ts shows key content in memory as per sid
+func Ts(ctx context.Context, c *gin.Context) {
 	sid := c.Param("sid")
-	if at, ok := engine.AllTs[sid]; ok {
-		if buf, err := yaml.Marshal(at); err != nil {
+	if ts := engine.TsContent(sid); ts != nil {
+		if buf, err := yaml.Marshal(ts); err != nil {
 			c.String(http.StatusInternalServerError, err.Error())
 		} else {
 			c.String(http.StatusOK, string(buf))
@@ -158,6 +168,18 @@ func AtsContent(ctx context.Context, c *gin.Context) {
 		c.String(http.StatusNotFound, "Session ID : %s is not existed and checked out with CC.", sid)
 	}
 }
+
+// AllTsD shows all recorded deployment in memory
+func AllTsD(ctx context.Context, c *gin.Context) {
+	ds := engine.AllTsContent()
+	if buf, err := yaml.Marshal(ds); err != nil {
+		c.String(http.StatusInternalServerError, err.Error())
+	} else {
+		c.String(http.StatusOK, string(buf))
+	}
+
+}
+
 
 // Deployment validate deployment yaml
 func Deployment(ctx context.Context, c *gin.Context) {

@@ -28,9 +28,9 @@ func validateFunc(c *cobra.Command, args []string) {
 		}
 
 		var dcode, tcode int
-		dcode, _ = cmd.RunPost(addr, "deployment", buf)
+		dcode, _ = cmd.RunPostByVersion(addr, "deployment", buf)
 		if dcode != 200 {
-			tcode, _ = cmd.RunPost(addr, "tile", buf)
+			tcode, _ = cmd.RunPostByVersion(addr, "tile", buf)
 			if tcode != 200 {
 				log.Printf("%s\n", "Supplied content were neither 'Deployment' nor 'Tile'")
 			}
