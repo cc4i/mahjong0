@@ -47,14 +47,15 @@ func Run(addr string, dryRun bool, cmd []byte) error {
 }
 
 func Connect2Dice(addr string, dryRun bool) (*websocket.Conn, error) {
-	u := &url.URL{
+	u := &url.URL {
 		Scheme: "ws",
 		Host:   addr,
 		Path:   fmt.Sprintf("/%s/%s", apiVersion, "ws"),
 	}
 	if dryRun {
-		u.Path = fmt.Sprintf("/%s/%s", apiVersion, "ws?dryRun=true")
+		u.RawQuery="dryRun=true"
 	}
+	log.Printf("Connecting to %s\n", u.String())
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
 		return c, err

@@ -219,7 +219,7 @@ func ValueRef(dSid string, ref string, ti string) (string, error) {
 	} else {
 		return "", errors.New("expression: " + ref + " was error")
 	}
-	return "", errors.New("referred value wasn't exist")
+	return ref, nil
 }
 
 // ParentTileInstance return Tile instance of parent Tile

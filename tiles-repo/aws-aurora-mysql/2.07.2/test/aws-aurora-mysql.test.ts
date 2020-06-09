@@ -9,10 +9,10 @@ test('Aurora MySQL Created', () => {
   const stack = new cdk.Stack(app, "TestStack");
   const vpc = new ec2.Vpc(stack,"vpc",{})
   // WHEN
-  new AwsAuroraMysql.AwsAuroraMysql(stack, 'MyTestConstruct',{
+  new AwsAuroraMysql.AWSAuroraMysql(stack, 'MyTestConstruct',{
     vpc: vpc,
-    username: "dbadmin",
-    dbname: "DbMySQL"
+    masterUser: "dbadmin",
+    clusterIdentifier: "DbMySQL"
   });
   // THEN
   expectCDK(stack).to(haveResource("AWS::RDS::DBCluster"));

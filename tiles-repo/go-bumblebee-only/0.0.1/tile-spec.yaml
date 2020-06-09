@@ -15,15 +15,15 @@ spec:
         value: go-bumblebee-tile
       - name: ACCESS_TOKEN
          # <tileInstance.outputs.name> / self -> tileInstane of this Tile
-        valueRef: $(self.inputs.accessToken)
+        value: $(self.inputs.accessToken)
       - name: APP_NAMESPACE
         value: go-bumblebee
       - name: ARGOCD_NAMESPACE
-        valueRef: $(self.inputs.argocdNamespace)
+        value: $(self.inputs.argocdNamespace)
       - name: ARGOCD_USER
-        valueRef: $(self.inputs.argocdUser)
+        value: $(self.inputs.argocdUser)
       - name: ARGOCD_PASSWORD
-        valueRef: $(self.inputs.argocdPassword)
+        value: $(self.inputs.argocdPassword)
 
   preRun:
     stages:

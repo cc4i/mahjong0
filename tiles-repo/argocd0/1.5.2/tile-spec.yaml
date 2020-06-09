@@ -19,7 +19,7 @@ spec:
       # Tile name
       tileReference: Eks0
       # Tile version
-      tileVersion: 0.0.1
+      tileVersion: 0.0.5
     - name: network
       # Tile name
       tileReference: Network0

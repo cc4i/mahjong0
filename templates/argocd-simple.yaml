@@ -26,15 +26,15 @@ spec:
       description: Argo CD has been installed in $(tileArgocd0152.outputs.clusterName) with success and checking out following notes to get started.
       outputs:
         - name: EKS Cluster Name
-          valueRef: $(tileArgocd0152.outputs.clusterName)
+          value: $(tileArgocd0152.outputs.clusterName)
         - name: Master role arn for EKS Cluster
-          valueRef: $(tileArgocd0152.outputs.masterRoleARN)
+          value: $(tileArgocd0152.outputs.masterRoleARN)
         - name: The API endpoint EKS Cluster
-          valueRef: $(tileArgocd0152.outputs.clusterEndpoint)
+          value: $(tileArgocd0152.outputs.clusterEndpoint)
         - name: ArgoCD admin
-          valueRef: $(tileArgocd0152.outputs.user)
+          value: $(tileArgocd0152.outputs.user)
         - name: ArgoCD password
-          valueRef: $(tileArgocd0152.outputs.password)        
+          value: $(tileArgocd0152.outputs.password)        
 
       notes: 
         - kubectl port-forward svc/argocd-server -n $NAMESPACE 8080:443

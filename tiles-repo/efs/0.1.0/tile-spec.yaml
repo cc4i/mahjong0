@@ -22,7 +22,7 @@ spec:
 
   outputs:
     # String
-    - name: clusterName
+    - name: fileSystemId
       outputType: String
       description: AWS::EFS::FileSystem
 

@@ -6,19 +6,13 @@
 namespace: go-bumblebee
 
 resources:
-- ns.yaml
-- air
-- front
-- gql
-- locust
-- redis
-- was
+- ../../air
 
 
 # all with following *kustomization*
 images:
-- name: herochinese/go-bumblebee-was
-  newName: 530820415924.dkr.ecr.us-west-2.amazonaws.com/herochinese/go-bumblebee-was
+- name: herochinese/go-bumblebee-air
+  newName: 530820415924.dkr.ecr.us-west-2.amazonaws.com/herochinese/go-bumblebee-air
   newTag: new-combo-jazz
 
 apiVersion: kustomize.config.k8s.io/v1beta1

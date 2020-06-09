@@ -11,7 +11,7 @@ spec:
       - name: GITHUB_USER
         value: cc4i
       - name: GIT_ACCESS_TOKEN
-        valueRef: $(self.inputs.gitAccessToken)
+        value: $(self.inputs.gitAccessToken)
       - name: APP_REPO
         value: go-bumblebee
       - name: APP_BRANCH
@@ -19,7 +19,7 @@ spec:
       - name: APP_CONF_REPO
         value: go-bumblebee-jazz-config
       - name: KMS_KEY_ID
-        valueRef: $(self.inputs.kmsKeyID)
+        value: $(self.inputs.kmsKeyID)
 
   preRun:
     stages:
@@ -51,12 +51,21 @@ spec:
         cammand: |
           cd $TILE_HOME/manifest/argocd
           ARGOCD_TOKEN=`curl -s -k $(self.inputs.argocdBaseUrl)/api/v1/session -d $'{"username":"$(self.inputs.argocdUser)","password":"$(self.inputs.argocdPassword)"}'|jq -r '.token'`
-          curl -s -k $(self.inputs.argocdBaseUrl)/api/v1/applications -H "Authorization: Bearer $ARGOCD_TOKEN" -d "@air.json"
-          curl -s -k $(self.inputs.argocdBaseUrl)/api/v1/applications -H "Authorization: Bearer $ARGOCD_TOKEN" -d "@front.json"
-          curl -s -k $(self.inputs.argocdBaseUrl)/api/v1/applications -H "Authorization: Bearer $ARGOCD_TOKEN" -d "@gql.json"
-          curl -s -k $(self.inputs.argocdBaseUrl)/api/v1/applications -H "Authorization: Bearer $ARGOCD_TOKEN" -d "@locust.json"
-          curl -s -k $(self.inputs.argocdBaseUrl)/api/v1/applications -H "Authorization: Bearer $ARGOCD_TOKEN" -d "@redis.json"
-          curl -s -k $(self.inputs.argocdBaseUrl)/api/v1/applications -H "Authorization: Bearer $ARGOCD_TOKEN" -d "@was.json"
+          curl -s -k $(self.inputs.argocdBaseUrl)/api/v1/applications -H "Authorization: Bearer $ARGOCD_TOKEN" -d "@stage-all-in-one.json"
+          
+          # add production cluster
+          kubectl apply -f ./argocd-remote.yaml
+          sed -i -e 's/__caData__/$(self.inputs.prodClusterCertificateAuthorityData)/g' ./add-cluster.json
+          VALUE=$(echo $(self.inputs.prodClusterArn) | sed -e "s#/#\\\/#g")
+          sed -i -e 's/__name__/'$VALUE'/g' ./add-cluster.json
+          VALUE=$(echo $(self.inputs.prodClusterEndpoint) | sed -e "s#/#\\\/#g")
+          sed -i -e 's/__server__/'$VALUE'/g' ./add-cluster.json
+          curl -s -k $(self.inputs.argocdBaseUrl)/api/v1/clusters -H "Authorization: Bearer $ARGOCD_TOKEN" -d "@add-cluster.json"
+          
+          # add production deployment
+          VALUE=$(echo $(self.inputs.prodClusterEndpoint) | sed -e "s#/#\\\/#g")
+          sed -i -e 's/__server__/'$VALUE'/g' ./production-all-in-one.json
+          curl -s -k $(self.inputs.argocdBaseUrl)/api/v1/applications -H "Authorization: Bearer $ARGOCD_TOKEN" -d "@production-all-in-one.json"
 
   inputs:
     - name: gitAccessToken
@@ -74,7 +83,16 @@ spec:
     - name: argocdPassword
       inputType: String
       require: true
-          
+    - name: prodClusterCertificateAuthorityData
+      inputType: String
+      require: true
+    - name: prodClusterArn
+      inputType: String
+      require: true
+    - name: prodClusterEndpoint
+      inputType: String
+      require: true
+
   # Ouptputs represnt output value after launched, for 'ContainerApplication' might need leverage specific command to retrive output.
   outputs:
     # FromCommand
