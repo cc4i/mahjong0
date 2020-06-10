@@ -87,9 +87,11 @@ func init() {
 
 // GenerateMainApp return path where the base CDK App was generated.
 func (d *Deployment) GenerateMainApp(ctx context.Context, out *websocket.Conn) (*ExecutionPlan, error) {
+	dSid := ctx.Value("d-sid").(string)
 	dn := DepName(d.Metadata.Name)
 	var aTs = &Ts {
 		Dr: &DeploymentR{
+			SID: dSid,
 			Name: dn,
 			CreatedTime:  time.Now(),
 			SuperFolder: "/"+dn,
@@ -102,7 +104,7 @@ func (d *Deployment) GenerateMainApp(ctx context.Context, out *websocket.Conn) (
 	}
 	// 1. Caching Ts
 	// Cached here with point, so can be used in following procedures
-	AllTs[ctx.Value("d-sid").(string)] = *aTs
+	AllTs[dSid] = *aTs
 
 	// 2. Loading Super from s3 & unzip
 	aTs.Dr.Status = Progress.DSString()
