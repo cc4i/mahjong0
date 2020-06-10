@@ -118,6 +118,10 @@ func (wb *WsBox) Processor(ctx context.Context, messageType int, p []byte, dryRu
 		if aTs, ok := engine.AllTs[sid]; ok {
 			aTs.Dr.Status = engine.Interrupted.DSString()
 		}
+	} else {
+		if aTs, ok := engine.AllTs[sid]; ok {
+			aTs.Dr.Status = engine.Done.DSString()
+		}
 	}
 	return err
 
@@ -171,12 +175,7 @@ func Ts(ctx context.Context, c *gin.Context) {
 
 // AllTsD shows all recorded deployment in memory
 func AllTsD(ctx context.Context, c *gin.Context) {
-	ds := engine.AllTsContent()
-	if buf, err := yaml.Marshal(ds); err != nil {
-		c.String(http.StatusInternalServerError, err.Error())
-	} else {
-		c.String(http.StatusOK, string(buf))
-	}
+	c.JSON(http.StatusOK, engine.AllTsDeployment())
 
 }
 

@@ -327,7 +327,7 @@ func DepName(name string) string {
 	return name
 }
 
-
+// TsContent returns content as per d-sid
 func TsContent(sid string) *Ts {
 	if ts, ok := AllTs[sid]; ok {
 		return &ts
@@ -335,10 +335,11 @@ func TsContent(sid string) *Ts {
 	return nil
 }
 
-func AllTsContent() map[string]DeploymentR {
-	ds := make(map[string]DeploymentR)
-	for sid, ts := range AllTs {
-		ds[sid]=*ts.Dr
+// AllTsDeployment returns all records of deployment
+func AllTsDeployment() []DeploymentR {
+	var ds []DeploymentR
+	for _, ts := range AllTs {
+		ds = append(ds, *ts.Dr)
 	}
 	return ds
 }
