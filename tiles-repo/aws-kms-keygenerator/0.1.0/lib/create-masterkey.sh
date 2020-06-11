@@ -5,7 +5,7 @@ aws kms create-key \
     --tags TagKey=Purpose,TagValue=Tiles TagKey=Builder,TagValue=Mahjong \
     --description "Master symmetric key for Tiles" > kms.out
 SYMMETRIC_KEY_ID=`cat kms.out | jq -r '.KeyMetadata.KeyId'`
-SYMMETRIC_KEY_ARN=`cat kms.out | jq -r '.KeyMetadata.KeyId'`
+SYMMETRIC_KEY_ARN=`cat kms.out | jq -r '.KeyMetadata.Arn'`
 echo "Done"
 if [ $SYMMETRIC_KEY_ALIAS = "" ]
 then
@@ -23,7 +23,7 @@ aws kms create-key \
     --description "Master asymmetric key for Tiles" > akms.out
 
 ASYMMETRIC_KEY_ID=`cat akms.out | jq -r '.KeyMetadata.KeyId'`
-ASYMMETRIC_KEY_ARN=`cat akms.out | jq -r '.KeyMetadata.KeyId'`
+ASYMMETRIC_KEY_ARN=`cat akms.out | jq -r '.KeyMetadata.Arn'`
 echo "Done"
 if [ $ASYMMETRIC_KEY_ALIAS = "" ]
 then

@@ -153,13 +153,15 @@ spec:
       - name: UpdateConfigMap
         command: |
           cd $TILE_HOME
-          VALUE=$(echo ${D_TBD_EKS_WITH_SPOT_MASTERROLEARN} | sed -e "s#/#\\\/#g")
-          sed -i -e 's/X_EKSClusterMasterRoleARN_X/'$VALUE'/g' lib/yaml/aws-auth-cm.yaml
-          VALUE=$(echo ${D_TBD_EKS_WITH_SPOT_NODESROLEARN} | sed -e "s#/#\\\/#g")
-          sed -i -e 's/X_NodeGroupRoleARN_X/'$VALUE'/g' lib/yaml/aws-auth-cm.yaml
+          MasterRoleARN=$(echo ${D_TBD_EKS_WITH_SPOT_MASTERROLEARN} | sed -e "s#/#\\\/#g")
+          NodeRoleARN=$(echo ${D_TBD_EKS_WITH_SPOT_NODESROLEARN} | sed -e "s#/#\\\/#g")
+          
+          sed -e 's/__EKSClusterMasterRoleARN__/'$MasterRoleARN'/g' \
+              -e 's/__NodeGroupRoleARN__/'$NodeRoleARN'/g' \
+              lib/yaml/aws-auth-cm.yaml > lib/yaml/aws-auth-cm-go.yaml
           aws eks update-kubeconfig --name $D_TBD_EKS_WITH_SPOT_CLUSTERNAME --region $D_TBD_EKS_WITH_SPOT_REGIONOFCLUSTER --role-arn $D_TBD_EKS_WITH_SPOT_MASTERROLEARN --kubeconfig $TILE_HOME/kube.config
           export KUBECONFIG=$TILE_HOME/kube.config
-          kubectl apply -f lib/yaml/aws-auth-cm.yaml
+          kubectl apply -f  lib/yaml/aws-auth-cm-go.yaml
       - name: TagSpotInstances
         command: |
           # waiting nodes' ready for 5 seconds
@@ -168,11 +170,12 @@ spec:
       - name: InstallClusterAutoScaler
         command: |
           sleep 10
-          sed -i -e 's/X_CLUSTER_NAME_X/'$D_TBD_EKS_WITH_SPOT_CLUSTERNAME'/g' lib/yaml/cluster-autoscaler-autodiscover.yaml
+          sed -e 's/__CLUSTER_NAME__/'$D_TBD_EKS_WITH_SPOT_CLUSTERNAME'/g' \
+              lib/yaml/cluster-autoscaler-autodiscover.yaml > lib/yaml/cluster-autoscaler-autodiscover-go.yaml
           kubectl apply -f lib/yaml/cluster-autoscaler-autodiscover-starter.yaml
           kubectl get pods -n kube-system
           sleep 10
-          kubectl apply -f lib/yaml/cluster-autoscaler-autodiscover.yaml
+          kubectl apply -f lib/yaml/cluster-autoscaler-autodiscover-go.yaml
           kubectl -n kube-system annotate deployment.apps/cluster-autoscaler cluster-autoscaler.kubernetes.io/safe-to-evict="false"
           kubectl -n kube-system set image deployment.apps/cluster-autoscaler cluster-autoscaler=us.gcr.io/k8s-artifacts-prod/autoscaling/cluster-autoscaler:v$D_TBD_EKS_WITH_SPOT_CLUSTERVERSION.5          
       - name: InstallHorizontalPodAutoscaler

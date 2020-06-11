@@ -23,7 +23,7 @@ spec:
           - name: cidr
             inputValue: 192.0.0.0/16
           - name: clusterName
-            inputValue: mahjong-spot-cluster0
+            inputValue: mahjong-eks-cluster-stage0
           - name: clusterVersion
             inputValue: 1.16
           - name: keyPair4EC2
@@ -41,7 +41,7 @@ spec:
           - name: cidr
             inputValue: 192.0.0.0/16
           - name: clusterName
-            inputValue: mahjong-spot-cluster0
+            inputValue: mahjong-eks-cluster-prod0
           - name: clusterVersion
             inputValue: 1.16
           - name: keyPair4EC2
@@ -87,7 +87,7 @@ spec:
       tileAuroraMysqlProd:
         tileReference: AWS-Aurora-Mysql
         tileVersion: 2.07.2
-        dependsOn: tileNetwork0
+        dependsOn: tileEksWithSpotProd
         inputs:
           - name: vpc
             inputValue: $cdk(tileEksWithSpotProd.Network0.baseVpc)        
@@ -113,34 +113,36 @@ spec:
             inputValue: testDb   
 
       # Istio for Prod
-      tileIstio0ForProduction:
+      tileIstio0ForProd:
         tileReference: Istio0
         tileVersion: 1.5.4
+        dependsOn: tileEksWithSpotProd
         inputs:
           - name: clusterName
-            value: $(tileEksWithSpotProd.outputs.clusterName)
+            inputValue: $(tileEksWithSpotProd.outputs.clusterName)
           - name: masterRoleARN
-            value: $(tileEksWithSpotProd.outputs.masterRoleARN)
+            inputValue: $(tileEksWithSpotProd.outputs.masterRoleARN)
       # Istio for Stage
       tileIstio0ForStage:
         tileReference: Istio0
         tileVersion: 1.5.4
+        dependsOn: tileEksWithSpotStage
         inputs:
           - name: clusterName
-            value: $(tileEksWithSpotStage.outputs.clusterName)
+            inputValue: $(tileEksWithSpotStage.outputs.clusterName)
           - name: masterRoleARN
-            value: $(tileEksWithSpotStage.outputs.masterRoleARN)
+            inputValue: $(tileEksWithSpotStage.outputs.masterRoleARN)
       
       # ArgoCD
       tileArgocdWithExsitingEks152:
         tileReference: Argocd-With-Existing-EKS
         tileVersion: 1.5.6
-        dependsOn: tileEksWithSpotStage
+        dependsOn: tileIstio0ForStage
         inputs:
           - name: clusterName
-            value: $(tileEksWithSpotStage.outputs.clusterName)         
+            inputValue: $(tileEksWithSpotStage.outputs.clusterName)         
           - name: masterRoleARN
-            value: $(tileEksWithSpotStage.outputs.masterRoleARN) 
+            inputValue: $(tileEksWithSpotStage.outputs.masterRoleARN) 
 
       # Inject DEMO Applications & setup CI+CD
       tileGoBumblebeeJazz071:
@@ -148,21 +150,30 @@ spec:
         tileVersion: 0.7.1
         inputs:
           - name: gitAccessToken
-            inputValue: GITHUB-TOKEN
+            inputValue: <Replace GitHub_Token by value>
           - name: kmsKeyID
-            value: $(tileAwsKmsKeyGenerator010.outputs.symmetricKeyID)
+            inputValue: $(tileAwsKmsKeyGenerator010.outputs.symmetricKeyID)
           - name: argocdBaseUrl
-            value: $(tileArgocdWithExsitingEks152.outputs.argocdBaseUrl)
+            inputValue: $(tileArgocdWithExsitingEks152.outputs.argocdBaseUrl)
           - name: argocdUser
-            value: $(tileArgocdWithExsitingEks152.outputs.user)
+            inputValue: $(tileArgocdWithExsitingEks152.outputs.user)
           - name: argocdPassword
-            value: $(tileArgocdWithExsitingEks152.outputs.password)
+            inputValue: $(tileArgocdWithExsitingEks152.outputs.password)
           - name: prodClusterCertificateAuthorityData
-            value: $(tileEksWithSpotProd.outputs.clusterCertificateAuthorityData)
+            inputValue: $(tileEksWithSpotProd.outputs.clusterCertificateAuthorityData)
           - name: prodClusterArn
-            value: $(tileEksWithSpotProd.outputs.clusterArn)
+            inputValue: $(tileEksWithSpotProd.outputs.clusterArn)
           - name: prodClusterEndpoint
-            value: $(tileEksWithSpotProd.outputs.clusterEndpoint)
+            inputValue: $(tileEksWithSpotProd.outputs.clusterEndpoint)
+          - name: prodClusterName
+            inputValue: $(tileEksWithSpotProd.outputs.clusterName)
+          - name: prodMasterRoleARN
+            inputValue: $(tileEksWithSpotProd.outputs.masterRoleARN)
+          - name: stageClusterName
+            inputValue: $(tileEksWithSpotStage.outputs.clusterName)
+          - name: stageMasterRoleARN
+            inputValue: $(tileEksWithSpotStage.outputs.masterRoleARN)
+
 summary:
       description: |
         ++++++++++++++++++++++++++++++++++++++++++++++++++++

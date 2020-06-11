@@ -6,7 +6,7 @@ set -x
 aws ec2 describe-instances \
     --filters Name=tag:member,Values=$D_TBD_EKS_WITH_SPOT_AUTOSCALINGGROUPNAME  \
     --output json \
-    | jq '.Reservations[].Instances[] | .InstanceId, .InstanceLifecycle, .PrivateDnsName ' | sed -e 's/"//g' > spot.out
+    | jq -r '.Reservations[].Instances[] | .InstanceId, .InstanceLifecycle, .PrivateDnsName'> spot.out
 
 exec 5< spot.out
 

@@ -5,7 +5,7 @@ argocd app create cc-go-bumblebee \
 --revision master \
 --path kustomize \
 --dest-server https://kubernetes.default.svc \
---dest-namespace x_namespace_x
+--dest-namespace __Namespace__
 
 argocd app sync cc-go-bumblebee
 
