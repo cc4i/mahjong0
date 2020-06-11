@@ -75,22 +75,22 @@ func (mts ManifestType) MTString() string {
 
 // Deployment specification
 type Deployment struct {
-	ApiVersion    string         `json:"apiVersion" valid:"in(mahjong.io/v1alpha1)"`
-	Kind          string         `json:"kind" valid:"in(Deployment)"`
-	Metadata      Metadata       `json:"metadata"`
-	Spec          DeploymentSpec `json:"spec" `
-	OriginalOrder []string       `json:"originalOrder"` // Stored TileInstance, keep original order as same as in yaml
+	ApiVersion    string         `json:"apiVersion" jsonschema:"required" valid:"in(mahjong.io/v1alpha1)"`
+	Kind          string         `json:"kind" jsonschema:"required" valid:"in(Deployment)"`
+	Metadata      Metadata       `json:"metadata" jsonschema:"required"`
+	Spec          DeploymentSpec `json:"spec" jsonschema:"required"`
+	OriginalOrder []string       `json:"originalOrder,omitempty"` // Stored TileInstance, keep original order as same as in yaml
 }
 
 // DeploymentSpec deployment.spec
 type DeploymentSpec struct {
-	Template DeploymentTemplate `json:"template"`
+	Template DeploymentTemplate `json:"template" jsonschema:"required"`
 	Summary  DeploymentSummary  `json:"summary"`
 }
 
 // DeploymentTemplate deployment.spec.template
 type DeploymentTemplate struct {
-	Tiles map[string]DeploymentTemplateDetail `json:"tiles"` // Tiles represent all to be deployed Tiles
+	Tiles map[string]DeploymentTemplateDetail `json:"tiles" jsonschema:"required"` // Tiles represent all to be deployed Tiles
 }
 
 // DeploymentSummary deployment.spec.summary
@@ -126,7 +126,7 @@ type Tile struct {
 
 // Metadata for Tile & Deployment
 type Metadata struct {
-	Name                     string `json:"name" `
+	Name                     string `json:"name"`
 	Category                 string `json:"category"`
 	VendorService            string `json:"vendorService,omitempty"`
 	DependentOnVendorService string `json:"dependentOnVendorService,omitempty"`
@@ -138,7 +138,7 @@ type TileSpec struct {
 	Global       GlobalDetail     `json:"global"`
 	PreRun       PreRunDetail     `json:"preRun"`
 	Dependencies []TileDependency `json:"dependencies"`
-	Inputs       []TileInput      `json:"inputs "`
+	Inputs       []TileInput      `json:"inputs"`
 	Manifests    TileManifest     `json:"manifests"`
 	Outputs      []TileOutput     `json:"outputs" `
 	PostRun      PostRunDetail    `json:"PostRun"`
@@ -242,7 +242,7 @@ type ParserCore interface {
 func (d *Data) ParseTile(ctx context.Context) (*Tile, error) {
 	var tile Tile
 
-	err := yaml.Unmarshal(*d, &tile)
+	err := yaml.UnmarshalStrict(*d, &tile)
 	if err != nil {
 		return &tile, err
 	}
@@ -284,10 +284,18 @@ func (d *Data) ParseDeployment(ctx context.Context) (*Deployment, error) {
 	}
 	////
 
-	if err := yaml.Unmarshal(*d, &deployment); err != nil {
+	if err := yaml.UnmarshalStrict(*d, &deployment); err != nil {
 		log.Errorf("Unmarshal yaml error : %s\n", err)
-		return &deployment, errors.New(" Deployment specification was invalid")
+		return &deployment, err
 	}
+	//obj, err := runtime.Decode(scheme.Codecs.UniversalDeserializer(), *d)
+	//if err != nil {
+	//	return &deployment, err
+	//}
+	//deployment, ok := obj.(Deployment)
+	//if obj!=nil {
+	//	return nil, fmt.Errorf("expected to decode object of type %T; got %T", &Deployment{}, deployment)
+	//}
 	// Attache original order
 	deployment.OriginalOrder = originalOrder
 
