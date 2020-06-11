@@ -53,12 +53,12 @@ var Deployment = &cobra.Command{
 		addr, _ := c.Flags().GetString("addr")
 		buf, err := cmd.RunGetByVersion(addr, "ts")
 		if err != nil {
-			logger.Info("%s\n",err)
+			logger.Warning("%s\n",err)
 			return
 		}
 		err = json.Unmarshal(buf, &dr)
 		if err != nil {
-			logger.Info("\n--------- Deployment Records --------- \n%s\n--------- ---------------- ---------\n", string(buf))
+			logger.Warning("\n--------- Deployment Records --------- \n%s\n--------- ---------------- ---------\n", string(buf))
 		} else {
 			logger.Info("\n--------- Deployment Records --------- \n")
 			logger.Info("SID\t\t Name\t\t Created Time\t\t Folder\t\t Status\t\t \n")

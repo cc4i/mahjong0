@@ -24,7 +24,7 @@ func validateFunc(c *cobra.Command, args []string) {
 	} else {
 		buf, err := ioutil.ReadFile(filename)
 		if err != nil {
-			logger.Info("%s\n", err)
+			logger.Warning("%s\n", err)
 		}
 
 		var dcode, tcode int

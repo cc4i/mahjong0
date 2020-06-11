@@ -143,12 +143,12 @@ spec:
 	logger.Info("Generating simple example for deployment ... ...")
 	file, err := os.Create("simple-eks.yaml")
 	if err != nil {
-		logger.Info("Generating simple example for deployment was failed, with error: %s\n", err)
+		logger.Warning("Generating simple example for deployment was failed, with error: %s\n", err)
 	}
 	defer file.Close()
 	_, err = file.Write([]byte(deploymentExample))
 	if err != nil {
-		logger.Info("Generating simple example for deployment was failed, with error: %s\n", err)
+		logger.Warning("Generating simple example for deployment was failed, with error: %s\n", err)
 	}
 	logger.Info("Generated a simple example. ")
 	logger.Info("Download https://github.com/cc4i/mahjong0/blob/master/templates/deployment-schema.json for schema, and jump to https://github.com/cc4i/mahjong0#examples for more examples.\n")
@@ -184,7 +184,7 @@ func download(c *cobra.Command, args []string, name string) (string, error) {
 
 	url, err := cmd.RunGetByVersion(addr, uri)
 	if err != nil {
-		logger.Info("Loading %s was failed with Err: %s. %s\n", name, err, url)
+		logger.Warning("Loading %s was failed with Err: %s. %s\n", name, err, url)
 		return destDir, err
 	}
 
@@ -197,13 +197,13 @@ func download(c *cobra.Command, args []string, name string) (string, error) {
 	req, err := http.NewRequest(http.MethodGet, string(url), nil)
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		logger.Info("Downloading was failed from %s with Err: %s. \n", string(url), err)
+		logger.Warning("Downloading was failed from %s with Err: %s. \n", string(url), err)
 		return destDir, err
 	}
 
 	err = cmd.UnTarGz(destDir, bufio.NewReader(resp.Body))
 	if err != nil {
-		logger.Info("Unzip tar was failed with Err: %s \n", err.Error())
+		logger.Warning("Unzip tar was failed with Err: %s \n", err.Error())
 		return destDir, err
 	}
 

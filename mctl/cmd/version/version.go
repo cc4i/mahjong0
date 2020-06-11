@@ -1,7 +1,7 @@
 package version
 
 import (
-	"fmt"
+	"github.com/kris-nova/logger"
 	"github.com/spf13/cobra"
 	"mctl/cmd"
 	"runtime"
@@ -23,22 +23,20 @@ var Version = &cobra.Command{
 }
 
 func clientVersion(c *cobra.Command, args []string) {
-	fmt.Printf("Client Version:\n")
-	fmt.Printf("\tVersion:\t%s\n", ClientVersion)
-	fmt.Printf("\tGo version:\t%s\n", runtime.Version())
-	fmt.Printf("\tGit commit:\t%s\n", GitCommit)
-	fmt.Printf("\tBuilt:\t%s\n", Built)
-	fmt.Printf("\tOS/Arch:\t%s/%s\n", runtime.GOOS, runtime.GOARCH)
+	logger.Info("\nClient Version:\n" +
+		"\tVersion:\t%s\n"+
+		"\tGo version:\t%s\n" +
+		"\tGit commit:\t%s\n"+
+		"\tBuilt:\t%s\n" +
+		"\tOS/Arch:\t%s/%s\n", ClientVersion, runtime.Version(), GitCommit, Built, runtime.GOOS, runtime.GOARCH)
 }
 
 func serverVersion(c *cobra.Command, args []string) {
-	//TODO Query from server
-	fmt.Printf("Server Version:\n")
 	addr, _ := c.Flags().GetString("addr")
 	if buf, err := cmd.RunGet(addr, "version"); err != nil {
-		fmt.Println(err.Error())
+		logger.Warning(err.Error())
 	} else {
-		fmt.Printf("%s\n", buf)
+		logger.Info("\nServer Version:\n%s\n", buf)
 	}
 
 }

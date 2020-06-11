@@ -20,7 +20,10 @@ func init() {
 }
 
 func main() {
-	var cmd = &cobra.Command{Use: "mctl"}
+	var cmd = &cobra.Command{
+		Use: "mctl",
+		Short: "The official CLI for Mahjong",
+	}
 	// Root flag for Dice's address
 	cmd.PersistentFlags().String("addr", "127.0.0.1:9090", "Dice's address & port, default : 127.0.0.1:9090")
 	addr := cmd.PersistentFlags().Lookup("addr")

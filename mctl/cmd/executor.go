@@ -37,16 +37,16 @@ func RunPostByVersion(addr string, uri string, body []byte) (int, error) {
 	}
 	resp, err := http.Post(u.String(), "text/yaml", bytes.NewReader(body))
 	if err != nil {
-		logger.Info("%s\n", err)
+		logger.Warning("%s\n", err)
 	} else {
-		logger.Info("%s\n", resp.Body)
+		logger.Warning("%s\n", resp.Body)
 	}
 	return resp.StatusCode, err
 }
 
 func Run(addr string, dryRun bool, cmd []byte) error {
 	if c, err := Connect2Dice(addr, dryRun); err != nil {
-		logger.Info("failed to connect with Dice: %s \n", err)
+		logger.Warning("failed to connect with Dice: %s \n", err)
 		return err
 	} else {
 		return ExecCommand(cmd, c)
@@ -72,13 +72,13 @@ func Connect2Dice(addr string, dryRun bool) (*websocket.Conn, error) {
 
 func ExecCommand(cmd []byte, c *websocket.Conn) error {
 	if err := c.WriteMessage(websocket.TextMessage, cmd); err != nil {
-		logger.Info("write error: %s\n", err)
+		logger.Warning("write error: %s\n", err)
 		return err
 	}
 	for {
 		_, message, err := c.ReadMessage()
 		if err != nil {
-			logger.Info("read error: %s\n", err)
+			logger.Warning("read error: %s\n", err)
 			return err
 		}
 		if string(message) == "d-done" {
