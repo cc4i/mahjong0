@@ -54,9 +54,9 @@ type TsLib struct {
 
 // TsStack represents all detail for each stack
 type TsStack struct {
-	TileInstance      string
-	TileName          string
-	TileVersion       string
+	TileInstance      string	//Unique name for Tile instance, either given or generated
+	TileName          string	// Name of Tile
+	TileVersion       string	// Version of Tile
 	TileConstructName string
 	TileVariable      string
 	TileStackName     string
@@ -64,6 +64,7 @@ type TsStack struct {
 	TileCategory      string
 	InputParameters   map[string]TsInputParameter //input name -> TsInputParameter
 	TsManifests       *TsManifests
+	TileFolder string 	// The relative folder for Tile
 }
 
 // TsInputParameter
@@ -139,9 +140,10 @@ func SortedTilesGrid(dSid string) []TilesGrid {
 // DependentEKSTile return dependent EKS tile in the the group
 func DependentEKSTile(dSid string, tileInstance string) *Tile {
 
+	pTileInstance := ParentTileInstance(dSid, tileInstance)
 	if allTG, ok := AllTilesGrids[dSid]; ok {
 		for _, v := range *allTG {
-			if v.ParentTileInstance == tileInstance {
+			if v.TileInstance == pTileInstance {
 				if at, ok := AllTs[dSid]; ok {
 					if tile, ok := at.AllTilesN[v.TileInstance]; ok {
 						if tile.Metadata.VendorService == EKS.VSString() {
@@ -152,9 +154,7 @@ func DependentEKSTile(dSid string, tileInstance string) *Tile {
 			}
 		}
 	}
-
 	return nil
-
 }
 
 // AllDependentTiles return all dependent Tiles
@@ -177,11 +177,11 @@ func AllDependentTiles(dSid string, tileInstance string) []Tile {
 }
 
 // IsDuplicatedCategory determine if it's duplicated Tile under same group
-func IsDuplicatedCategory(dSid string, rootTileInstance string, tileCategory string) bool {
+func IsDuplicatedCategory(dSid string, rootTileInstance string, tileName string) bool {
 	if allTG, ok := AllTilesGrids[dSid]; ok {
 		for _, v := range *allTG {
 			if v.RootTileInstance == rootTileInstance {
-				if v.TileCategory == tileCategory {
+				if v.TileName == tileName {
 					return true
 				}
 			}
@@ -222,18 +222,42 @@ func ValueRef(dSid string, ref string, ti string) (string, error) {
 
 			switch where {
 			case "inputs":
-				if tsStack, ok := at.TsStacksMapN[tileInstance]; ok {
-					for _, input := range tsStack.InputParameters {
-						if field == input.InputName {
-							return input.InputValue, nil
+				if tileInstance!="self" {
+					if tsStack, ok := at.TsStacksMapN[tileInstance]; ok {
+						for _, input := range tsStack.InputParameters {
+							if field == input.InputName {
+								return input.InputValue, nil
+							}
 						}
 					}
+				}  else {
+					//TODO: Any possible value ?! May not right
+					for _, tsStack := range at.TsStacksMapN {
+						for _, input := range tsStack.InputParameters {
+							if field == input.InputName {
+								return input.InputValue, nil
+							}
+						}
+					}
+
 				}
+
 			case "outputs":
-				if outputs, ok := at.AllOutputsN[tileInstance]; ok {
-					for name, output := range outputs.TsOutputs {
-						if name == field {
-							return output.OutputValue, nil
+				if tileInstance!="self" {
+					if outputs, ok := at.AllOutputsN[tileInstance]; ok {
+						for name, output := range outputs.TsOutputs {
+							if name == field {
+								return output.OutputValue, nil
+							}
+						}
+					}
+				} else {
+					//TODO: Any possible value ?!
+					for _, outputs := range at.AllOutputsN {
+						for name, output := range outputs.TsOutputs {
+							if name == field {
+								return output.OutputValue, nil
+							}
 						}
 					}
 				}

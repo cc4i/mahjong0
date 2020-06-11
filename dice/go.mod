@@ -12,5 +12,6 @@ require (
 	github.com/iancoleman/strcase v0.0.0-20191112232945-16388991a334
 	github.com/sirupsen/logrus v1.6.0
 	github.com/stretchr/testify v1.4.0
-	sigs.k8s.io/yaml v1.2.0
+	gopkg.in/yaml.v2 v2.2.8
+    sigs.k8s.io/yaml v1.2.0
 )

@@ -103,13 +103,13 @@ func (wb *WsBox) Processor(ctx context.Context, messageType int, p []byte, dryRu
 
 	//
 	// 2. assemble super app with base templates +
-	engine.SR(wb.out, []byte("Generating CDK App..."))
+	engine.SR(wb.out, []byte("Generating main app..."))
 	ep, err = deploy.GenerateMainApp(ctx, wb.out)
 	if err != nil {
 		engine.SRf(wb.out, "GenerateMainApp error : %s \n", err)
 		return err
 	}
-	engine.SR(wb.out, []byte("Generating CDK App was success."))
+	engine.SR(wb.out, []byte("Generating main app... with success"))
 
 	//
 	// 3. execute cdk / manifest +

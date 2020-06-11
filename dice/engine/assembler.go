@@ -4,6 +4,7 @@ import (
 	"container/list"
 	"context"
 	"dice/utils"
+	"errors"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
@@ -119,11 +120,14 @@ func (d *Deployment) GenerateMainApp(ctx context.Context, out *websocket.Conn) (
 	SR(out, []byte("Loading Super ... from RePO with success."))
 
 
-
 	// 3. Loading Tiles from s3 & unzip
 	if err := d.ProcessTiles(ctx, aTs, override, out); err != nil {
 		aTs.Dr.Status = Interrupted.DSString()
 		return ep, err
+	}
+	if len(aTs.TsStacksMapN)<1 {
+		aTs.Dr.Status = Interrupted.DSString()
+		return ep, errors.New("invalid deployment without parsed Tiles")
 	}
 
 	// 4. Generate super.ts
@@ -141,22 +145,29 @@ func (d *Deployment) GenerateMainApp(ctx context.Context, out *websocket.Conn) (
 	return plan, nil
 }
 
+func (d *Deployment) validateDependsOn(tileInstance string) error {
+	for _,ti := range d.OriginalOrder {
+		if ti == tileInstance {
+			return nil
+		}
+	}
+	return errors.New(tileInstance + " wasn't existed in the deployment")
+}
+
 // ProcessTiles controls Tiles processing
 func (d *Deployment) ProcessTiles(ctx context.Context, aTs *Ts, override map[string]*TileInputOverride, out *websocket.Conn) error {
 	// order factor, every tiles family +1000
 	executableOrder := 1000
 	toBeProcessedTiles := make(map[string]DeploymentTemplateDetail) //tile-instance -> Tile
-	var reversedTileInstance []string
 
-	// Process by reversed order / revered order = right order we see in yaml
-	for tileInstance, _ := range d.Spec.Template.Tiles {
-		reversedTileInstance = append(reversedTileInstance, tileInstance)
-	}
-	for i := len(reversedTileInstance) - 1; i >= 0; i-- {
-		tileInstance := reversedTileInstance[i]
+	for _,tileInstance := range d.OriginalOrder {
+
 		if tile, ok := d.Spec.Template.Tiles[tileInstance]; ok {
 			parentTileInstance := "root"
 			if tile.DependsOn != "" {
+				if err := d.validateDependsOn(tile.DependsOn); err!=nil {
+					return err
+				}
 				parentTileInstance = tile.DependsOn
 				if allTG, ok := AllTilesGrids[ctx.Value("d-sid").(string)]; ok && allTG != nil {
 					if _, ok := (*allTG)[parentTileInstance]; ok {
@@ -260,7 +271,7 @@ func (d *Deployment) PullTile(ctx context.Context,
 	if ti == "" {
 		ti = fmt.Sprintf("%s-%s-%s", tile, id, "generated")
 	}
-	tg := TilesGrid{
+	tg := TilesGrid {
 		TileInstance:       ti,
 		ExecutableOrder:    executableOrder - 1,
 		TileName:           tile,
@@ -270,7 +281,7 @@ func (d *Deployment) PullTile(ctx context.Context,
 		TileCategory:       parsedTile.Metadata.Category,
 	}
 	if allTG, ok := AllTilesGrids[dSid]; ok && allTG != nil {
-		if !IsDuplicatedCategory(dSid, rootTileInstance, parsedTile.Metadata.Category) {
+		if !IsDuplicatedCategory(dSid, rootTileInstance, parsedTile.Metadata.Name) {
 			(*allTG)[ti] = tg
 		} else {
 			log.Debugf("It's duplicated Tile under same group, Ignore : %s / %s / %s\n", tile, version, parsedTile.Metadata.Category)
@@ -495,6 +506,7 @@ func (d *Deployment) PullTile(ctx context.Context,
 		InputParameters:   inputs,
 		TileCategory:      parsedTile.Metadata.Category,
 		TsManifests:       tm,
+		TileFolder: "/lib/"+strings.ToLower(parsedTile.Metadata.Name),
 	}
 	if _, ok := aTs.TsStacksMapN[tg.TileInstance]; !ok {
 		aTs.TsStacksMapN[tg.TileInstance] = ts
@@ -565,12 +577,12 @@ func str2string(str string, inputType string) string {
 // ApplyMainTs apply values with super.ts template
 func (d *Deployment) ApplyMainTs(ctx context.Context, aTs *Ts, out *websocket.Conn) error {
 	dSid := ctx.Value("d-sid").(string)
-	sts := DiceConfig.WorkHome + aTs.Dr.SuperFolder + "/bin/super.ts"
+	superFile := DiceConfig.WorkHome + aTs.Dr.SuperFolder + "/bin/super.ts"
 	SR(out, []byte("Generating main.ts for Super ..."))
 
-	tp, _ := template.ParseFiles(sts)
+	tp, _ := template.ParseFiles(superFile)
 
-	file, err := os.Create(sts + "_new")
+	tmpFile, err := os.Create(superFile + "_new")
 	if err != nil {
 		SR(out, []byte(err.Error()))
 		return err
@@ -585,44 +597,49 @@ func (d *Deployment) ApplyMainTs(ctx context.Context, aTs *Ts, out *websocket.Co
 		aTs.TsLibs = append(aTs.TsLibs, tl)
 	}
 
-	err = tp.Execute(file, aTs)
+	err = tp.Execute(tmpFile, aTs)
 	if err != nil {
 		SR(out, []byte(err.Error()))
 		return err
 	}
-	err = file.Close()
+	err = tmpFile.Close()
 	if err != nil {
 		SR(out, []byte(err.Error()))
 		return err
 	}
-	os.Rename(sts, sts+"_old")
-	os.Rename(sts+"_new", sts)
-	buf, err := ioutil.ReadFile(sts)
-	if err != nil {
-		SR(out, []byte(err.Error()))
-		return err
-	}
+	os.Rename(superFile, superFile+"_old")
+	os.Rename(superFile+"_new", superFile)
+	//buf, err := ioutil.ReadFile(superFile)
+	//if err != nil {
+	//	SR(out, []byte(err.Error()))
+	//	return err
+	//}
 	SR(out, []byte("Generating main.ts for Super ... with success"))
-	SR(out, []byte("--BO:-------------------------------------------------"))
-	SR(out, buf)
-	SR(out, []byte("--EO:-------------------------------------------------"))
+	//SR(out, []byte("--BO:-------------------------------------------------"))
+	//SR(out, buf)
+	//SR(out, []byte("--EO:-------------------------------------------------"))
 	return nil
 }
 
 func (d *Deployment) GenerateExecutePlan(ctx context.Context, aTs *Ts, out *websocket.Conn) (*ExecutionPlan, error) {
+	//dSid := ctx.Value("d-sid").(string)
 	SR(out, []byte("Generating execution plan... "))
 	var p = ExecutionPlan{
 		Plan:             list.New(),
 		PlanMirror:       make(map[string]*ExecutionStage),
 		OriginDeployment: d,
 	}
+	//tgs := SortedTilesGrid(dSid)
+	//for _, tg := range tgs {
+	//	log.Println(tg.TileInstance)
+	//}
 	for _, ts := range aTs.TsStacks {
 		workHome := DiceConfig.WorkHome + aTs.Dr.SuperFolder
 		stage := ExecutionStage{
 			Name:        ts.TileInstance,
 			Kind:        ts.TileCategory,
 			WorkHome:    workHome,
-			Preparation: []string{"cd " + workHome},
+			Preparation: []string{"cd $WORK_HOME"},
 			TileName:    ts.TileName,
 			TileVersion: ts.TileVersion,
 		}
@@ -633,7 +650,7 @@ func (d *Deployment) GenerateExecutePlan(ctx context.Context, aTs *Ts, out *webs
 			stage.Kind = CDK.SKString()
 		}
 		stage.InjectedEnv = append(stage.InjectedEnv, "export WORK_HOME="+DiceConfig.WorkHome+aTs.Dr.SuperFolder)
-		stage.InjectedEnv = append(stage.InjectedEnv, "export TILE_HOME="+DiceConfig.WorkHome+aTs.Dr.SuperFolder+"/lib/"+strings.ToLower(ts.TileName))
+		stage.InjectedEnv = append(stage.InjectedEnv, "export TILE_HOME="+DiceConfig.WorkHome+aTs.Dr.SuperFolder+ts.TileFolder)
 
 		if ts.TileCategory == ContainerApplication.CString() || ts.TileCategory == Application.CString() {
 			// ContainerApplication & Application
@@ -725,13 +742,27 @@ func (d *Deployment) GenerateExecutePlan(ctx context.Context, aTs *Ts, out *webs
 		}
 
 		p.Plan.PushFront(&stage)
-		p.PlanMirror[ts.TileName] = &stage
+		p.PlanMirror[ts.TileInstance] = &stage
 	}
 
 	buf, err := yaml.Marshal(p)
 	SR(out, buf)
 	SR(out, []byte("Generating execution plan... with success"))
+	SR(out, []byte("\n+--------------Execution Flow--------------+\n"))
+	SR(out, []byte(toFlow(&p)))
+	SR(out, []byte("\n+--------------Execution Flow--------------+\n"))
 	return &p, err
+}
+
+func toFlow(p *ExecutionPlan) string {
+
+	flow :="{Start}"
+	for e := p.Plan.Back(); e != nil; e = e.Prev() {
+		stage := e.Value.(*ExecutionStage)
+		flow=flow+" -> " + stage.Name
+	}
+	flow = flow + " -> {Stop}"
+	return flow
 }
 
 func generateAId() string {

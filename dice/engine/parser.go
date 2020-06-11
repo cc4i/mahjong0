@@ -5,6 +5,7 @@ import (
 	"errors"
 	valid "github.com/asaskevich/govalidator"
 	log "github.com/sirupsen/logrus"
+	yamlv2 "gopkg.in/yaml.v2"
 	"sigs.k8s.io/yaml"
 )
 
@@ -73,10 +74,11 @@ func (mts ManifestType) MTString() string {
 
 // Deployment specification
 type Deployment struct {
-	ApiVersion string         `json:"apiVersion"`
-	Kind       string         `json:"kind" valid:"in(Deployment)"`
-	Metadata   Metadata       `json:"metadata"`
-	Spec       DeploymentSpec `json:"spec"`
+	ApiVersion    string         `json:"apiVersion"`
+	Kind          string         `json:"kind" valid:"in(Deployment)"`
+	Metadata      Metadata       `json:"metadata"`
+	Spec          DeploymentSpec `json:"spec"`
+	OriginalOrder []string       `json:"OriginalOrder"` // Stored TileInstance, keep original order as same as in yaml
 }
 
 // DeploymentSpec deployment.spec
@@ -87,10 +89,7 @@ type DeploymentSpec struct {
 
 // DeploymentTemplate deployment.spec.template
 type DeploymentTemplate struct {
-	// Tiles
-	Tiles map[string]DeploymentTemplateDetail `json:"tiles"`
-	// Order for execution plan
-	ForceOrder []string `json:"forceOrder"`
+	Tiles map[string]DeploymentTemplateDetail `json:"tiles"` // Tiles represent all to be deployed Tiles
 }
 
 // DeploymentSummary deployment.spec.summary
@@ -253,11 +252,41 @@ func (d *Data) ParseTile(ctx context.Context) (*Tile, error) {
 // ParseDeployment parse Deployment
 func (d *Data) ParseDeployment(ctx context.Context) (*Deployment, error) {
 	var deployment Deployment
-
-	if err := yaml.Unmarshal(*d, &deployment); err != nil {
-		log.Errorf("%s\n", err)
+	mapSlice := yamlv2.MapSlice{}
+	if err := yamlv2.Unmarshal(*d, &mapSlice); err != nil {
+		log.Errorf("Unmarshal mapSlice yaml error : %s\n", err)
 		return &deployment, errors.New(" Deployment specification was invalid")
 	}
+
+	var originalOrder []string
+	for _, item := range mapSlice {
+		if item.Key=="spec" {
+			spec := item.Value.(yamlv2.MapSlice)
+			for _, s := range spec {
+				if s.Key=="template" {
+					template := s.Value.(yamlv2.MapSlice)
+					for _, t := range template {
+						if t.Key == "tiles" {
+							tiles := t.Value.(yamlv2.MapSlice)
+							for _, tile := range tiles {
+								originalOrder = append(originalOrder, tile.Key.(string))
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	if len(originalOrder)<1 {
+		return &deployment, errors.New(" Deployment specification didn't include tiles")
+	}
+
+	if err := yaml.Unmarshal(*d, &deployment); err != nil {
+		log.Errorf("Unmarshal yaml error : %s\n", err)
+		return &deployment, errors.New(" Deployment specification was invalid")
+	}
+	// Attache original order
+	deployment.OriginalOrder = originalOrder
 
 	return &deployment, d.ValidateDeployment(ctx, &deployment)
 }
