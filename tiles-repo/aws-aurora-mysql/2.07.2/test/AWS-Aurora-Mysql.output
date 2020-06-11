@@ -1,0 +1,103 @@
+{"level":"info","msg":"+ export WORK_HOME=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/go-bumblebee-jazz-application-demo-wE1tltyX"}
+{"level":"info","msg":"+ WORK_HOME=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/go-bumblebee-jazz-application-demo-wE1tltyX"}
+{"level":"info","msg":"+ export TILE_HOME=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/go-bumblebee-jazz-application-demo-wE1tltyX/lib/aws-aurora-mysql"}
+{"level":"info","msg":"+ TILE_HOME=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/go-bumblebee-jazz-application-demo-wE1tltyX/lib/aws-aurora-mysql"}
+{"level":"info","msg":"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/go-bumblebee-jazz-application-demo-wE1tltyX"}
+{"level":"info","msg":"+ npm install"}
+{"level":"info","msg":"npm WARN @aws-cdk/core@1.42.0 requires a peer of @aws-cdk/cdk-assets-schema@1.42.0 but none is installed. You must install peer dependencies yourself."}
+{"level":"info","msg":"npm WARN super@0.1.0 No repository field."}
+{"level":"info","msg":"npm WARN super@0.1.0 No license field."}
+{"level":"info","msg":""}
+{"level":"info","msg":"audited 858 packages in 6.822s"}
+{"level":"info","msg":""}
+{"level":"info","msg":"14 packages are looking for funding"}
+{"level":"info","msg":"  run `npm fund` for details"}
+{"level":"info","msg":""}
+{"level":"info","msg":"found 0 vulnerabilities"}
+{"level":"info","msg":""}
+{"level":"info","msg":"+ npm run build"}
+{"level":"info","msg":""}
+{"level":"info","msg":"\u003e super@0.1.0 build /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/go-bumblebee-jazz-application-demo-wE1tltyX"}
+{"level":"info","msg":"\u003e tsc"}
+{"level":"info","msg":""}
+{"level":"info","msg":"+ cdk list"}
+{"level":"info","msg":"Network0Stack9cd004be"}
+{"level":"info","msg":"Network0Stackbc5a18b6"}
+{"level":"info","msg":"AWSAuroraMysqlStack15d060ef"}
+{"level":"info","msg":"AWSAuroraMysqlStackd4e1e0e1"}
+{"level":"info","msg":"AWSElastiCacheRedisStack5b48a7a6"}
+{"level":"info","msg":"AWSElastiCacheRedisStacka9c8e94b"}
+{"level":"info","msg":"EksWithSpotStack2284e8d0"}
+{"level":"info","msg":"EksWithSpotStack68a88232"}
+{"level":"info","msg":"+ cdk deploy AWSAuroraMysqlStackd4e1e0e1 --require-approval never"}
+{"level":"info","msg":"Including dependency stacks: Network0Stack9cd004be"}
+{"level":"info","msg":"Network0Stack9cd004be"}
+{"level":"info","msg":"Network0Stack9cd004be: deploying..."}
+{"level":"info","msg":""}
+{"level":"info","msg":" ✅  Network0Stack9cd004be (no changes)"}
+{"level":"info","msg":""}
+{"level":"info","msg":"Outputs:"}
+{"level":"info","msg":"Network0Stack9cd004be.Network0publicSubnetId1AE831B0A = subnet-09a421484a9fd7825"}
+{"level":"info","msg":"Network0Stack9cd004be.Network0isolatedSubnetId206A72368 = subnet-01d9f17893c56725b"}
+{"level":"info","msg":"Network0Stack9cd004be.Network0privateSubnetId15BEF5820 = subnet-01d5bc68bec7801a0"}
+{"level":"info","msg":"Network0Stack9cd004be.ExportsOutputRefNetwork0BaseVPCingressSubnet2Subnet52888390B37BC1D9 = subnet-00dd5119bae289252"}
+{"level":"info","msg":"Network0Stack9cd004be.ExportsOutputRefNetwork0BaseVPCapplicationSubnet1SubnetBC4191259BA51423 = subnet-01d5bc68bec7801a0"}
+{"level":"info","msg":"Network0Stack9cd004be.ExportsOutputRefNetwork0BaseVPCF17C8F455FAB5CE7 = vpc-0747a487cac350652"}
+{"level":"info","msg":"Network0Stack9cd004be.ExportsOutputRefNetwork0BaseVPCapplicationSubnet2Subnet98478B5F0BDF1D6E = subnet-0b2394de303addade"}
+{"level":"info","msg":"Network0Stack9cd004be.ExportsOutputRefNetwork0BaseVPCingressSubnet1Subnet5744344C34286214 = subnet-09a421484a9fd7825"}
+{"level":"info","msg":"Network0Stack9cd004be.Network0availabilityZonesuswest2bD55CD48C = us-west-2b"}
+{"level":"info","msg":"Network0Stack9cd004be.ExportsOutputFnGetAttNetwork0BaseVPCF17C8F45CidrBlockEBE760E6 = 192.0.0.0/16"}
+{"level":"info","msg":"Network0Stack9cd004be.Network0publicSubnetId26BBC24FE = subnet-00dd5119bae289252"}
+{"level":"info","msg":"Network0Stack9cd004be.Network0privateSubnetId281C6427A = subnet-0b2394de303addade"}
+{"level":"info","msg":"Network0Stack9cd004be.Network0isolatedSubnetId128715501 = subnet-04177b73b43e37d22"}
+{"level":"info","msg":"Network0Stack9cd004be.Network0vpcId7C11C88F = vpc-0747a487cac350652"}
+{"level":"info","msg":"Network0Stack9cd004be.Network0availabilityZonesuswest2a30BA59C6 = us-west-2a"}
+{"level":"info","msg":""}
+{"level":"info","msg":"Stack ARN:"}
+{"level":"info","msg":"AWSAuroraMysqlStackd4e1e0e1"}
+{"level":"info","msg":"AWSAuroraMysqlStackd4e1e0e1: deploying..."}
+{"level":"info","msg":"arn:aws:cloudformation:us-west-2:530820415924:stack/Network0Stack9cd004be/02caa590-ab06-11ea-aa34-06a318773a24"}
+{"level":"info","msg":"AWSAuroraMysqlStackd4e1e0e1: creating CloudFormation changeset..."}
+{"level":"info","msg":" 0/10 | 11:41:44 PM | CREATE_IN_PROGRESS   | AWS::RDS::DBClusterParameterGroup | ClusterParameterGroup (ClusterParameterGroupF60E75FA) "}
+{"level":"info","msg":" 0/10 | 11:41:44 PM | CREATE_IN_PROGRESS   | AWS::CDK::Metadata                | CDKMetadata "}
+{"level":"info","msg":" 0/10 | 11:41:44 PM | CREATE_IN_PROGRESS   | AWS::SecretsManager::Secret       | AWSAuroraMysql/DBCredentialsSecret (AWSAuroraMysqlDBCredentialsSecret71C4C5DA) "}
+{"level":"info","msg":" 0/10 | 11:41:44 PM | CREATE_IN_PROGRESS   | AWS::RDS::DBClusterParameterGroup | ClusterParameterGroup (ClusterParameterGroupF60E75FA) Resource creation Initiated"}
+{"level":"info","msg":" 0/10 | 11:41:45 PM | CREATE_IN_PROGRESS   | AWS::CDK::Metadata                | CDKMetadata Resource creation Initiated"}
+{"level":"info","msg":" 0/10 | 11:41:45 PM | CREATE_IN_PROGRESS   | AWS::SecretsManager::Secret       | AWSAuroraMysql/DBCredentialsSecret (AWSAuroraMysqlDBCredentialsSecret71C4C5DA) Resource creation Initiated"}
+{"level":"info","msg":" 1/10 | 11:41:46 PM | CREATE_COMPLETE      | AWS::CDK::Metadata                | CDKMetadata "}
+{"level":"info","msg":" 2/10 | 11:41:46 PM | CREATE_COMPLETE      | AWS::SecretsManager::Secret       | AWSAuroraMysql/DBCredentialsSecret (AWSAuroraMysqlDBCredentialsSecret71C4C5DA) "}
+{"level":"info","msg":" 2/10 | 11:41:47 PM | CREATE_IN_PROGRESS   | AWS::SSM::Parameter               | AWSAuroraMysql/DBCredentialsArn (AWSAuroraMysqlDBCredentialsArn130A2FB2) "}
+{"level":"info","msg":" 2/10 | 11:41:49 PM | CREATE_IN_PROGRESS   | AWS::SSM::Parameter               | AWSAuroraMysql/DBCredentialsArn (AWSAuroraMysqlDBCredentialsArn130A2FB2) Resource creation Initiated"}
+{"level":"info","msg":" 3/10 | 11:41:50 PM | CREATE_COMPLETE      | AWS::SSM::Parameter               | AWSAuroraMysql/DBCredentialsArn (AWSAuroraMysqlDBCredentialsArn130A2FB2) "}
+{"level":"info","msg":"3/10 Currently in progress: ClusterParameterGroupF60E75FA"}
+{"level":"info","msg":" 4/10 | 11:46:45 PM | CREATE_COMPLETE      | AWS::RDS::DBClusterParameterGroup | ClusterParameterGroup (ClusterParameterGroupF60E75FA) "}
+{"level":"info","msg":" 4/10 | 11:46:46 PM | CREATE_IN_PROGRESS   | AWS::RDS::DBSubnetGroup           | AuroraMySQL/Subnets (AuroraMySQLSubnets4ADDEC5A) "}
+{"level":"info","msg":" 4/10 | 11:46:46 PM | CREATE_IN_PROGRESS   | AWS::EC2::SecurityGroup           | AuroraMySQL/SecurityGroup (AuroraMySQLSecurityGroup065BD5C6) "}
+{"level":"info","msg":" 4/10 | 11:46:47 PM | CREATE_IN_PROGRESS   | AWS::RDS::DBSubnetGroup           | AuroraMySQL/Subnets (AuroraMySQLSubnets4ADDEC5A) Resource creation Initiated"}
+{"level":"info","msg":" 5/10 | 11:46:47 PM | CREATE_COMPLETE      | AWS::RDS::DBSubnetGroup           | AuroraMySQL/Subnets (AuroraMySQLSubnets4ADDEC5A) "}
+{"level":"info","msg":" 5/10 | 11:46:51 PM | CREATE_IN_PROGRESS   | AWS::EC2::SecurityGroup           | AuroraMySQL/SecurityGroup (AuroraMySQLSecurityGroup065BD5C6) Resource creation Initiated"}
+{"level":"info","msg":" 6/10 | 11:46:52 PM | CREATE_COMPLETE      | AWS::EC2::SecurityGroup           | AuroraMySQL/SecurityGroup (AuroraMySQLSecurityGroup065BD5C6) "}
+{"level":"info","msg":" 6/10 | 11:46:54 PM | CREATE_IN_PROGRESS   | AWS::RDS::DBCluster               | AuroraMySQL (AuroraMySQL58A40F91) "}
+{"level":"info","msg":" 6/10 | 11:46:56 PM | CREATE_IN_PROGRESS   | AWS::RDS::DBCluster               | AuroraMySQL (AuroraMySQL58A40F91) Resource creation Initiated"}
+{"level":"info","msg":"6/10 Currently in progress: AuroraMySQL58A40F91"}
+{"level":"info","msg":" 7/10 | 11:47:58 PM | CREATE_COMPLETE      | AWS::RDS::DBCluster               | AuroraMySQL (AuroraMySQL58A40F91) "}
+{"level":"info","msg":" 7/10 | 11:48:00 PM | CREATE_IN_PROGRESS   | AWS::RDS::DBInstance              | AuroraMySQL/Instance1 (AuroraMySQLInstance1D2804BA5) "}
+{"level":"info","msg":" 7/10 | 11:48:00 PM | CREATE_IN_PROGRESS   | AWS::RDS::DBInstance              | AuroraMySQL/Instance2 (AuroraMySQLInstance246095B16) "}
+{"level":"info","msg":" 7/10 | 11:48:01 PM | CREATE_IN_PROGRESS   | AWS::RDS::DBInstance              | AuroraMySQL/Instance2 (AuroraMySQLInstance246095B16) Resource creation Initiated"}
+{"level":"info","msg":" 7/10 | 11:48:01 PM | CREATE_IN_PROGRESS   | AWS::RDS::DBInstance              | AuroraMySQL/Instance1 (AuroraMySQLInstance1D2804BA5) Resource creation Initiated"}
+{"level":"info","msg":"7/10 Currently in progress: AuroraMySQLInstance1D2804BA5, AuroraMySQLInstance246095B16"}
+{"level":"info","msg":" 8/10 | 11:53:14 PM | CREATE_COMPLETE      | AWS::RDS::DBInstance              | AuroraMySQL/Instance2 (AuroraMySQLInstance246095B16) "}
+{"level":"info","msg":"8/10 Currently in progress: AuroraMySQLInstance1D2804BA5"}
+{"level":"info","msg":" 9/10 | 11:58:10 PM | CREATE_COMPLETE      | AWS::RDS::DBInstance              | AuroraMySQL/Instance1 (AuroraMySQLInstance1D2804BA5) "}
+{"level":"info","msg":" 10/10 | 11:58:12 PM | CREATE_COMPLETE      | AWS::CloudFormation::Stack        | AWSAuroraMysqlStackd4e1e0e1 "}
+{"level":"info","msg":""}
+{"level":"info","msg":" ✅  AWSAuroraMysqlStackd4e1e0e1"}
+{"level":"info","msg":""}
+{"level":"info","msg":"Outputs:"}
+{"level":"info","msg":"AWSAuroraMysqlStackd4e1e0e1.AWSAuroraMysqlclusterReadEndpoint64ECF855 = aurora-mysql-prod.cluster-ro-cdkrmxd5lpf9.us-west-2.rds.amazonaws.com:-1.8881545897089485e+289"}
+{"level":"info","msg":"AWSAuroraMysqlStackd4e1e0e1.AWSAuroraMysqlclusterEndpointF377059B = aurora-mysql-prod.cluster-cdkrmxd5lpf9.us-west-2.rds.amazonaws.com:-1.8881545897089485e+289"}
+{"level":"info","msg":"AWSAuroraMysqlStackd4e1e0e1.AWSAuroraMysqldefaultDatabaseNameDA016F98 = testDb"}
+{"level":"info","msg":"arn:aws:cloudformation:us-west-2:530820415924:stack/AWSAuroraMysqlStackd4e1e0e1/5477fbf0-ab0f-11ea-87e1-0a3f23848a3e"}
+{"level":"info","msg":"AWSAuroraMysqlStackd4e1e0e1.AWSAuroraMysqlclusterIdentifierF70315DC = aurora-mysql-prod"}
+{"level":"info","msg":""}
+{"level":"info","msg":"Stack ARN:"}

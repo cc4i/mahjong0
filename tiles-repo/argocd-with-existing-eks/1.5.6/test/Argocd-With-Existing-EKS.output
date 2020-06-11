@@ -1,0 +1,62 @@
+{"level":"info","msg":"+ aws eks update-kubeconfig --name mahjong-eks-cluster-stage02 --role-arn arn:aws:iam::530820415924:role/EksWithSpotStack68a88232-EksWithSpotEksClusterMast-T6HHXXDTH0M3 --kubeconfig /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/testing-yEI6sxka/lib/argocd-with-existing-eks/kube.config"}
+{"level":"info","msg":"Added new context arn:aws:eks:us-west-2:530820415924:cluster/mahjong-eks-cluster-stage02 to /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/testing-yEI6sxka/lib/argocd-with-existing-eks/kube.config"}
+{"level":"info","msg":"+ export KUBECONFIG=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/testing-yEI6sxka/lib/argocd-with-existing-eks/kube.config"}
+{"level":"info","msg":"+ KUBECONFIG=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/testing-yEI6sxka/lib/argocd-with-existing-eks/kube.config"}
+{"level":"info","msg":"+ export WORK_HOME=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/testing-yEI6sxka"}
+{"level":"info","msg":"+ WORK_HOME=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/testing-yEI6sxka"}
+{"level":"info","msg":"+ export TILE_HOME=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/testing-yEI6sxka/lib/argocd-with-existing-eks"}
+{"level":"info","msg":"+ TILE_HOME=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/testing-yEI6sxka/lib/argocd-with-existing-eks"}
+{"level":"info","msg":"+ export NAMESPACE=argocd"}
+{"level":"info","msg":"+ NAMESPACE=argocd"}
+{"level":"info","msg":"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/testing-yEI6sxka"}
+{"level":"info","msg":"+ kubectl create ns argocd"}
+{"level":"info","msg":"namespace/argocd created"}
+{"level":"info","msg":"+ kubectl apply -f ./lib/argocd-with-existing-eks/lib/k8s/install.yaml -n argocd"}
+{"level":"info","msg":"customresourcedefinition.apiextensions.k8s.io/applications.argoproj.io created"}
+{"level":"info","msg":"customresourcedefinition.apiextensions.k8s.io/appprojects.argoproj.io created"}
+{"level":"info","msg":"serviceaccount/argocd-application-controller created"}
+{"level":"info","msg":"serviceaccount/argocd-dex-server created"}
+{"level":"info","msg":"serviceaccount/argocd-server created"}
+{"level":"info","msg":"role.rbac.authorization.k8s.io/argocd-application-controller created"}
+{"level":"info","msg":"role.rbac.authorization.k8s.io/argocd-dex-server created"}
+{"level":"info","msg":"role.rbac.authorization.k8s.io/argocd-server created"}
+{"level":"info","msg":"clusterrole.rbac.authorization.k8s.io/argocd-application-controller created"}
+{"level":"info","msg":"clusterrole.rbac.authorization.k8s.io/argocd-server created"}
+{"level":"info","msg":"rolebinding.rbac.authorization.k8s.io/argocd-application-controller created"}
+{"level":"info","msg":"rolebinding.rbac.authorization.k8s.io/argocd-dex-server created"}
+{"level":"info","msg":"rolebinding.rbac.authorization.k8s.io/argocd-server created"}
+{"level":"info","msg":"clusterrolebinding.rbac.authorization.k8s.io/argocd-application-controller created"}
+{"level":"info","msg":"clusterrolebinding.rbac.authorization.k8s.io/argocd-server created"}
+{"level":"info","msg":"configmap/argocd-cm created"}
+{"level":"info","msg":"configmap/argocd-rbac-cm created"}
+{"level":"info","msg":"configmap/argocd-ssh-known-hosts-cm created"}
+{"level":"info","msg":"configmap/argocd-tls-certs-cm created"}
+{"level":"info","msg":"secret/argocd-secret created"}
+{"level":"info","msg":"service/argocd-dex-server created"}
+{"level":"info","msg":"service/argocd-metrics created"}
+{"level":"info","msg":"service/argocd-redis created"}
+{"level":"info","msg":"service/argocd-repo-server created"}
+{"level":"info","msg":"service/argocd-server-metrics created"}
+{"level":"info","msg":"service/argocd-server created"}
+{"level":"info","msg":"deployment.apps/argocd-application-controller created"}
+{"level":"info","msg":"deployment.apps/argocd-dex-server created"}
+{"level":"info","msg":"deployment.apps/argocd-redis created"}
+{"level":"info","msg":"deployment.apps/argocd-repo-server created"}
+{"level":"info","msg":"deployment.apps/argocd-server created"}
+{"level":"info","msg":"+ sleep 10"}
+{"level":"info","msg":"+ echo '{\"user=admin\"}'"}
+{"user=admin"}
+{"level":"info","msg":"++ kubectl get pods -n argocd -l app.kubernetes.io/name=argocd-server -o name"}
+{"level":"info","msg":"++ cut -d/ -f 2"}
+{"level":"info","msg":"+ echo '{\"password=argocd-server-cf87b5c86-hbsxf\"}'"}
+{"password=argocd-server-cf87b5c86-hbsxf"}
+{"level":"info","msg":"++ kubectl get svc argocd-server -n argocd -o json"}
+{"level":"info","msg":"++ jq -r '.status.loadBalancer.ingress[].hostname'"}
+{"level":"info","msg":"+ echo '{\"argocdServer=a5705b8bc2dd24d0e806ba551b0a4a25-1193132182.us-west-2.elb.amazonaws.com\"}'"}
+{"argocdServer=a5705b8bc2dd24d0e806ba551b0a4a25-1193132182.us-west-2.elb.amazonaws.com"}
+{"level":"info","msg":"++ echo https://"}
+{"level":"info","msg":"++ /argocd"}
+{"level":"info","msg":"/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/testing-yEI6sxka/script-tileArgocdWithExsitingEks152-cBHSSr9z.sh: line 29: /argocd: No such file or directory"}
+{"argocdBaseUrl=https://$(self.outputs.argocdServer)/argocd"}
+{"level":"info","msg":"0"}
+{"level":"info","msg":"+ echo 0"}
