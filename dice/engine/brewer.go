@@ -194,6 +194,7 @@ func (ep *ExecutionPlan) ReplaceAllValueRef(str string, dSid string, ti string) 
 		} else {
 			break
 		}
+		// avoid infinite loop due to replacement failure
 		max--
 		if max<0 {
 			break

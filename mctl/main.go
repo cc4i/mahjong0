@@ -1,7 +1,7 @@
 package main
 
 import (
-	log "github.com/sirupsen/logrus"
+	"github.com/kris-nova/logger"
 	"github.com/spf13/cobra"
 	"mctl/cmd/deploy"
 	"mctl/cmd/initial"
@@ -11,9 +11,12 @@ import (
 )
 
 func init() {
-	log.SetFormatter(&log.TextFormatter{
-		ForceColors: true,
-	})
+	// Control colored output
+	logger.Color = true
+	logger.Fabulous = true
+	// Add timestamps
+	logger.Timestamps = true
+	logger.Level = 4
 }
 
 func main() {

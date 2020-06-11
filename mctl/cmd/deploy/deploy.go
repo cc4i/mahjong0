@@ -1,7 +1,7 @@
 package deploy
 
 import (
-	log "github.com/sirupsen/logrus"
+	"github.com/kris-nova/logger"
 	"github.com/spf13/cobra"
 	"io/ioutil"
 	"mctl/cmd"
@@ -30,12 +30,12 @@ func deployFunc(c *cobra.Command, args []string) {
 		if len(args) == 1 {
 			cmd.Run(addr, dryRun, []byte(args[0]))
 		} else {
-			log.Fatal("Need deployment file to apply")
+			logger.Info("Need deployment file to apply")
 		}
 	} else {
 		buf, err := ioutil.ReadFile(filename)
 		if err != nil {
-			log.Printf("%s\n", err)
+			logger.Info("%s\n", err)
 		}
 		cmd.Run(addr, dryRun, buf)
 	}

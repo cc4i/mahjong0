@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/gorilla/websocket"
-	log "github.com/sirupsen/logrus"
+	"github.com/kris-nova/logger"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -37,16 +37,16 @@ func RunPostByVersion(addr string, uri string, body []byte) (int, error) {
 	}
 	resp, err := http.Post(u.String(), "text/yaml", bytes.NewReader(body))
 	if err != nil {
-		log.Printf("%s\n", err)
+		logger.Info("%s\n", err)
 	} else {
-		log.Printf("%s\n", resp.Body)
+		logger.Info("%s\n", resp.Body)
 	}
 	return resp.StatusCode, err
 }
 
 func Run(addr string, dryRun bool, cmd []byte) error {
 	if c, err := Connect2Dice(addr, dryRun); err != nil {
-		log.Printf("failed to connect with Dice: %s \n", err)
+		logger.Info("failed to connect with Dice: %s \n", err)
 		return err
 	} else {
 		return ExecCommand(cmd, c)
@@ -62,7 +62,7 @@ func Connect2Dice(addr string, dryRun bool) (*websocket.Conn, error) {
 	if dryRun {
 		u.RawQuery="dryRun=true"
 	}
-	log.Printf("Connecting to %s\n", u.String())
+	logger.Info("Connecting to %s\n", u.String())
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
 		return c, err
@@ -72,19 +72,19 @@ func Connect2Dice(addr string, dryRun bool) (*websocket.Conn, error) {
 
 func ExecCommand(cmd []byte, c *websocket.Conn) error {
 	if err := c.WriteMessage(websocket.TextMessage, cmd); err != nil {
-		log.Printf("write error: %s\n", err)
+		logger.Info("write error: %s\n", err)
 		return err
 	}
 	for {
 		_, message, err := c.ReadMessage()
 		if err != nil {
-			log.Printf("read error: %s\n", err)
+			logger.Info("read error: %s\n", err)
 			return err
 		}
 		if string(message) == "d-done" {
 			return nil
 		} else {
-			log.Printf("%s\n", message)
+			logger.Info("%s\n", message)
 		}
 	}
 }

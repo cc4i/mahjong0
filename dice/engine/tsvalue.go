@@ -208,65 +208,67 @@ func ReferencedTsStack(dSid string, rootTileInstance string, tileName string) *T
 
 // ValueRef return actual value of referred input/output
 func ValueRef(dSid string, ref string, ti string) (string, error) {
-	re := regexp.MustCompile(`^\$\(([[:alnum:]]*\.[[:alnum:]]*\.[[:alnum:]]*)\)$`)
-	ms := re.FindStringSubmatch(ref)
-	if len(ms) == 2 {
-		str := strings.Split(ms[1], ".")
-		tileInstance := str[0]
-		where := str[1]
-		field := str[2]
-		if tileInstance == "self" && ti != "" {
-			tileInstance = ti
-		}
-		if at, ok := AllTs[dSid]; ok {
-
-			switch where {
-			case "inputs":
-				if tileInstance!="self" {
-					if tsStack, ok := at.TsStacksMapN[tileInstance]; ok {
-						for _, input := range tsStack.InputParameters {
-							if field == input.InputName {
-								return input.InputValue, nil
-							}
-						}
-					}
-				}  else {
-					//TODO: Any possible value ?! May not right
-					for _, tsStack := range at.TsStacksMapN {
-						for _, input := range tsStack.InputParameters {
-							if field == input.InputName {
-								return input.InputValue, nil
-							}
-						}
-					}
-
-				}
-
-			case "outputs":
-				if tileInstance!="self" {
-					if outputs, ok := at.AllOutputsN[tileInstance]; ok {
-						for name, output := range outputs.TsOutputs {
-							if name == field {
-								return output.OutputValue, nil
-							}
-						}
-					}
-				} else {
-					//TODO: Any possible value ?!
-					for _, outputs := range at.AllOutputsN {
-						for name, output := range outputs.TsOutputs {
-							if name == field {
-								return output.OutputValue, nil
-							}
-						}
-					}
-				}
-
+	if strings.Contains(ref, "$") {
+		re := regexp.MustCompile(`^\$\(([[:alnum:]]*\.[[:alnum:]]*\.[[:alnum:]]*)\)$`)
+		ms := re.FindStringSubmatch(ref)
+		if len(ms) == 2 {
+			str := strings.Split(ms[1], ".")
+			tileInstance := str[0]
+			where := str[1]
+			field := str[2]
+			if tileInstance == "self" && ti != "" {
+				tileInstance = ti
 			}
-		}
+			if at, ok := AllTs[dSid]; ok {
 
-	} else {
-		return "", errors.New("expression: " + ref + " was error")
+				switch where {
+				case "inputs":
+					if tileInstance!="self" {
+						if tsStack, ok := at.TsStacksMapN[tileInstance]; ok {
+							for _, input := range tsStack.InputParameters {
+								if field == input.InputName {
+									return input.InputValue, nil
+								}
+							}
+						}
+					}  else {
+						//TODO: Any possible value ?! May not right
+						for _, tsStack := range at.TsStacksMapN {
+							for _, input := range tsStack.InputParameters {
+								if field == input.InputName {
+									return input.InputValue, nil
+								}
+							}
+						}
+
+					}
+
+				case "outputs":
+					if tileInstance!="self" {
+						if outputs, ok := at.AllOutputsN[tileInstance]; ok {
+							for name, output := range outputs.TsOutputs {
+								if name == field {
+									return output.OutputValue, nil
+								}
+							}
+						}
+					} else {
+						//TODO: Any possible value ?!
+						for _, outputs := range at.AllOutputsN {
+							for name, output := range outputs.TsOutputs {
+								if name == field {
+									return output.OutputValue, nil
+								}
+							}
+						}
+					}
+
+				}
+			}
+
+		} else {
+			return "", errors.New("expression: " + ref + " was error")
+		}
 	}
 	return ref, nil
 }
@@ -282,6 +284,7 @@ func ParentTileInstance(dSid string, tileInstance string) string {
 }
 
 func CDKAllValueRef(dSid string, str string) (string, error) {
+	max := strings.Count(str, "$")
 	for {
 		re := regexp.MustCompile(`^.*\$cdk\(([[:alnum:]]*\.[[:alnum:]]*\.[[:alnum:]]*)\).*$`)
 		s := re.FindStringSubmatch(str)
@@ -297,6 +300,11 @@ func CDKAllValueRef(dSid string, str string) (string, error) {
 			}
 
 		} else {
+			break
+		}
+		// avoid infinite loop due to replacement failure
+		max--
+		if max < 0 {
 			break
 		}
 	}

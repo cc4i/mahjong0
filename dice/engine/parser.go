@@ -258,6 +258,7 @@ func (d *Data) ParseDeployment(ctx context.Context) (*Deployment, error) {
 		return &deployment, errors.New(" Deployment specification was invalid")
 	}
 
+	// Retrieve original order as presenting in the file
 	var originalOrder []string
 	for _, item := range mapSlice {
 		if item.Key=="spec" {
@@ -280,6 +281,7 @@ func (d *Data) ParseDeployment(ctx context.Context) (*Deployment, error) {
 	if len(originalOrder)<1 {
 		return &deployment, errors.New(" Deployment specification didn't include tiles")
 	}
+	////
 
 	if err := yaml.Unmarshal(*d, &deployment); err != nil {
 		log.Errorf("Unmarshal yaml error : %s\n", err)
@@ -303,6 +305,7 @@ func (d *Data) ValidateTile(ctx context.Context, tile *Tile) error {
 func (d *Data) ValidateDeployment(ctx context.Context, deployment *Deployment) error {
 	//TODO implementing ValidateDeployment
 	//	such as: Are inputs covered all required inputs?
+	jsons
 	_, err := valid.ValidateStruct(deployment)
 	return err
 }
