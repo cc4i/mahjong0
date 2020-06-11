@@ -65,6 +65,7 @@ spec:
       # - Options:  String/String[], string type, [] indicate the input is array
       #             Number/Number[], number type, [] indicate the input is array
       #             CDKObject/CDKObject[], input is a object refer to a CDK construct, [] indicate the input is array
+      #             Base64
       inputType: 
       # Dependency list, dependency could be more than one list and will orgnized as an array. -> {'', '', ''}
       dependencies:

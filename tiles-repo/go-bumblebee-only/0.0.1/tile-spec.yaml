@@ -49,11 +49,9 @@ spec:
           #nohup kubectl port-forward svc/argocd-server -n $ARGOCD_NAMESPACE 8080:443 &
           sleep 5
           cd $TILE_HOME/apps
-          sed -i -e 's/x_user_x/'$ARGOCD_USER'/g' ./login-argocd.sh
-          sed -i -e 's/x_password_x/'$ARGOCD_PASSWORD'/g' ./login-argocd.sh
-          sed -i -e 's/x_namespace_x/'$APP_NAMESPACE'/g' ./create-app.sh
-          #./login-argocd.sh
-          #./create-app.sh
+          sed -e 's/__User__/'$ARGOCD_USER'/g' \
+              -e 's/__Password__/'$ARGOCD_PASSWORD'/g' ./login-argocd.sh > ./login-argocd-go.sh
+          sed -e 's/__Namespace__/'$APP_NAMESPACE'/g' ./create-app.sh > ./create-app-go.sh
 
   inputs:
     - name: accessToken

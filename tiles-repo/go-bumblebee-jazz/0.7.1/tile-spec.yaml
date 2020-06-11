@@ -5,7 +5,6 @@ metadata:
     category: Application
     version: 0.7.1
 spec:
-
   global:
     env:
       - name: GITHUB_USER
@@ -13,11 +12,11 @@ spec:
       - name: GIT_ACCESS_TOKEN
         value: $(self.inputs.gitAccessToken)
       - name: APP_REPO
-        value: go-bumblebee
+        value: $(self.inputs.appRepo)
       - name: APP_BRANCH
-        value: new-combo-jazz
+        value: $(self.inputs.appBranch)
       - name: APP_CONF_REPO
-        value: go-bumblebee-jazz-config
+        value: $(self.inputs.appConfRepo)
       - name: KMS_KEY_ID
         value: $(self.inputs.kmsKeyID)
 
@@ -47,28 +46,56 @@ spec:
           ./import-source-credential.sh
           ./create-iam-role.sh
           ./register-to-codebuild.sh
+      - name: PrepareKubeConfig
+        command: |
+          cd $TILE_HOME
+          export AWS_REGION=`aws configure get region`
+          export KUBECONFIG=$TILE_HOME/kube.config
+          aws eks update-kubeconfig --name $(self.inputs.prodClusterName) --region $AWS_REGION --role-arn $(self.inputs.prodMasterRoleARN) --kubeconfig $TILE_HOME/kube.config
+          kubectl create ns go-bumblebee
+          aws eks update-kubeconfig --name $(self.inputs.stageClusterName) --region $AWS_REGION --role-arn $(self.inputs.stageMasterRoleARN) --kubeconfig $TILE_HOME/kube.config
+          kubectl create ns go-bumblebee
       - name: SetupDeploymentWithArgocd
-        cammand: |
+        command: |
           cd $TILE_HOME/manifest/argocd
           ARGOCD_TOKEN=`curl -s -k $(self.inputs.argocdBaseUrl)/api/v1/session -d $'{"username":"$(self.inputs.argocdUser)","password":"$(self.inputs.argocdPassword)"}'|jq -r '.token'`
+
+          # add git repo
+          githubRepo=$(echo https://$GIT_ACCESS_TOKEN:x-oauth-basic@github.com/$GITHUB_USER/$APP_CONF_REPO.git | sed -e "s#/#\\\/#g")
+          sed -e 's/__github_repo__/'$githubRepo'/g' \
+              -e 's/__github_access_token__/'$GIT_ACCESS_TOKEN'/g' ./add-repo.json > ./add-repo-go.json
+          curl -s -k $(self.inputs.argocdBaseUrl)/api/v1/repositories -H "Authorization: Bearer $ARGOCD_TOKEN" -d "@add-repo-go.json"
+
+          # add staging deployment 
+          sed -e 's/__github_repo__/'$githubRepo'/g' ./stage-all-in-one.json > ./stage-all-in-one-go.json
           curl -s -k $(self.inputs.argocdBaseUrl)/api/v1/applications -H "Authorization: Bearer $ARGOCD_TOKEN" -d "@stage-all-in-one.json"
-          
+
           # add production cluster
           kubectl apply -f ./argocd-remote.yaml
-          sed -i -e 's/__caData__/$(self.inputs.prodClusterCertificateAuthorityData)/g' ./add-cluster.json
-          VALUE=$(echo $(self.inputs.prodClusterArn) | sed -e "s#/#\\\/#g")
-          sed -i -e 's/__name__/'$VALUE'/g' ./add-cluster.json
-          VALUE=$(echo $(self.inputs.prodClusterEndpoint) | sed -e "s#/#\\\/#g")
-          sed -i -e 's/__server__/'$VALUE'/g' ./add-cluster.json
-          curl -s -k $(self.inputs.argocdBaseUrl)/api/v1/clusters -H "Authorization: Bearer $ARGOCD_TOKEN" -d "@add-cluster.json"
+          prodClusterArn=$(echo $(self.inputs.prodClusterArn) | sed -e "s#/#\\\/#g")
+          prodClusterEndpoint=$(echo $(self.inputs.prodClusterEndpoint) | sed -e "s#/#\\\/#g")
+
+          sed -e 's/__caData__/$(self.inputs.prodClusterCertificateAuthorityData)/g' \
+              -e 's/__name__/'$prodClusterArn'/g' \
+              -e 's/__server__/'$prodClusterEndpoint'/g' ./add-cluster.json > ./add-cluster-go.json
+          curl -s -k $(self.inputs.argocdBaseUrl)/api/v1/clusters -H "Authorization: Bearer $ARGOCD_TOKEN" -d "@add-cluster-go.json"
           
           # add production deployment
-          VALUE=$(echo $(self.inputs.prodClusterEndpoint) | sed -e "s#/#\\\/#g")
-          sed -i -e 's/__server__/'$VALUE'/g' ./production-all-in-one.json
-          curl -s -k $(self.inputs.argocdBaseUrl)/api/v1/applications -H "Authorization: Bearer $ARGOCD_TOKEN" -d "@production-all-in-one.json"
+          sed -e 's/__server__/'$prodClusterEndpoint'/g' \
+              -e 's/__github_repo__/'$githubRepo'/g' ./prod-all-in-one.json > ./prod-all-in-one-go.json
+          curl -s -k $(self.inputs.argocdBaseUrl)/api/v1/applications -H "Authorization: Bearer $ARGOCD_TOKEN" -d "@prod-all-in-one-go.json"
 
   inputs:
     - name: gitAccessToken
+      inputType: String
+      require: true
+    - name: appRepo
+      inputType: String
+      require: true
+    - name: appBranch
+      inputType: String
+      require: true
+    - name: appConfRepo
       inputType: String
       require: true
     - name: kmsKeyID
@@ -84,7 +111,7 @@ spec:
       inputType: String
       require: true
     - name: prodClusterCertificateAuthorityData
-      inputType: String
+      inputType: Base64
       require: true
     - name: prodClusterArn
       inputType: String
@@ -92,6 +119,18 @@ spec:
     - name: prodClusterEndpoint
       inputType: String
       require: true
+    - name: prodClusterName
+      inputType: String
+      require: true
+    - name: prodMasterRoleARN
+      inputType: String
+      require: true
+    - name: stageClusterName
+      inputType: String
+      require: true
+    - name: stageMasterRoleARN
+      inputType: String
+      require: true      
 
   # Ouptputs represnt output value after launched, for 'ContainerApplication' might need leverage specific command to retrive output.
   outputs:
