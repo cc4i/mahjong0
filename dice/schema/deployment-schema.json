@@ -39,7 +39,6 @@
                                     "type": "object",
                                     "properties": {
                                         "inputValue": {"type": "string"},
-                                        "valueRef": {"type": "string"},
                                         "inputValues": {
                                             "type": "array",
                                             "items": {
@@ -63,7 +62,7 @@
                                 "type": "object",
                                 "properties": {
                                     "name": {"type": "string"},
-                                    "valueRef": {"type": "string"}
+                                    "value": {"type": "string"}
                                 }
                             }
                         },
@@ -83,16 +82,26 @@
     "type": "object",
     "properties": {
         "apiVersion": {
-            "const": "mahjong.io/v1alpha1"
+            "const": "mahjong.io/v1alpha1",
+            "required": ["apiVersion"]
         },
         "kind": {
-            "const": "Deployment"
+            "const": "Deployment",
+            "required": ["kind"]
         },
         "metadata": {
-            "$ref": "#/definitions/metadata"
+            "$ref": "#/definitions/metadata",
+            "required": ["metadata"]
         },
         "spec": {
-            "$ref": "#/definitions/spec"
+            "$ref": "#/definitions/spec",
+            "required": ["spec"]
+        },
+        "originalOrder": {
+            "type": "array",
+            "items": {
+                "type":"string"
+            }
         }
     }
 }

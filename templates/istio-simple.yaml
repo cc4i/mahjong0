@@ -1,0 +1,31 @@
+apiVersion: mahjong.io/v1alpha1
+kind: Deployment 
+metadata:
+  name: istio-simple
+spec:
+  template:
+    tiles:
+      # Istio for Stage
+      tileIstio0ForProd:
+        tileReference: Istio0
+        tileVersion: 1.5.4
+        inputs:
+          - name: clusterName
+            inputValue: <Replace clusterName by value>
+          - name: masterRoleARN
+            inputValue: <Replace masterRoleARN by value>
+
+  summary:
+      description: DEMO.
+      outputs: 
+        - name: installedNamespace
+          value: $(tileIstio0ForProd.outputs.installedNamespace)
+        - name: ingressHost
+          value: $(tileIstio0ForProd.outputs.ingressHost)
+        - name: ingressPort
+          value: $(tileIstio0ForProd.outputs.ingressPort)
+        - name: secureIngressHost
+          value: $(tileIstio0ForProd.outputs.secureIngressHost)
+        - name: tcpIngressPort
+          value: $(tileIstio0ForProd.outputs.tcpIngressPort)
+      notes: []

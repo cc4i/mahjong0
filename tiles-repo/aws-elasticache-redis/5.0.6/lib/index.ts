@@ -37,7 +37,7 @@ export class AWSElastiCacheRedis extends cdk.Construct {
     const redis = new ec.CfnReplicationGroup(scope, "ReplicationGroup", {
       replicationGroupId: props.redisClusterName+"-"+uuid,
       replicationGroupDescription: props.redisClusterName+"-"+uuid,
-      replicasPerNodeGroup: props.replicasPerNodeGroup || 3,
+      replicasPerNodeGroup: props.replicasPerNodeGroup || 2,
       numNodeGroups: props.numNodeGroups || 2,
       engine: "redis",
       cacheNodeType: "cache.t3.medium",

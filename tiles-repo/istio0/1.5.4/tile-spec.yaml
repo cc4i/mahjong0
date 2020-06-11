@@ -11,7 +11,9 @@ spec:
     stages:
       - name: InstallIstio1.6
         command: |
+            cd $TILE_HOME
             kubectl apply -f lib/istio-operator-1.6.0.yaml
+            sleep 10
             kubectl get pods -n istio-operator
             
             # Create namespace for Istio
@@ -52,19 +54,19 @@ spec:
       description: Custom::String
     - name: ingressHost
       outputType: String
-      defaultValueCommand: echo `kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'`
+      defaultValueCommand: kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
       description: Custom::String
     - name: ingressPort
       outputType: String
-      defaultValueCommand: echo `kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="http2")].port}'`
+      defaultValueCommand: kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="http2")].port}'
       description: Custom::String
     - name: secureIngressHost
       outputType: String
-      defaultValueCommand: echo `kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="https")].port}'`
+      defaultValueCommand: kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="https")].port}'
       description: Custom::String
     - name: tcpIngressPort
       outputType: String
-      defaultValueCommand: echo `kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="tcp")].port}'`
+      defaultValueCommand: kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="tcp")].port}'
       description: Custom::String
 
   notes: []

@@ -1,0 +1,24 @@
+{"level":"info","msg":"+ export WORK_HOME=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/go-bumblebee-jazz-application-demo-wE1tltyX"}
+{"level":"info","msg":"+ WORK_HOME=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/go-bumblebee-jazz-application-demo-wE1tltyX"}
+{"level":"info","msg":"+ export TILE_HOME=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/go-bumblebee-jazz-application-demo-wE1tltyX/lib/aws-kms-keygenerator"}
+{"level":"info","msg":"+ TILE_HOME=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/go-bumblebee-jazz-application-demo-wE1tltyX/lib/aws-kms-keygenerator"}
+{"level":"info","msg":"+ export SYMMETRIC_KEY_ALIAS=majhong/symmetric-key_0"}
+{"level":"info","msg":"+ SYMMETRIC_KEY_ALIAS=majhong/symmetric-key_0"}
+{"level":"info","msg":"Creating symmetric key ..."}
+{"level":"info","msg":"+ export ASYMMETRIC_KEY_ALIAS=majhong/asymmetric-key_0"}
+{"level":"info","msg":"+ ASYMMETRIC_KEY_ALIAS=majhong/asymmetric-key_0"}
+{"level":"info","msg":"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/go-bumblebee-jazz-application-demo-wE1tltyX"}
+{"level":"info","msg":"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/go-bumblebee-jazz-application-demo-wE1tltyX/lib/aws-kms-keygenerator/lib"}
+{"level":"info","msg":"+ ./create-masterkey.sh"}
+{"level":"info","msg":"Done"}
+{"level":"info","msg":"Creating asymmetric key ..."}
+{"level":"info","msg":"Done"}
+{"level":"info","msg":"{\"symmetricKeyID=696d31eb-a14e-4c9a-b6d5-921c20e0b08b\"}"}
+{"level":"info","msg":"{\"symmetricKeyArn=696d31eb-a14e-4c9a-b6d5-921c20e0b08b\"}"}
+{"level":"info","msg":"{\"symmetricKeyAlias=majhong/symmetric-key_0\"}"}
+{"level":"info","msg":"{\"asymmetricKeyID=65b90406-98f7-481a-b0bc-81427af09386\"}"}
+{"level":"info","msg":"{\"asymmetricKeyArn=65b90406-98f7-481a-b0bc-81427af09386\"}"}
+{"level":"info","msg":"{\"asymmetricKeyAlias=majhong/asymmetric-key_0\"}"}
+{"level":"info","msg":"+ sleep 10"}
+{"level":"info","msg":"0"}
+{"level":"info","msg":"+ echo 0"}

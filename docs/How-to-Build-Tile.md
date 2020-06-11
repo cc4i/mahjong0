@@ -75,6 +75,30 @@ mctl deploy -f try-my-tile.yaml
 ```
 > Here's the [Deployment schema](../templates/deployment-schema.json) to fulfil your trial. 
 
+
+## Useful Tips
+
+1. How to get rid of back slash
+```bash
+
+```
+2. Don't use 'sed' to replace any orginal files think about the Tile could be referred multiple time.
+```bash
+# Don't do 'sed -i -e ...' instead of 'sed -e -e ...'
+
+```
+3. Using $cdk() to refer CDK object
+
+4. Using $(*.inputs.*) to refer input values
+
+5. Using $(*.outputs.*) to refer output values
+
+6. Using Global ENV section to simply your Tile specification.
+
+7. Place 'DependentOnVendorService' under 'Metadata' will enforce to inject kube.config, so far only support EKS. You must supply 'clusterName' and 'masterRoleARN' if there's no dependent Tile is EKS.
+
+8. All Tile should be built by CDK or a combination of commands so far, it might change in the future. The ideal language suppose to be Typescript, but you can use other language but you have to convert to TypeScript by [jsii](https://github.com/aws/jsii) before using it. 
+
 ## Tile with Anything
 
 Building process is going to be almost same and slightly diferent at Step 3. Only need to create folders and add Tile specification without using CDK or mctl, look at Tiles example for further detail.

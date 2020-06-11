@@ -2,7 +2,7 @@ package list
 
 import (
 	"encoding/json"
-	log "github.com/sirupsen/logrus"
+	"github.com/kris-nova/logger"
 	"github.com/spf13/cobra"
 	"mctl/cmd"
 	"time"
@@ -22,7 +22,7 @@ var TilesInRepo = &cobra.Command{
 	Short: "\tList Tiles in the Repo.",
 	Long:  "\tList Tiles in the Repo.",
 	Run: func(c *cobra.Command, args []string) {
-		log.Println("Tile")
+		logger.Info("Tile")
 	},
 }
 
@@ -31,7 +31,7 @@ var HuInRepo = &cobra.Command{
 	Short: "\tList Hu in the Repo.",
 	Long:  "\tList Hu in the Repo.",
 	Run: func(c *cobra.Command, args []string) {
-		log.Println("Hu")
+		logger.Info("Hu")
 	},
 }
 
@@ -40,7 +40,7 @@ var SchemaInRepo = &cobra.Command{
 	Short: "\tList Hu in the Repo.",
 	Long:  "\tList Hu in the Repo.",
 	Run: func(c *cobra.Command, args []string) {
-		log.Println("schema")
+		logger.Info("schema")
 	},
 }
 
@@ -53,20 +53,20 @@ var Deployment = &cobra.Command{
 		addr, _ := c.Flags().GetString("addr")
 		buf, err := cmd.RunGetByVersion(addr, "ts")
 		if err != nil {
-			log.Printf("%s\n",err)
+			logger.Warning("%s\n",err)
 			return
 		}
 		err = json.Unmarshal(buf, &dr)
 		if err != nil {
-			log.Printf("\n--------- Deployment Records --------- \n%s\n--------- ---------------- ---------\n", string(buf))
+			logger.Warning("\n--------- Deployment Records --------- \n%s\n--------- ---------------- ---------\n", string(buf))
 		} else {
-			log.Printf("\n--------- Deployment Records --------- \n")
-			log.Printf("SID\t\t Name\t\t Created Time\t\t Folder\t\t Status\t\t \n")
+			logger.Info("\n--------- Deployment Records --------- \n")
+			logger.Info("SID\t\t Name\t\t Created Time\t\t Folder\t\t Status\t\t \n")
 			for _, d := range dr {
-				log.Printf("%s\t%s\t%s\t%s\t%s",d.SID, d.Name, d.CreatedTime, d.SuperFolder, d.Status)
+				logger.Info("%s\t%s\t%s\t%s\t%s",d.SID, d.Name, d.CreatedTime, d.SuperFolder, d.Status)
 			}
 
-			log.Printf("\n--------- ---------------- -----------\n")
+			logger.Info("\n--------- ---------------- -----------\n")
 
 		}
 	},

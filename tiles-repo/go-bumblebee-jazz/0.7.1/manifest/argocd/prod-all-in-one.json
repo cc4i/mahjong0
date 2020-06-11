@@ -1,24 +1,18 @@
 {
     "metadata": {
-      "name": "go-bumblebee-jazz-all-in-one",
+      "name": "go-bumblebee-jazz-prod",
       "namespace": "argocd"
     },
     "spec": {
       "source": {
-        "repoURL": "https://github.com/cc4i/go-bumblebee",
+        "repoURL": "__github_repo__",
         "path": "manifests/kustomize/production",
-        "targetRevision": "new-combo-jazz"
+        "targetRevision": "HEAD"
       },
       "destination": {
         "server": "__server__",
         "namespace": "go-bumblebee"
       },
-      "project": "default",
-      "syncPolicy": {
-        "automated": {
-          "prune": true,
-          "selfHeal": true
-        }
-      }
+      "project": "default"
     }
   }

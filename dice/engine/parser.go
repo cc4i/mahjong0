@@ -2,9 +2,11 @@ package engine
 
 import (
 	"context"
-	"errors"
 	valid "github.com/asaskevich/govalidator"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+	"github.com/xeipuuv/gojsonschema"
+	yamlv2 "gopkg.in/yaml.v2"
 	"sigs.k8s.io/yaml"
 )
 
@@ -73,24 +75,22 @@ func (mts ManifestType) MTString() string {
 
 // Deployment specification
 type Deployment struct {
-	ApiVersion string         `json:"apiVersion"`
-	Kind       string         `json:"kind" valid:"in(Deployment)"`
-	Metadata   Metadata       `json:"metadata"`
-	Spec       DeploymentSpec `json:"spec"`
+	ApiVersion    string         `json:"apiVersion" jsonschema:"required" valid:"in(mahjong.io/v1alpha1)"`
+	Kind          string         `json:"kind" jsonschema:"required" valid:"in(Deployment)"`
+	Metadata      Metadata       `json:"metadata" jsonschema:"required"`
+	Spec          DeploymentSpec `json:"spec" jsonschema:"required"`
+	OriginalOrder []string       `json:"originalOrder,omitempty"` // Stored TileInstance, keep original order as same as in yaml
 }
 
 // DeploymentSpec deployment.spec
 type DeploymentSpec struct {
-	Template DeploymentTemplate `json:"template"`
+	Template DeploymentTemplate `json:"template" jsonschema:"required"`
 	Summary  DeploymentSummary  `json:"summary"`
 }
 
 // DeploymentTemplate deployment.spec.template
 type DeploymentTemplate struct {
-	// Tiles
-	Tiles map[string]DeploymentTemplateDetail `json:"tiles"`
-	// Order for execution plan
-	ForceOrder []string `json:"forceOrder"`
+	Tiles map[string]DeploymentTemplateDetail `json:"tiles" jsonschema:"required"` // Tiles represent all to be deployed Tiles
 }
 
 // DeploymentSummary deployment.spec.summary
@@ -102,14 +102,14 @@ type DeploymentSummary struct {
 
 // DeploymentSummaryOutput deployment.spec.summary.outputs
 type DeploymentSummaryOutput struct {
-	Name     string `json:"name"`
+	Name  string `json:"name"`
 	Value string `json:"value"`
 }
 
 // DeploymentTemplateDetail deployment.spec.template
 type DeploymentTemplateDetail struct {
-	TileReference string       `json:"tileReference"`
-	TileVersion   string       `json:"tileVersion"`
+	TileReference string       `json:"tileReference" `
+	TileVersion   string       `json:"tileVersion" `
 	DependsOn     string       `json:"dependsOn"`
 	Inputs        []TileInput  `json:"inputs"`
 	Manifests     TileManifest `json:"manifests"`
@@ -118,18 +118,18 @@ type DeploymentTemplateDetail struct {
 // Tile specification
 type Tile struct {
 	TileInstance string   `json:"tileInstance"`
-	ApiVersion   string   `json:"apiVersion"`
+	ApiVersion   string   `json:"apiVersion" valid:"in(mahjong.io/v1alpha1)"`
 	Kind         string   `json:"kind" valid:"in(Tile)"`
-	Metadata     Metadata `json:"metadata"`
-	Spec         TileSpec `json:"spec"`
+	Metadata     Metadata `json:"metadata" `
+	Spec         TileSpec `json:"spec" `
 }
 
 // Metadata for Tile & Deployment
 type Metadata struct {
 	Name                     string `json:"name"`
 	Category                 string `json:"category"`
-	VendorService            string `json:"vendorService"`
-	DependentOnVendorService string `json:"dependentOnVendorService"`
+	VendorService            string `json:"vendorService,omitempty"`
+	DependentOnVendorService string `json:"dependentOnVendorService,omitempty"`
 	Version                  string `json:"version"`
 }
 
@@ -140,7 +140,7 @@ type TileSpec struct {
 	Dependencies []TileDependency `json:"dependencies"`
 	Inputs       []TileInput      `json:"inputs"`
 	Manifests    TileManifest     `json:"manifests"`
-	Outputs      []TileOutput     `json:"outputs"`
+	Outputs      []TileOutput     `json:"outputs" `
 	PostRun      PostRunDetail    `json:"PostRun"`
 	Notes        []string         `json:"notes"`
 }
@@ -242,7 +242,7 @@ type ParserCore interface {
 func (d *Data) ParseTile(ctx context.Context) (*Tile, error) {
 	var tile Tile
 
-	err := yaml.Unmarshal(*d, &tile)
+	err := yaml.UnmarshalStrict(*d, &tile)
 	if err != nil {
 		return &tile, err
 	}
@@ -253,27 +253,85 @@ func (d *Data) ParseTile(ctx context.Context) (*Tile, error) {
 // ParseDeployment parse Deployment
 func (d *Data) ParseDeployment(ctx context.Context) (*Deployment, error) {
 	var deployment Deployment
-
-	if err := yaml.Unmarshal(*d, &deployment); err != nil {
-		log.Errorf("%s\n", err)
+	mapSlice := yamlv2.MapSlice{}
+	if err := yamlv2.Unmarshal(*d, &mapSlice); err != nil {
+		log.Errorf("Unmarshal mapSlice yaml error : %s\n", err)
 		return &deployment, errors.New(" Deployment specification was invalid")
 	}
+
+	// Retrieve original order as presenting in the file
+	var originalOrder []string
+	for _, item := range mapSlice {
+		if item.Key == "spec" {
+			spec := item.Value.(yamlv2.MapSlice)
+			for _, s := range spec {
+				if s.Key == "template" {
+					template := s.Value.(yamlv2.MapSlice)
+					for _, t := range template {
+						if t.Key == "tiles" {
+							tiles := t.Value.(yamlv2.MapSlice)
+							for _, tile := range tiles {
+								originalOrder = append(originalOrder, tile.Key.(string))
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	if len(originalOrder) < 1 {
+		return &deployment, errors.New(" Deployment specification didn't include tiles")
+	}
+	////
+
+	if err := yaml.UnmarshalStrict(*d, &deployment); err != nil {
+		log.Errorf("Unmarshal yaml error : %s\n", err)
+		return &deployment, err
+	}
+	//obj, err := runtime.Decode(scheme.Codecs.UniversalDeserializer(), *d)
+	//if err != nil {
+	//	return &deployment, err
+	//}
+	//deployment, ok := obj.(Deployment)
+	//if obj!=nil {
+	//	return nil, fmt.Errorf("expected to decode object of type %T; got %T", &Deployment{}, deployment)
+	//}
+	// Attache original order
+	deployment.OriginalOrder = originalOrder
 
 	return &deployment, d.ValidateDeployment(ctx, &deployment)
 }
 
 // ValidateTile validates Tile as per tile-spec.yaml
 func (d *Data) ValidateTile(ctx context.Context, tile *Tile) error {
-	//TODO implementing ValidateTile
-	//	such as: name='folder' version='version_folder'
+	//TODO find a better way to verify yaml
 	_, err := valid.ValidateStruct(tile)
 	return err
 }
 
 // ValidateDeployment validate Deployment as per deployment-spec.yaml
 func (d *Data) ValidateDeployment(ctx context.Context, deployment *Deployment) error {
-	//TODO implementing ValidateDeployment
-	//	such as: Are inputs covered all required inputs?
-	_, err := valid.ValidateStruct(deployment)
+	//TODO find a better way to verify yaml
+	schemaLoader := gojsonschema.NewReferenceLoader("file://./schema/deployment-schema.json")
+	jsonLoader := gojsonschema.NewGoLoader(deployment)
+	result, err := gojsonschema.Validate(schemaLoader, jsonLoader)
+	if err != nil {
+		log.Errorf("Failed to load schema : %s\n", err)
+		return err
+	}
+	if result.Valid() {
+		log.Printf("The document is valid\n")
+	} else {
+		log.Printf("The document is not valid. see errors :\n")
+
+		for _, ret := range result.Errors() {
+			// Err implements the ResultError interface
+			log.Printf("- %s\n", ret)
+			err = errors.Wrap(errors.New(ret.String()), ret.Description())
+		}
+		return err
+
+	}
+	_, err = valid.ValidateStruct(deployment)
 	return err
 }

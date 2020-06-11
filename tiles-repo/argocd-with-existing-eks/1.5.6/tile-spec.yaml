@@ -48,8 +48,8 @@ spec:
       defaultValueCommand: kubectl get svc argocd-server -n argocd -o json  |jq -r '.status.loadBalancer.ingress[].hostname'
       description: Custom::String        
     - name: argocdBaseUrl
-      outputType: FromCommand
-      defaultValueCommand: echo "https://"`kubectl get svc argocd-server -n argocd -o json  |jq -r '.status.loadBalancer.ingress[].hostname'`"/argocd"
+      outputType: String
+      defaultValue: https://$(self.outputs.argocdServer)/argocd
       description: Custom::String        
 
   notes: []

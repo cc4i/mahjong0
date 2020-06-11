@@ -67,7 +67,6 @@ func Router(ctx context.Context) *gin.Engine {
 		AllTsD(ctx, c)
 	})
 
-
 	// Version of Dice
 	r.GET("/version", func(c *gin.Context) {
 		version := fmt.Sprintf("\tVersion:\t%s\n\tGo version:\t%s\n\tGit commit:\t%s\n\tBuilt:\t%s\n\tOS/Arch:\t%s/%s\n",

@@ -35,11 +35,11 @@ type TilesGrid struct {
 
 // DeploymentR is a record of each deployment
 type DeploymentR struct {
-	SID string // session ID for each deployment
-	Name string	//Unique name for each deployment
-	CreatedTime  time.Time            // Created time
-	SuperFolder	string	// Main folder for all stuff per deployment
-	Status string	// Status of deployment
+	SID         string    // session ID for each deployment
+	Name        string    //Unique name for each deployment
+	CreatedTime time.Time // Created time
+	SuperFolder string    // Main folder for all stuff per deployment
+	Status      string    // Status of deployment
 }
 
 // Ts represents all referred CDK resources
@@ -54,9 +54,9 @@ type TsLib struct {
 
 // TsStack represents all detail for each stack
 type TsStack struct {
-	TileInstance      string
-	TileName          string
-	TileVersion       string
+	TileInstance      string //Unique name for Tile instance, either given or generated
+	TileName          string // Name of Tile
+	TileVersion       string // Version of Tile
 	TileConstructName string
 	TileVariable      string
 	TileStackName     string
@@ -64,6 +64,7 @@ type TsStack struct {
 	TileCategory      string
 	InputParameters   map[string]TsInputParameter //input name -> TsInputParameter
 	TsManifests       *TsManifests
+	TileFolder        string // The relative folder for Tile
 }
 
 // TsInputParameter
@@ -102,7 +103,6 @@ type TsOutputDetail struct {
 	Description         string
 }
 
-
 // Ts is key struct to fulfil super.ts template and key element to generate execution plan.
 type Ts struct {
 	Dr           *DeploymentR         // Dr is a deployment record
@@ -113,7 +113,6 @@ type Ts struct {
 	AllTilesN    map[string]*Tile     // AllTiles: TileInstance -> Tile
 	AllOutputsN  map[string]*TsOutput // AllOutputs:  TileInstance ->TsOutput, all output values will be store here
 }
-
 
 // AllTs represents all information about tiles, input, output, etc.,  id(uuid) -> Ts
 var AllTs = make(map[string]Ts)
@@ -139,9 +138,10 @@ func SortedTilesGrid(dSid string) []TilesGrid {
 // DependentEKSTile return dependent EKS tile in the the group
 func DependentEKSTile(dSid string, tileInstance string) *Tile {
 
+	pTileInstance := ParentTileInstance(dSid, tileInstance)
 	if allTG, ok := AllTilesGrids[dSid]; ok {
 		for _, v := range *allTG {
-			if v.ParentTileInstance == tileInstance {
+			if v.TileInstance == pTileInstance {
 				if at, ok := AllTs[dSid]; ok {
 					if tile, ok := at.AllTilesN[v.TileInstance]; ok {
 						if tile.Metadata.VendorService == EKS.VSString() {
@@ -152,9 +152,7 @@ func DependentEKSTile(dSid string, tileInstance string) *Tile {
 			}
 		}
 	}
-
 	return nil
-
 }
 
 // AllDependentTiles return all dependent Tiles
@@ -177,11 +175,11 @@ func AllDependentTiles(dSid string, tileInstance string) []Tile {
 }
 
 // IsDuplicatedCategory determine if it's duplicated Tile under same group
-func IsDuplicatedCategory(dSid string, rootTileInstance string, tileCategory string) bool {
+func IsDuplicatedCategory(dSid string, rootTileInstance string, tileName string) bool {
 	if allTG, ok := AllTilesGrids[dSid]; ok {
 		for _, v := range *allTG {
 			if v.RootTileInstance == rootTileInstance {
-				if v.TileCategory == tileCategory {
+				if v.TileName == tileName {
 					return true
 				}
 			}
@@ -208,41 +206,67 @@ func ReferencedTsStack(dSid string, rootTileInstance string, tileName string) *T
 
 // ValueRef return actual value of referred input/output
 func ValueRef(dSid string, ref string, ti string) (string, error) {
-	re := regexp.MustCompile(`^\$\(([[:alnum:]]*\.[[:alnum:]]*\.[[:alnum:]]*)\)$`)
-	ms := re.FindStringSubmatch(ref)
-	if len(ms) == 2 {
-		str := strings.Split(ms[1], ".")
-		tileInstance := str[0]
-		where := str[1]
-		field := str[2]
-		if tileInstance == "self" && ti != "" {
-			tileInstance = ti
-		}
-		if at, ok := AllTs[dSid]; ok {
-
-			switch where {
-			case "inputs":
-				if tsStack, ok := at.TsStacksMapN[tileInstance]; ok {
-					for _, input := range tsStack.InputParameters {
-						if field == input.InputName {
-							return input.InputValue, nil
-						}
-					}
-				}
-			case "outputs":
-				if outputs, ok := at.AllOutputsN[tileInstance]; ok {
-					for name, output := range outputs.TsOutputs {
-						if name == field {
-							return output.OutputValue, nil
-						}
-					}
-				}
-
+	if strings.Contains(ref, "$") {
+		re := regexp.MustCompile(`^\$\(([[:alnum:]]*\.[[:alnum:]]*\.[[:alnum:]]*)\)$`)
+		ms := re.FindStringSubmatch(ref)
+		if len(ms) == 2 {
+			str := strings.Split(ms[1], ".")
+			tileInstance := str[0]
+			where := str[1]
+			field := str[2]
+			if tileInstance == "self" && ti != "" {
+				tileInstance = ti
 			}
-		}
+			if at, ok := AllTs[dSid]; ok {
 
-	} else {
-		return "", errors.New("expression: " + ref + " was error")
+				switch where {
+				case "inputs":
+					if tileInstance != "self" {
+						if tsStack, ok := at.TsStacksMapN[tileInstance]; ok {
+							for _, input := range tsStack.InputParameters {
+								if field == input.InputName {
+									return input.InputValue, nil
+								}
+							}
+						}
+					} else {
+						//TODO: Any possible value ?! May not right
+						for _, tsStack := range at.TsStacksMapN {
+							for _, input := range tsStack.InputParameters {
+								if field == input.InputName {
+									return input.InputValue, nil
+								}
+							}
+						}
+
+					}
+
+				case "outputs":
+					if tileInstance != "self" {
+						if outputs, ok := at.AllOutputsN[tileInstance]; ok {
+							for name, output := range outputs.TsOutputs {
+								if name == field {
+									return output.OutputValue, nil
+								}
+							}
+						}
+					} else {
+						//TODO: Any possible value ?!
+						for _, outputs := range at.AllOutputsN {
+							for name, output := range outputs.TsOutputs {
+								if name == field {
+									return output.OutputValue, nil
+								}
+							}
+						}
+					}
+
+				}
+			}
+
+		} else {
+			return "", errors.New("expression: " + ref + " was error")
+		}
 	}
 	return ref, nil
 }
@@ -258,6 +282,7 @@ func ParentTileInstance(dSid string, tileInstance string) string {
 }
 
 func CDKAllValueRef(dSid string, str string) (string, error) {
+	max := strings.Count(str, "$")
 	for {
 		re := regexp.MustCompile(`^.*\$cdk\(([[:alnum:]]*\.[[:alnum:]]*\.[[:alnum:]]*)\).*$`)
 		s := re.FindStringSubmatch(str)
@@ -273,6 +298,11 @@ func CDKAllValueRef(dSid string, str string) (string, error) {
 			}
 
 		} else {
+			break
+		}
+		// avoid infinite loop due to replacement failure
+		max--
+		if max < 0 {
 			break
 		}
 	}

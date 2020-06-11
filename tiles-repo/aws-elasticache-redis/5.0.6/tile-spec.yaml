@@ -24,7 +24,7 @@ spec:
       require: false
     - name: replicasPerNodeGroup
       inputType: Number
-      defaultValue: 3
+      defaultValue: 2
       description: 'Node number per node group'
       require: false
     - name: numNodeGroups
