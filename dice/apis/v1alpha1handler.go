@@ -127,7 +127,6 @@ func (wb *WsBox) Processor(ctx context.Context, messageType int, p []byte, dryRu
 
 }
 
-
 // RetrieveTemplate download template from S3 repo.
 func RetrieveTemplate(ctx context.Context, c *gin.Context) {
 	what := c.Param("what")
@@ -178,7 +177,6 @@ func AllTsD(ctx context.Context, c *gin.Context) {
 	c.JSON(http.StatusOK, engine.AllTsDeployment())
 
 }
-
 
 // Deployment validate deployment yaml
 func Deployment(ctx context.Context, c *gin.Context) {

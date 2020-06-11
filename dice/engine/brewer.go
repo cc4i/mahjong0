@@ -196,7 +196,7 @@ func (ep *ExecutionPlan) ReplaceAllValueRef(str string, dSid string, ti string) 
 		}
 		// avoid infinite loop due to replacement failure
 		max--
-		if max<0 {
+		if max < 0 {
 			break
 		}
 	}
@@ -336,7 +336,7 @@ echo $?
 					}
 				}
 				// Tile without dependency but input parameters
-				if s, ok := at.TsStacksMapN[ep.CurrentStage.Name]; ok && (clusterName=="" || masterRoleARN=="") {
+				if s, ok := at.TsStacksMapN[ep.CurrentStage.Name]; ok && (clusterName == "" || masterRoleARN == "") {
 					if inputParameters, ok := s.InputParameters["clusterName"]; ok {
 						clusterName = inputParameters.InputValue
 					}

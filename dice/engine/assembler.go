@@ -90,13 +90,13 @@ func init() {
 func (d *Deployment) GenerateMainApp(ctx context.Context, out *websocket.Conn) (*ExecutionPlan, error) {
 	dSid := ctx.Value("d-sid").(string)
 	dn := DepName(d.Metadata.Name)
-	var aTs = &Ts {
+	var aTs = &Ts{
 		Dr: &DeploymentR{
-			SID: dSid,
-			Name: dn,
-			CreatedTime:  time.Now(),
-			SuperFolder: "/"+dn,
-			Status: Created.DSString(),
+			SID:         dSid,
+			Name:        dn,
+			CreatedTime: time.Now(),
+			SuperFolder: "/" + dn,
+			Status:      Created.DSString(),
 		},
 		AllTilesN:    make(map[string]*Tile),
 		TsLibsMap:    make(map[string]TsLib),
@@ -119,13 +119,12 @@ func (d *Deployment) GenerateMainApp(ctx context.Context, out *websocket.Conn) (
 	}
 	SR(out, []byte("Loading Super ... from RePO with success."))
 
-
 	// 3. Loading Tiles from s3 & unzip
 	if err := d.ProcessTiles(ctx, aTs, override, out); err != nil {
 		aTs.Dr.Status = Interrupted.DSString()
 		return ep, err
 	}
-	if len(aTs.TsStacksMapN)<1 {
+	if len(aTs.TsStacksMapN) < 1 {
 		aTs.Dr.Status = Interrupted.DSString()
 		return ep, errors.New("invalid deployment without parsed Tiles")
 	}
@@ -138,7 +137,7 @@ func (d *Deployment) GenerateMainApp(ctx context.Context, out *websocket.Conn) (
 
 	// 5. Generate execution plan
 	plan, err := d.GenerateExecutePlan(ctx, aTs, out)
-	if err !=nil {
+	if err != nil {
 		aTs.Dr.Status = Interrupted.DSString()
 		return nil, err
 	}
@@ -146,7 +145,7 @@ func (d *Deployment) GenerateMainApp(ctx context.Context, out *websocket.Conn) (
 }
 
 func (d *Deployment) validateDependsOn(tileInstance string) error {
-	for _,ti := range d.OriginalOrder {
+	for _, ti := range d.OriginalOrder {
 		if ti == tileInstance {
 			return nil
 		}
@@ -160,12 +159,12 @@ func (d *Deployment) ProcessTiles(ctx context.Context, aTs *Ts, override map[str
 	executableOrder := 1000
 	toBeProcessedTiles := make(map[string]DeploymentTemplateDetail) //tile-instance -> Tile
 
-	for _,tileInstance := range d.OriginalOrder {
+	for _, tileInstance := range d.OriginalOrder {
 
 		if tile, ok := d.Spec.Template.Tiles[tileInstance]; ok {
 			parentTileInstance := "root"
 			if tile.DependsOn != "" {
-				if err := d.validateDependsOn(tile.DependsOn); err!=nil {
+				if err := d.validateDependsOn(tile.DependsOn); err != nil {
 					return err
 				}
 				parentTileInstance = tile.DependsOn
@@ -271,7 +270,7 @@ func (d *Deployment) PullTile(ctx context.Context,
 	if ti == "" {
 		ti = fmt.Sprintf("%s-%s-%s", tile, id, "generated")
 	}
-	tg := TilesGrid {
+	tg := TilesGrid{
 		TileInstance:       ti,
 		ExecutableOrder:    executableOrder - 1,
 		TileName:           tile,
@@ -506,7 +505,7 @@ func (d *Deployment) PullTile(ctx context.Context,
 		InputParameters:   inputs,
 		TileCategory:      parsedTile.Metadata.Category,
 		TsManifests:       tm,
-		TileFolder: "/lib/"+strings.ToLower(parsedTile.Metadata.Name),
+		TileFolder:        "/lib/" + strings.ToLower(parsedTile.Metadata.Name),
 	}
 	if _, ok := aTs.TsStacksMapN[tg.TileInstance]; !ok {
 		aTs.TsStacksMapN[tg.TileInstance] = ts
@@ -756,10 +755,10 @@ func (d *Deployment) GenerateExecutePlan(ctx context.Context, aTs *Ts, out *webs
 
 func toFlow(p *ExecutionPlan) string {
 
-	flow :="{Start}"
+	flow := "{Start}"
 	for e := p.Plan.Back(); e != nil; e = e.Prev() {
 		stage := e.Value.(*ExecutionStage)
-		flow=flow+" -> " + stage.Name
+		flow = flow + " -> " + stage.Name
 	}
 	flow = flow + " -> {Stop}"
 	return flow

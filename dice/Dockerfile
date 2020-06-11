@@ -96,6 +96,7 @@ RUN apk add --no-cache ca-certificates \
 COPY --from=dicebuilder /go/bin/dice /usr/local/bin/dice
 # Copy static files
 COPY ./toy /workspace/toy
+COPY ./schema /workspace/schema
 
 WORKDIR /workspace
 

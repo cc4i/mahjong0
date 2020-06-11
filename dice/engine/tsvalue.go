@@ -35,11 +35,11 @@ type TilesGrid struct {
 
 // DeploymentR is a record of each deployment
 type DeploymentR struct {
-	SID string // session ID for each deployment
-	Name string	//Unique name for each deployment
-	CreatedTime  time.Time            // Created time
-	SuperFolder	string	// Main folder for all stuff per deployment
-	Status string	// Status of deployment
+	SID         string    // session ID for each deployment
+	Name        string    //Unique name for each deployment
+	CreatedTime time.Time // Created time
+	SuperFolder string    // Main folder for all stuff per deployment
+	Status      string    // Status of deployment
 }
 
 // Ts represents all referred CDK resources
@@ -54,9 +54,9 @@ type TsLib struct {
 
 // TsStack represents all detail for each stack
 type TsStack struct {
-	TileInstance      string	//Unique name for Tile instance, either given or generated
-	TileName          string	// Name of Tile
-	TileVersion       string	// Version of Tile
+	TileInstance      string //Unique name for Tile instance, either given or generated
+	TileName          string // Name of Tile
+	TileVersion       string // Version of Tile
 	TileConstructName string
 	TileVariable      string
 	TileStackName     string
@@ -64,7 +64,7 @@ type TsStack struct {
 	TileCategory      string
 	InputParameters   map[string]TsInputParameter //input name -> TsInputParameter
 	TsManifests       *TsManifests
-	TileFolder string 	// The relative folder for Tile
+	TileFolder        string // The relative folder for Tile
 }
 
 // TsInputParameter
@@ -103,7 +103,6 @@ type TsOutputDetail struct {
 	Description         string
 }
 
-
 // Ts is key struct to fulfil super.ts template and key element to generate execution plan.
 type Ts struct {
 	Dr           *DeploymentR         // Dr is a deployment record
@@ -114,7 +113,6 @@ type Ts struct {
 	AllTilesN    map[string]*Tile     // AllTiles: TileInstance -> Tile
 	AllOutputsN  map[string]*TsOutput // AllOutputs:  TileInstance ->TsOutput, all output values will be store here
 }
-
 
 // AllTs represents all information about tiles, input, output, etc.,  id(uuid) -> Ts
 var AllTs = make(map[string]Ts)
@@ -223,7 +221,7 @@ func ValueRef(dSid string, ref string, ti string) (string, error) {
 
 				switch where {
 				case "inputs":
-					if tileInstance!="self" {
+					if tileInstance != "self" {
 						if tsStack, ok := at.TsStacksMapN[tileInstance]; ok {
 							for _, input := range tsStack.InputParameters {
 								if field == input.InputName {
@@ -231,7 +229,7 @@ func ValueRef(dSid string, ref string, ti string) (string, error) {
 								}
 							}
 						}
-					}  else {
+					} else {
 						//TODO: Any possible value ?! May not right
 						for _, tsStack := range at.TsStacksMapN {
 							for _, input := range tsStack.InputParameters {
@@ -244,7 +242,7 @@ func ValueRef(dSid string, ref string, ti string) (string, error) {
 					}
 
 				case "outputs":
-					if tileInstance!="self" {
+					if tileInstance != "self" {
 						if outputs, ok := at.AllOutputsN[tileInstance]; ok {
 							for name, output := range outputs.TsOutputs {
 								if name == field {
