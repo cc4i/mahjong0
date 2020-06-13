@@ -95,6 +95,7 @@ func UpdateDR(dr *DeploymentRecord, status string) {
 	dr.Status = status
 	dr.Updated = time.Now()
 }
+
 // GenerateMainApp return path where the base CDK App was generated.
 func (d *AssembleData) GenerateMainApp(ctx context.Context, out *websocket.Conn) (*ExecutionPlan, error) {
 

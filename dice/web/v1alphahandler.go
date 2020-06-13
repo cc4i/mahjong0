@@ -100,7 +100,7 @@ func (wb *WsBox) Processor(ctx context.Context, messageType int, p []byte, dryRu
 	engine.SR(wb.out, []byte("--EO:-------------------------------------------------"))
 
 	// 2. Looking for the dSid of last deployment
-	rdSid, isRepeated:= engine.IsRepeatedDeployment(deployment.Metadata.Name)
+	rdSid, isRepeated := engine.IsRepeatedDeployment(deployment.Metadata.Name)
 	if isRepeated {
 		engine.SRf(wb.out, "Repeated deployment and last d-dSid = %s", rdSid)
 	}

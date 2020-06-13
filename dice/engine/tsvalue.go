@@ -36,10 +36,10 @@ type TilesGrid struct {
 
 // DeploymentRecord is a record of each deployment
 type DeploymentRecord struct {
-	SID     string    // SID is session ID for each deployment
-	Name    string    // Name is unique identifier for each deployment: metadata.name
-	Created time.Time // Created time
-	Updated time.Time // Updated time
+	SID         string    // SID is session ID for each deployment
+	Name        string    // Name is unique identifier for each deployment: metadata.name
+	Created     time.Time // Created time
+	Updated     time.Time // Updated time
 	SuperFolder string    // Main folder for all stuff per deployment
 	Status      string    // Status of deployment
 }
@@ -379,7 +379,7 @@ func AllTsDeployment() []DeploymentRecord {
 // IsRepeatedDeployment return flag of repeated deployment and sid if repeated
 func IsRepeatedDeployment(name string) (string, bool) {
 	tss := make([]Ts, 0, len(AllTs))
-	for _,ts := range AllTs {
+	for _, ts := range AllTs {
 		tss = append(tss, ts)
 	}
 	// By create time (descending)
