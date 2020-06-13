@@ -6,7 +6,7 @@
     "spec": {
       "source": {
         "repoURL": "__github_repo__",
-        "path": "manifests/kustomize/production",
+        "path": "kustomize/production",
         "targetRevision": "HEAD"
       },
       "destination": {

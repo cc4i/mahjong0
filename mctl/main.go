@@ -15,13 +15,13 @@ func init() {
 	logger.Color = true
 	logger.Fabulous = true
 	// Add timestamps
-	logger.Timestamps = true
+	logger.Timestamps = false
 	logger.Level = 4
 }
 
 func main() {
 	var cmd = &cobra.Command{
-		Use: "mctl",
+		Use:   "mctl",
 		Short: "The official CLI for Mahjong",
 	}
 	// Root flag for Dice's address

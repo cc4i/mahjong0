@@ -1,4 +1,4 @@
-package apis
+package web
 
 import (
 	"context"
@@ -39,8 +39,8 @@ func Router(ctx context.Context) *gin.Engine {
 
 	// Destroy API through WebSocket
 	r.GET("/v1alpha1/destroy", func(c *gin.Context) {
-		// TODO
-
+		//TODO: delete local cache & print out guide
+		c.String(http.StatusOK, "Coming soon!")
 	})
 
 	// Return url of basic templates as per request

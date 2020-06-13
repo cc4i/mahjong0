@@ -52,11 +52,3 @@ spec:
 
   # Notes are description list for addtional information.
   notes: []
-
-  vpc: ec2.Vpc;
-  redisClusterName?: string;
-  replicasPerNodeGroup?: number;
-  numNodeGroups?: number;
-  engineVersion?: string;
-  autoMinorVersionUpgrade?: boolean;
-  subnetIds: string[];

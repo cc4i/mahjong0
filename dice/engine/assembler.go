@@ -3,6 +3,7 @@ package engine
 import (
 	"container/list"
 	"context"
+	"dice/apis/v1alpha1"
 	"dice/utils"
 	"errors"
 	"fmt"
@@ -18,13 +19,17 @@ import (
 	"time"
 )
 
+type AssembleData struct {
+	Deployment *v1alpha1.Deployment
+}
+
 // AssemblerCore represents a group of functions to assemble CDK App.
 type AssemblerCore interface {
 	// GenerateMainApp generate main app from base template with necessary tiles
 	GenerateMainApp(ctx context.Context, out *websocket.Conn) (*ExecutionPlan, error)
 
 	// ProcessTiles controls Tile processing
-	ProcessTiles(ctx context.Context, aTs *Ts, override map[string]*TileInputOverride, out *websocket.Conn)
+	ProcessTiles(ctx context.Context, aTs *Ts, override map[string]*v1alpha1.TileInputOverride, out *websocket.Conn)
 	// PullTile pulls Tile from repo
 	PullTile(ctx context.Context,
 		tileInstance string,
@@ -34,7 +39,7 @@ type AssemblerCore interface {
 		parentTileInstance string,
 		rootTileInstance string,
 		aTs *Ts,
-		override map[string]*TileInputOverride,
+		override map[string]*v1alpha1.TileInputOverride,
 		out *websocket.Conn) error
 
 	// ApplyMainTs applies Ts to main CDK app
@@ -86,19 +91,24 @@ func init() {
 	log.Printf("Loaded configuration: \n%s\n", c)
 }
 
+func UpdateDR(dr *DeploymentRecord, status string) {
+	dr.Status = status
+	dr.Updated = time.Now()
+}
 // GenerateMainApp return path where the base CDK App was generated.
-func (d *Deployment) GenerateMainApp(ctx context.Context, out *websocket.Conn) (*ExecutionPlan, error) {
+func (d *AssembleData) GenerateMainApp(ctx context.Context, out *websocket.Conn) (*ExecutionPlan, error) {
+
 	dSid := ctx.Value("d-sid").(string)
-	dn := DepName(d.Metadata.Name)
+	//dn := DepName(d.Deployment.Metadata.Name)
 	var aTs = &Ts{
-		Dr: &DeploymentR{
+		DR: &DeploymentRecord{
 			SID:         dSid,
-			Name:        dn,
-			CreatedTime: time.Now(),
-			SuperFolder: "/" + dn,
+			Name:        d.Deployment.Metadata.Name,
+			Created:     time.Now(),
+			SuperFolder: "/" + d.Deployment.Metadata.Name,
 			Status:      Created.DSString(),
 		},
-		AllTilesN:    make(map[string]*Tile),
+		AllTilesN:    make(map[string]*v1alpha1.Tile),
 		TsLibsMap:    make(map[string]TsLib),
 		TsStacksMapN: make(map[string]*TsStack),
 		AllOutputsN:  make(map[string]*TsOutput),
@@ -108,44 +118,44 @@ func (d *Deployment) GenerateMainApp(ctx context.Context, out *websocket.Conn) (
 	AllTs[dSid] = *aTs
 
 	// 2. Loading Super from s3 & unzip
-	aTs.Dr.Status = Progress.DSString()
-	var override = make(map[string]*TileInputOverride) //TileName->TileInputOverride
+	UpdateDR(aTs.DR, Progress.DSString())
+	var override = make(map[string]*v1alpha1.TileInputOverride) //TileName->TileInputOverride
 	var ep *ExecutionPlan
 	SR(out, []byte("Loading Super ... from RePO."))
-	_, err := DiceConfig.LoadSuper(aTs.Dr.SuperFolder)
+	_, err := DiceConfig.LoadSuper(aTs.DR.SuperFolder)
 	if err != nil {
-		aTs.Dr.Status = Interrupted.DSString()
+		UpdateDR(aTs.DR, Interrupted.DSString())
 		return ep, err
 	}
 	SR(out, []byte("Loading Super ... from RePO with success."))
 
 	// 3. Loading Tiles from s3 & unzip
 	if err := d.ProcessTiles(ctx, aTs, override, out); err != nil {
-		aTs.Dr.Status = Interrupted.DSString()
+		UpdateDR(aTs.DR, Interrupted.DSString())
 		return ep, err
 	}
 	if len(aTs.TsStacksMapN) < 1 {
-		aTs.Dr.Status = Interrupted.DSString()
+		UpdateDR(aTs.DR, Interrupted.DSString())
 		return ep, errors.New("invalid deployment without parsed Tiles")
 	}
 
 	// 4. Generate super.ts
 	if err := d.ApplyMainTs(ctx, aTs, out); err != nil {
-		aTs.Dr.Status = Interrupted.DSString()
+		UpdateDR(aTs.DR, Interrupted.DSString())
 		return ep, err
 	}
 
 	// 5. Generate execution plan
 	plan, err := d.GenerateExecutePlan(ctx, aTs, out)
 	if err != nil {
-		aTs.Dr.Status = Interrupted.DSString()
+		UpdateDR(aTs.DR, Interrupted.DSString())
 		return nil, err
 	}
 	return plan, nil
 }
 
-func (d *Deployment) validateDependsOn(tileInstance string) error {
-	for _, ti := range d.OriginalOrder {
+func (d *AssembleData) validateDependsOn(tileInstance string) error {
+	for _, ti := range d.Deployment.OriginalOrder {
 		if ti == tileInstance {
 			return nil
 		}
@@ -154,14 +164,14 @@ func (d *Deployment) validateDependsOn(tileInstance string) error {
 }
 
 // ProcessTiles controls Tiles processing
-func (d *Deployment) ProcessTiles(ctx context.Context, aTs *Ts, override map[string]*TileInputOverride, out *websocket.Conn) error {
+func (d *AssembleData) ProcessTiles(ctx context.Context, aTs *Ts, override map[string]*v1alpha1.TileInputOverride, out *websocket.Conn) error {
 	// order factor, every tiles family +1000
 	executableOrder := 1000
-	toBeProcessedTiles := make(map[string]DeploymentTemplateDetail) //tile-instance -> Tile
+	toBeProcessedTiles := make(map[string]v1alpha1.DeploymentTemplateDetail) //tile-instance -> Tile
 
-	for _, tileInstance := range d.OriginalOrder {
+	for _, tileInstance := range d.Deployment.OriginalOrder {
 
-		if tile, ok := d.Spec.Template.Tiles[tileInstance]; ok {
+		if tile, ok := d.Deployment.Spec.Template.Tiles[tileInstance]; ok {
 			parentTileInstance := "root"
 			if tile.DependsOn != "" {
 				if err := d.validateDependsOn(tile.DependsOn); err != nil {
@@ -229,7 +239,7 @@ func (d *Deployment) ProcessTiles(ctx context.Context, aTs *Ts, override map[str
 }
 
 // PullTile pulls Tile from Tile Repo and extract & setup data along the way
-func (d *Deployment) PullTile(ctx context.Context,
+func (d *AssembleData) PullTile(ctx context.Context,
 	tileInstance string,
 	tile string,
 	version string,
@@ -237,15 +247,14 @@ func (d *Deployment) PullTile(ctx context.Context,
 	parentTileInstance string,
 	rootTileInstance string,
 	aTs *Ts,
-	override map[string]*TileInputOverride,
+	override map[string]*v1alpha1.TileInputOverride,
 	out *websocket.Conn) error {
 
 	dSid := ctx.Value("d-sid").(string)
-	id := generateAId()
-	rStack := "Stack" + id
+	rStack := "Stack"
 
 	// Pre-Process 1: Loading Tile from s3 & unzip
-	tileSpecFile, err := DiceConfig.LoadTile(tile, version, aTs.Dr.SuperFolder)
+	tileSpecFile, err := DiceConfig.LoadTile(tile, version, aTs.DR.SuperFolder)
 	if err != nil {
 		SRf(out, "Failed to pulling Tile < %s - %s > ... from RePO\n", tile, version)
 		return err
@@ -259,7 +268,7 @@ func (d *Deployment) PullTile(ctx context.Context,
 	if err != nil {
 		return err
 	}
-	data := Data(buf)
+	data := v1alpha1.Data(buf)
 	parsedTile, err := data.ParseTile(ctx)
 	if err != nil {
 		return err
@@ -268,7 +277,7 @@ func (d *Deployment) PullTile(ctx context.Context,
 	// Pre-Process 3: Caching TilesGrid, which presents relation between Tiles
 	ti := tileInstance
 	if ti == "" {
-		ti = fmt.Sprintf("%s-%s-%s", tile, id, "generated")
+		ti = fmt.Sprintf("%s-%s-%s", tile, randomSuffix(), "generated")
 	}
 	tg := TilesGrid{
 		TileInstance:       ti,
@@ -301,7 +310,7 @@ func (d *Deployment) PullTile(ctx context.Context,
 
 	// Step 2. Caching inputs & input values from deployment
 	deploymentInputs := make(map[string][]string) //tileName-inputName -> map[inputName]inputValues
-	if dt, ok := d.Spec.Template.Tiles[tileInstance]; ok {
+	if dt, ok := d.Deployment.Spec.Template.Tiles[tileInstance]; ok {
 		for _, input := range dt.Inputs {
 
 			if len(input.InputValues) > 0 {
@@ -325,7 +334,7 @@ func (d *Deployment) PullTile(ctx context.Context,
 		if ov.Override.Name != "" {
 			if tileName, ok := tileDependencies[ov.Override.Name]; ok {
 				if val, ok := deploymentInputs[tile+"-"+ov.Override.Field]; ok {
-					tlo := &TileInputOverride{
+					tlo := &v1alpha1.TileInputOverride{
 						Name:  ov.Override.Name,
 						Field: ov.Override.Field,
 						//OverrideValue: deploymentInputs
@@ -363,7 +372,7 @@ func (d *Deployment) PullTile(ctx context.Context,
 		ManifestType: parsedTile.Spec.Manifests.ManifestType,
 	}
 	ns := ""
-	for _, m := range d.Spec.Template.Tiles {
+	for _, m := range d.Deployment.Spec.Template.Tiles {
 		if m.TileReference == parsedTile.Metadata.Name {
 			ns = m.Manifests.Namespace
 		}
@@ -375,7 +384,7 @@ func (d *Deployment) PullTile(ctx context.Context,
 	// Overwrite files/folders as deployment
 	var ffs []string
 	var fds []string
-	for _, m := range d.Spec.Template.Tiles {
+	for _, m := range d.Deployment.Spec.Template.Tiles {
 		if m.TileReference == parsedTile.Metadata.Name {
 			if m.Manifests.Files != nil {
 				ffs = m.Manifests.Files
@@ -408,7 +417,9 @@ func (d *Deployment) PullTile(ctx context.Context,
 			tg.ExecutableOrder,
 			tg.TileInstance,
 			tg.RootTileInstance,
-			aTs, override, out); err != nil {
+			aTs,
+			override,
+			out); err != nil {
 			return err
 		}
 	}
@@ -423,8 +434,8 @@ func (d *Deployment) PullTile(ctx context.Context,
 		input := TsInputParameter{}
 		if tileInput.Dependencies != nil {
 			// For value dependent on other Tile
-			if parsedTile.Metadata.Category != ContainerApplication.CString() &&
-				parsedTile.Metadata.Category != Application.CString() {
+			if parsedTile.Metadata.Category != v1alpha1.ContainerApplication.CString() &&
+				parsedTile.Metadata.Category != v1alpha1.Application.CString() {
 				if len(tileInput.Dependencies) == 1 {
 					// single dependency
 					input.InputName = tileInput.Name
@@ -437,10 +448,10 @@ func (d *Deployment) PullTile(ctx context.Context,
 					// multiple dependencies will be organized as an array
 					input.InputName = tileInput.Name
 					v := "[ "
-					for _, d := range tileInput.Dependencies {
-						refTileName := tileDependencies[d.Name]
+					for _, dependency := range tileInput.Dependencies {
+						refTileName := tileDependencies[dependency.Name]
 						tsStack := ReferencedTsStack(dSid, rootTileInstance, refTileName)
-						val := tsStack.TileStackVariable + "." + tsStack.TileVariable + "." + d.Field
+						val := tsStack.TileStackVariable + "." + tsStack.TileVariable + "." + dependency.Field
 						v = v + val + ","
 					}
 					input.InputValue = strings.TrimSuffix(v, ",") + " ]"
@@ -538,7 +549,7 @@ func (d *Deployment) PullTile(ctx context.Context,
 func array2String(array []string, inputType string) string {
 	val := "[ "
 	switch inputType {
-	case String.IOTString() + "[]":
+	case v1alpha1.String.IOTString() + "[]":
 		for _, d := range array {
 			if strings.HasPrefix(d, "$(") || strings.HasPrefix(d, "$cdk(") {
 				val = val + d + ","
@@ -559,7 +570,7 @@ func array2String(array []string, inputType string) string {
 func str2string(str string, inputType string) string {
 	val := ""
 	switch inputType {
-	case String.IOTString():
+	case v1alpha1.String.IOTString():
 		if strings.HasPrefix(str, "$(") || strings.HasPrefix(str, "$cdk(") {
 			val = str
 		} else {
@@ -574,9 +585,9 @@ func str2string(str string, inputType string) string {
 }
 
 // ApplyMainTs apply values with super.ts template
-func (d *Deployment) ApplyMainTs(ctx context.Context, aTs *Ts, out *websocket.Conn) error {
+func (d *AssembleData) ApplyMainTs(ctx context.Context, aTs *Ts, out *websocket.Conn) error {
 	dSid := ctx.Value("d-sid").(string)
-	superFile := DiceConfig.WorkHome + aTs.Dr.SuperFolder + "/bin/super.ts"
+	superFile := DiceConfig.WorkHome + aTs.DR.SuperFolder + "/bin/super.ts"
 	SR(out, []byte("Generating main.ts for Super ..."))
 
 	tp, _ := template.ParseFiles(superFile)
@@ -620,20 +631,17 @@ func (d *Deployment) ApplyMainTs(ctx context.Context, aTs *Ts, out *websocket.Co
 	return nil
 }
 
-func (d *Deployment) GenerateExecutePlan(ctx context.Context, aTs *Ts, out *websocket.Conn) (*ExecutionPlan, error) {
+func (d *AssembleData) GenerateExecutePlan(ctx context.Context, aTs *Ts, out *websocket.Conn) (*ExecutionPlan, error) {
 	//dSid := ctx.Value("d-sid").(string)
 	SR(out, []byte("Generating execution plan... "))
 	var p = ExecutionPlan{
 		Plan:             list.New(),
 		PlanMirror:       make(map[string]*ExecutionStage),
-		OriginDeployment: d,
+		OriginDeployment: d.Deployment,
 	}
-	//tgs := SortedTilesGrid(dSid)
-	//for _, tg := range tgs {
-	//	log.Println(tg.TileInstance)
-	//}
+
 	for _, ts := range aTs.TsStacks {
-		workHome := DiceConfig.WorkHome + aTs.Dr.SuperFolder
+		workHome := DiceConfig.WorkHome + aTs.DR.SuperFolder
 		stage := ExecutionStage{
 			Name:        ts.TileInstance,
 			Kind:        ts.TileCategory,
@@ -643,15 +651,17 @@ func (d *Deployment) GenerateExecutePlan(ctx context.Context, aTs *Ts, out *webs
 			TileVersion: ts.TileVersion,
 		}
 		// Define Kind of Stage
-		if ts.TileCategory == ContainerApplication.CString() || ts.TileCategory == Application.CString() {
+		if ts.TileCategory == v1alpha1.ContainerApplication.CString() ||
+			ts.TileCategory == v1alpha1.Application.CString() {
 			stage.Kind = Command.SKString()
 		} else {
 			stage.Kind = CDK.SKString()
 		}
-		stage.InjectedEnv = append(stage.InjectedEnv, "export WORK_HOME="+DiceConfig.WorkHome+aTs.Dr.SuperFolder)
-		stage.InjectedEnv = append(stage.InjectedEnv, "export TILE_HOME="+DiceConfig.WorkHome+aTs.Dr.SuperFolder+ts.TileFolder)
+		stage.InjectedEnv = append(stage.InjectedEnv, "export WORK_HOME="+DiceConfig.WorkHome+aTs.DR.SuperFolder)
+		stage.InjectedEnv = append(stage.InjectedEnv, "export TILE_HOME="+DiceConfig.WorkHome+aTs.DR.SuperFolder+ts.TileFolder)
 
-		if ts.TileCategory == ContainerApplication.CString() || ts.TileCategory == Application.CString() {
+		if ts.TileCategory == v1alpha1.ContainerApplication.CString() ||
+			ts.TileCategory == v1alpha1.Application.CString() {
 			// ContainerApplication & Application
 			// Inject namespace as environment or using default as namespace
 			if ts.TsManifests.ManifestType != "" {
@@ -667,21 +677,21 @@ func (d *Deployment) GenerateExecutePlan(ctx context.Context, aTs *Ts, out *webs
 
 				// Process different manifests
 				switch ts.TsManifests.ManifestType {
-				case K8s.MTString():
+				case v1alpha1.K8s.MTString():
 
 					for _, f := range ts.TsManifests.Files {
 						var cmd string
 						cmd = "kubectl apply -f ./lib/" + strings.ToLower(ts.TileName) + "/lib/" + f + " -n " + ts.TsManifests.Namespace
 						stage.Commands = append(stage.Commands, cmd)
 					}
-				case Helm.MTString():
+				case v1alpha1.Helm.MTString():
 					// TODO: not quite yet to support Helm
 					for _, f := range ts.TsManifests.Folders {
 						cmd := "helm install " + ts.TileName + " ./lib/" + strings.ToLower(ts.TileName) + "/lib/" + f + " -n " + ts.TsManifests.Namespace
 						stage.Commands = append(stage.Commands, cmd)
 					}
 
-				case Kustomize.MTString():
+				case v1alpha1.Kustomize.MTString():
 					// TODO: not quite yet to support Kustomize
 					for _, f := range ts.TsManifests.Folders {
 						cmd := "kustomize build -f ./lib/" + strings.ToLower(ts.TileName) + "/lib/" + f + "|kubectl -f - " + " -n " + ts.TsManifests.Namespace
@@ -691,7 +701,7 @@ func (d *Deployment) GenerateExecutePlan(ctx context.Context, aTs *Ts, out *webs
 			}
 
 			// Commands & output values to output.log
-			fileName := DiceConfig.WorkHome + aTs.Dr.SuperFolder + "/" + stage.Name + "-output.log"
+			fileName := DiceConfig.WorkHome + aTs.DR.SuperFolder + "/" + stage.Name + "-output.log"
 			//Sleep 5 seconds to waiting pod's ready
 			stage.Commands = append(stage.Commands, "sleep 10")
 			if tile, ok := aTs.AllTilesN[ts.TileInstance]; ok {
@@ -764,6 +774,6 @@ func toFlow(p *ExecutionPlan) string {
 	return flow
 }
 
-func generateAId() string {
+func randomSuffix() string {
 	return uuid.New().String()[0:8]
 }

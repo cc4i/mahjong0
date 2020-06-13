@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"dice/apis/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -11,7 +12,7 @@ var tilesGrid1 = TilesGrid{
 	ExecutableOrder:    2,
 	TileName:           "EKS",
 	TileVersion:        "0.10.0",
-	TileCategory:       ContainerProvider.CString(),
+	TileCategory:       v1alpha1.ContainerProvider.CString(),
 	RootTileInstance:   "tileInstance01",
 	ParentTileInstance: "tileInstance03",
 }
@@ -20,7 +21,7 @@ var tilesGrid2 = TilesGrid{
 	ExecutableOrder:    1,
 	TileName:           "Network",
 	TileVersion:        "0.11.0",
-	TileCategory:       Network.CString(),
+	TileCategory:       v1alpha1.Network.CString(),
 	RootTileInstance:   "tileInstance01",
 	ParentTileInstance: "tileInstance01",
 }
@@ -29,7 +30,7 @@ var tilesGrid3 = TilesGrid{
 	ExecutableOrder:    3,
 	TileName:           "ArgoCD",
 	TileVersion:        "0.12.0",
-	TileCategory:       ContainerApplication.CString(),
+	TileCategory:       v1alpha1.ContainerApplication.CString(),
 	RootTileInstance:   "tileInstance01",
 	ParentTileInstance: "",
 }
@@ -38,7 +39,7 @@ var tilesGrid4 = TilesGrid{
 	ExecutableOrder:    3,
 	TileName:           "Bumblebee",
 	TileVersion:        "0.14.0",
-	TileCategory:       Application.CString(),
+	TileCategory:       v1alpha1.Application.CString(),
 	RootTileInstance:   "tileInstance04",
 	ParentTileInstance: "",
 }
@@ -48,27 +49,27 @@ var tilesGridMap3 = make(map[string]TilesGrid)
 
 func init() {
 	AllTs[dSid[0]] = Ts{
-		AllTilesN: map[string]*Tile{
-			"tileInstance01": &Tile{},
-			"tileInstance02": &Tile{},
-			"tileInstance03": &Tile{},
-			"tileInstance04": &Tile{},
+		AllTilesN: map[string]*v1alpha1.Tile{
+			"tileInstance01": &v1alpha1.Tile{},
+			"tileInstance02": &v1alpha1.Tile{},
+			"tileInstance03": &v1alpha1.Tile{},
+			"tileInstance04": &v1alpha1.Tile{},
 		},
 	}
 	AllTs[dSid[1]] = Ts{
-		AllTilesN: map[string]*Tile{
-			"tileInstance01": &Tile{},
-			"tileInstance02": &Tile{},
-			"tileInstance03": &Tile{},
-			"tileInstance04": &Tile{},
+		AllTilesN: map[string]*v1alpha1.Tile{
+			"tileInstance01": &v1alpha1.Tile{},
+			"tileInstance02": &v1alpha1.Tile{},
+			"tileInstance03": &v1alpha1.Tile{},
+			"tileInstance04": &v1alpha1.Tile{},
 		},
 	}
 	AllTs[dSid[2]] = Ts{
-		AllTilesN: map[string]*Tile{
-			"tileInstance01": &Tile{},
-			"tileInstance02": &Tile{},
-			"tileInstance03": &Tile{},
-			"tileInstance04": &Tile{},
+		AllTilesN: map[string]*v1alpha1.Tile{
+			"tileInstance01": &v1alpha1.Tile{},
+			"tileInstance02": &v1alpha1.Tile{},
+			"tileInstance03": &v1alpha1.Tile{},
+			"tileInstance04": &v1alpha1.Tile{},
 		},
 	}
 	tilesGridMap1[tilesGrid1.TileInstance] = tilesGrid1

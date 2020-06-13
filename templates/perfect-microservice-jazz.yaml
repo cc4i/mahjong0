@@ -1,7 +1,7 @@
 apiVersion: mahjong.io/v1alpha1
 kind: Deployment 
 metadata:
-  name: go-bumblebee-jazz-application-demo
+  name: perfect-microservice
 spec:
   template:
     tiles:
@@ -174,30 +174,30 @@ spec:
           - name: stageMasterRoleARN
             inputValue: $(tileEksWithSpotStage.outputs.masterRoleARN)
 
-summary:
-      description: |
-        ++++++++++++++++++++++++++++++++++++++++++++++++++++
-        +   Perfect Microservices with Demo Application    +
-        ++++++++++++++++++++++++++++++++++++++++++++++++++++
-      outputs:
-        - name: EKS Cluster for Production
-          value: $(tileEksWithSpotProd.outputs.clusterName)
-        - name: Master role for Production Cluster
-          value: $(tileEksWithSpotProd.outputs.masterRoleARN)
-        - name: Endpoint for Production Cluster
-          value: $(tileEksWithSpotProd.outputs.clusterEndpoint)
-        - name: EKS Cluster for Staging
-          value: $(tileEksWithSpotStage.outputs.clusterName)
-        - name: Master role for Staging Cluster
-          value: $(tileEksWithSpotStage.outputs.masterRoleARN)
-        - name: Endpoint for Staging Cluster
-          value: $(tileEksWithSpotStage.outputs.clusterEndpoint)
-        - name: Endpoint for AgroCD
-          value: $(tileArgocdWithExsitingEks152.outputs.argocdBaseUrl)
-        - name: Administrator for AgroCD
-          value: $(tileArgocdWithExsitingEks152.outputs.user)
-        - name: Password for AgroCD Administrator
-          value: $(tileArgocdWithExsitingEks152.outputs.password)
-        
-      notes: []
+  summary:
+        description: |
+          ++++++++++++++++++++++++++++++++++++++++++++++++++++
+          +   Perfect Microservices with Demo Application    +
+          ++++++++++++++++++++++++++++++++++++++++++++++++++++
+        outputs:
+          - name: EKS Cluster for Production
+            value: $(tileEksWithSpotProd.outputs.clusterName)
+          - name: Master role for Production Cluster
+            value: $(tileEksWithSpotProd.outputs.masterRoleARN)
+          - name: Endpoint for Production Cluster
+            value: $(tileEksWithSpotProd.outputs.clusterEndpoint)
+          - name: EKS Cluster for Staging
+            value: $(tileEksWithSpotStage.outputs.clusterName)
+          - name: Master role for Staging Cluster
+            value: $(tileEksWithSpotStage.outputs.masterRoleARN)
+          - name: Endpoint for Staging Cluster
+            value: $(tileEksWithSpotStage.outputs.clusterEndpoint)
+          - name: Endpoint for AgroCD
+            value: $(tileArgocdWithExsitingEks152.outputs.argocdBaseUrl)
+          - name: Administrator for AgroCD
+            value: $(tileArgocdWithExsitingEks152.outputs.user)
+          - name: Password for AgroCD Administrator
+            value: $(tileArgocdWithExsitingEks152.outputs.password)
+          
+        notes: []
  

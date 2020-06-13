@@ -24,10 +24,9 @@ func RunGet(addr string, uri string) ([]byte, error) {
 
 func RunGetByVersion(addr string, uri string) ([]byte, error) {
 
-	uri = fmt.Sprintf("%s/%s",apiVersion, uri)
+	uri = fmt.Sprintf("%s/%s", apiVersion, uri)
 	return RunGet(addr, uri)
 }
-
 
 func RunPostByVersion(addr string, uri string, body []byte) (int, error) {
 	u := &url.URL{
@@ -54,13 +53,13 @@ func Run(addr string, dryRun bool, cmd []byte) error {
 }
 
 func Connect2Dice(addr string, dryRun bool) (*websocket.Conn, error) {
-	u := &url.URL {
+	u := &url.URL{
 		Scheme: "ws",
 		Host:   addr,
 		Path:   fmt.Sprintf("/%s/%s", apiVersion, "ws"),
 	}
 	if dryRun {
-		u.RawQuery="dryRun=true"
+		u.RawQuery = "dryRun=true"
 	}
 	logger.Info("Connecting to %s\n", u.String())
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
