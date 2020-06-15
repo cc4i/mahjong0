@@ -1,0 +1,25 @@
+apiVersion: mahjong.io/v1alpha1
+kind: Deployment 
+metadata:
+  name: eks-fargate-simple
+spec:
+  template:
+    tiles:
+      tileEksFargate:
+        tileReference: Eks-Fargate
+        tileVersion: 0.1.0
+        inputs:
+          - name: clusterName
+            inputValue: mahjong-fargate-cluster0
+
+  summary:
+    description: 
+    outputs:
+      - name: EKS Cluster Name
+        value: $(tileEks0005.outputs.clusterName)
+      - name: Master role arn for EKS Cluster
+        value: $(tileEks0005.outputs.masterRoleARN)
+      - name: The API endpoint EKS Cluster
+        value: $(tileEks0005.outputs.clusterEndpoint)
+
+    notes: []

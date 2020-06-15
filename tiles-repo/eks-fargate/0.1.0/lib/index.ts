@@ -27,7 +27,6 @@ export class EksFargate extends cdk.Construct {
       managedPolicies: [
         ManagedPolicy.fromAwsManagedPolicyName("AmazonEKSServicePolicy"),
         ManagedPolicy.fromAwsManagedPolicyName("AmazonEKSClusterPolicy"),
-        //ManagedPolicy.fromAwsManagedPolicyName("AmazonEKSFargatePodExecutionRolePolicy")
       ]
     });
 

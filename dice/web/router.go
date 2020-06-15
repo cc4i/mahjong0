@@ -18,11 +18,6 @@ func Router(ctx context.Context) *gin.Engine {
 	store := cookie.NewStore([]byte("secret"))
 	r.Use(sessions.Sessions("server-session", store))
 
-	// Health API
-	r.GET("/ping", func(c *gin.Context) {
-		c.String(http.StatusOK, "pong")
-	})
-
 	// Deployment API through WebSocket
 	r.GET("/v1alpha1/ws", func(c *gin.Context) {
 		WsHandler(ctx, c)
@@ -76,6 +71,11 @@ func Router(ctx context.Context) *gin.Engine {
 			utils.Built,
 			runtime.GOOS, runtime.GOARCH)
 		c.String(http.StatusOK, version)
+	})
+
+	// Health API
+	r.GET("/ping", func(c *gin.Context) {
+		c.String(http.StatusOK, "pong")
 	})
 
 	// '/toy' is a page for quick testing

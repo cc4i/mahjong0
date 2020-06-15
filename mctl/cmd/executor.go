@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"github.com/gorilla/websocket"
@@ -8,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 var apiVersion = "v1alpha1"
@@ -83,7 +85,16 @@ func ExecCommand(cmd []byte, c *websocket.Conn) error {
 		if string(message) == "d-done" {
 			return nil
 		} else {
-			logger.Info("%s\n", message)
+			buf,_ := bufio.NewReader(bytes.NewReader(message)).ReadBytes('\n')
+			str := strings.ToLower(string(buf))
+			if strings.Contains(str,"warn") {
+				logger.Warning("%s\n", buf)
+			} else if strings.Contains(str,"error") || strings.Contains(str," err ") {
+				logger.Warning("%s\n", buf)
+			} else {
+				logger.Info("%s\n", buf)
+			}
+
 		}
 	}
 }

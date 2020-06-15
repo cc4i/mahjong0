@@ -7,24 +7,16 @@ The Tile repreents a basic EKS cluster, which uses EKS 1.16 as default and depen
 
 ## Inputs
 
-- name: cidr
 - name: vpc
-- name: vpcSubnets
 - name: clusterName
 - name: clusterVersion
-- name: capacityInstance
-- name: capacity
 
 
 
 ## Outputs 
 - name: clusterName
-- name: clusterVersion
 - name: clusterArn
 - name: clusterEndpoint
 - name: masterRoleARN
-- name: capacityInstance
-- name: capacity
 
 ## Notice
-- Installed spot instance termincation handler

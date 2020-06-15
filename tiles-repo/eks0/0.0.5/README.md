@@ -27,4 +27,3 @@ The Tile repreents a basic EKS cluster, which uses EKS 1.16 as default and depen
 - name: capacity
 
 ## Notice
-- Installed spot instance termincation handler

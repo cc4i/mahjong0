@@ -7,7 +7,6 @@ import (
 	"dice/utils"
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/iancoleman/strcase"
 	log "github.com/sirupsen/logrus"
@@ -33,7 +32,7 @@ type AssemblerCore interface {
 	// PullTile pulls Tile from repo
 	PullTile(ctx context.Context,
 		tileInstance string,
-		tile string,
+		tileName string,
 		version string,
 		executableOrder int,
 		parentTileInstance string,
@@ -242,7 +241,7 @@ func (d *AssembleData) ProcessTiles(ctx context.Context, aTs *Ts, override map[s
 // PullTile pulls Tile from Tile Repo and extract & setup data along the way
 func (d *AssembleData) PullTile(ctx context.Context,
 	tileInstance string,
-	tile string,
+	tileName string,
 	version string,
 	executableOrder int,
 	parentTileInstance string,
@@ -252,19 +251,20 @@ func (d *AssembleData) PullTile(ctx context.Context,
 	out *websocket.Conn) error {
 
 	dSid := ctx.Value("d-sid").(string)
-	rStack := "Stack"
+	ti := generateTileInstance(tileInstance, tileName, rootTileInstance)
+	rStack := "Stack"+ti
 
 	// Pre-Process 1: Loading Tile from s3 & unzip
-	tileSpecFile, err := DiceConfig.LoadTile(tile, version, aTs.DR.SuperFolder)
+	tileSpecFile, err := DiceConfig.LoadTile(tileName, version, aTs.DR.SuperFolder)
 	if err != nil {
-		SRf(out, "Failed to pulling Tile < %s - %s > ... from RePO\n", tile, version)
+		SRf(out, "Failed to pulling Tile < %s - %s > ... from RePO\n", tileName, version)
 		return err
 	} else {
-		SRf(out, "Pulling Tile < %s - %s > ... from RePO with success\n", tile, version)
+		SRf(out, "Pulling Tile < %s - %s > ... from RePO with success\n", tileName, version)
 	}
 
-	// Pre-Process 2: Parse tile-spec.yaml if need more tile
-	SRf(out, "Parsing specification of Tile: < %s - %s > ...\n", tile, version)
+	// Pre-Process 2: Parse tileName-spec.yaml if need more tileName
+	SRf(out, "Parsing specification of Tile: < %s - %s > ...\n", tileName, version)
 	buf, err := ioutil.ReadFile(tileSpecFile)
 	if err != nil {
 		return err
@@ -276,14 +276,10 @@ func (d *AssembleData) PullTile(ctx context.Context,
 	}
 
 	// Pre-Process 3: Caching TilesGrid, which presents relation between Tiles
-	ti := tileInstance
-	if ti == "" {
-		ti = fmt.Sprintf("%s-%s-%s", tile, randomSuffix(), "generated")
-	}
 	tg := TilesGrid{
 		TileInstance:       ti,
 		ExecutableOrder:    executableOrder - 1,
-		TileName:           tile,
+		TileName:           tileName,
 		TileVersion:        version,
 		ParentTileInstance: parentTileInstance,
 		RootTileInstance:   rootTileInstance,
@@ -293,7 +289,7 @@ func (d *AssembleData) PullTile(ctx context.Context,
 		if !IsDuplicatedCategory(dSid, rootTileInstance, parsedTile.Metadata.Name) {
 			(*allTG)[ti] = tg
 		} else {
-			log.Debugf("It's duplicated Tile under same group, Ignore : %s / %s / %s\n", tile, version, parsedTile.Metadata.Category)
+			log.Debugf("It's duplicated Tile under same group, Ignore : %s / %s / %s\n", tileName, version, parsedTile.Metadata.Category)
 			return nil
 		}
 	} else {
@@ -305,7 +301,7 @@ func (d *AssembleData) PullTile(ctx context.Context,
 	parsedTile.TileInstance = tg.TileInstance
 
 	// Kick start processing
-	// Step 1. Caching the tile
+	// Step 1. Caching the tileName
 	aTs.AllTilesN[ti] = parsedTile
 	////
 
@@ -323,18 +319,18 @@ func (d *AssembleData) PullTile(ctx context.Context,
 	}
 	////
 
-	// Step 3. Caching tile dependencies for further process
+	// Step 3. Caching tileName dependencies for further process
 	tileDependencies := make(map[string]string)
 	for _, m := range parsedTile.Spec.Dependencies {
 		tileDependencies[m.Name] = m.TileReference
 	}
 
-	// Step 4. Caching tile override for further process; depends on Step 2.
+	// Step 4. Caching tileName override for further process; depends on Step 2.
 	// !!!override - includes all input value from deployment & could be using in dependent Tiles.
 	for _, ov := range parsedTile.Spec.Inputs {
 		if ov.Override.Name != "" {
 			if tileName, ok := tileDependencies[ov.Override.Name]; ok {
-				if val, ok := deploymentInputs[tile+"-"+ov.Override.Field]; ok {
+				if val, ok := deploymentInputs[tileName+"-"+ov.Override.Field]; ok {
 					tlo := &v1alpha1.TileInputOverride{
 						Name:  ov.Override.Name,
 						Field: ov.Override.Field,
@@ -459,7 +455,7 @@ func (d *AssembleData) PullTile(ctx context.Context,
 				}
 			} else {
 				// output value can be retrieved after execution: $D-TBD_TileName.Output-Name
-				// !!!Now support non-CDK tile can reference value from dependent Tile by injecting ENV!!!
+				// !!!Now support non-CDK tileName can reference value from dependent Tile by injecting ENV!!!
 				input.InputName = tileInput.Name
 				input.InputValue = strings.ToUpper("$D_TBD_" +
 					strcase.ToScreamingSnake(parsedTile.Metadata.Name) +
@@ -526,7 +522,7 @@ func (d *AssembleData) PullTile(ctx context.Context,
 
 	// Step 10. !!!Caching Outputs
 	to := &TsOutput{
-		TileName:    tile,
+		TileName:    tileName,
 		TileVersion: parsedTile.Metadata.Version,
 		TsOutputs:   make(map[string]*TsOutputDetail),
 	}
@@ -543,7 +539,7 @@ func (d *AssembleData) PullTile(ctx context.Context,
 	aTs.AllOutputsN[tg.TileInstance] = to
 	////
 
-	SRf(out, "Parsing specification of Tile: < %s - %s > was success.\n", tile, version)
+	SRf(out, "Parsing specification of Tile: < %s - %s > was success.\n", tileName, version)
 	return nil
 }
 
@@ -775,6 +771,11 @@ func toFlow(p *ExecutionPlan) string {
 	return flow
 }
 
-func randomSuffix() string {
-	return uuid.New().String()[0:8]
+func generateTileInstance(tileInstance string,tileName string, rootTileInstance string) string {
+	if tileInstance == "" {
+		return fmt.Sprintf("%s%s%s", tileName, rootTileInstance, "Generated")
+	} else {
+		return tileInstance
+	}
+
 }
