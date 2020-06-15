@@ -2,8 +2,6 @@ import * as cdk from '@aws-cdk/core';
 import eks = require('@aws-cdk/aws-eks');
 import ec2 = require('@aws-cdk/aws-ec2');
 import iam = require('@aws-cdk/aws-iam');
-import region = require('@aws-cdk/region-info');
-import { CfnOutput } from '@aws-cdk/core';
 import {NodePolicies} from './policy4eks'
 
 /** Input parameters */
@@ -13,7 +11,7 @@ export interface Eks0Props {
   clusterName: string,
   capacity?: number,
   capacityInstance?: string,
-  version?: string,
+  clusterVersion?: string,
 }
 
 export class Eks0 extends cdk.Construct {
@@ -71,15 +69,25 @@ export class Eks0 extends cdk.Construct {
       vpc: props.vpc,
       vpcSubnets: vpcSubnets,
       clusterName: props.clusterName,
-      defaultCapacity: props.capacity,
-      defaultCapacityInstance: capacityInstance,
-      version: props.version || '1.16',
+      defaultCapacity: 0,
+      version: props.clusterVersion || '1.16',
       // Master role as initial permission to run Kubectl
       mastersRole: eksRole,
     });
-    // Add tag for beauty
-    cluster.defaultNodegroup!.node.applyAspect(new cdk.Tag("Name",cluster.defaultNodegroup!.nodegroupName));
+    /** unmanaged nodegroup */
+    cluster.addCapacity("unmanaged-node", {
+      instanceType: capacityInstance,
+      minCapacity:  Math.round(props.capacity!/2),
+      maxCapacity: props.capacity
+    })
+    /** managed nodegroup */
+    cluster.addNodegroup("managed-node", {
+      instanceType: capacityInstance,
+      minSize: (props.capacity! - Math.round(props.capacity!/3)),
+      maxSize: props.capacity
+    })
 
+    
 
     /** Added CF Output */
     new cdk.CfnOutput(this,"clusterName", {value: cluster.clusterName})
