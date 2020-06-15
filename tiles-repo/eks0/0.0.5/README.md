@@ -1,5 +1,5 @@
 # Eks0
-The Tile repreents a basic EKS cluster, which uses EKS 1.16 as default and depends on netwrok Tile. The worker nodes will make up with unmanaged nodes and managed nodes.
+The Tile repreents a basic EKS cluster, which uses EKS 1.16 as default and depends on network Tile. The worker nodes will be managed nodes.
 
 ## Dependent Tile
 
