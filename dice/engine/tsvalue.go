@@ -67,6 +67,8 @@ type TsStack struct {
 	InputParameters   map[string]TsInputParameter //input name -> TsInputParameter
 	TsManifests       *TsManifests
 	TileFolder        string // The relative folder for Tile
+	Region string // target region
+	Profile string // specified profile
 }
 
 // TsInputParameter

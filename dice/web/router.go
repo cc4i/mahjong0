@@ -40,7 +40,12 @@ func Router(ctx context.Context) *gin.Engine {
 
 	// Return url of basic templates as per request
 	r.GET("/v1alpha1/template/:what", func(c *gin.Context) {
-		RetrieveTemplate(ctx, c)
+		Template(ctx, c)
+	})
+
+	// Retrieve metadata from tiles repo
+	r.GET("/v1alpha1/repo", func(c *gin.Context) {
+		Metadata(ctx, c)
 	})
 
 	// Validate Tile specification

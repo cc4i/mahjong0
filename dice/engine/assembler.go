@@ -39,6 +39,8 @@ type AssemblerCore interface {
 		rootTileInstance string,
 		aTs *Ts,
 		override map[string]*v1alpha1.TileInputOverride,
+		region string,
+		profile string,
 		out *websocket.Conn) error
 
 	// ApplyMainTs applies Ts to main CDK app
@@ -167,47 +169,50 @@ func (d *AssembleData) validateDependsOn(tileInstance string) error {
 func (d *AssembleData) ProcessTiles(ctx context.Context, aTs *Ts, override map[string]*v1alpha1.TileInputOverride, out *websocket.Conn) error {
 	// order factor, every tiles family +1000
 	executableOrder := 1000
-	toBeProcessedTiles := make(map[string]v1alpha1.DeploymentTemplateDetail) //tile-instance -> Tile
+	toBeProcessedTiles := make(map[string]v1alpha1.DeploymentTemplateDetail) //deploy-instance -> Tile
 
 	for _, tileInstance := range d.Deployment.OriginalOrder {
-
-		if tile, ok := d.Deployment.Spec.Template.Tiles[tileInstance]; ok {
+		if deploy, ok := d.Deployment.Spec.Template.Tiles[tileInstance]; ok {
 			parentTileInstance := "root"
-			if tile.DependsOn != "" {
-				if err := d.validateDependsOn(tile.DependsOn); err != nil {
+			if deploy.DependsOn != "" {
+				if err := d.validateDependsOn(deploy.DependsOn); err != nil {
 					return err
 				}
-				parentTileInstance = tile.DependsOn
+				parentTileInstance = deploy.DependsOn
 				if allTG, ok := AllTilesGrids[ctx.Value("d-sid").(string)]; ok && allTG != nil {
 					if _, ok := (*allTG)[parentTileInstance]; ok {
 						if err := d.PullTile(ctx,
 							tileInstance,
-							tile.TileReference,
-							tile.TileVersion,
+							deploy.TileReference,
+							deploy.TileVersion,
 							executableOrder,
 							parentTileInstance,
-							parentTileInstance, //set same family with dependent tile if depends on tile
+							parentTileInstance, //set same family with dependent deploy if depends on deploy
 							aTs,
 							override,
+							deploy.Region,
+							deploy.Profile,
 							out); err != nil {
 							return err
 						}
 
 					} else {
 						// caching and process later
-						toBeProcessedTiles[tileInstance] = tile
+						toBeProcessedTiles[tileInstance] = deploy
 					}
 				}
 			} else {
 				if err := d.PullTile(ctx,
 					tileInstance,
-					tile.TileReference,
-					tile.TileVersion,
+					deploy.TileReference,
+					deploy.TileVersion,
 					executableOrder,
 					parentTileInstance,
 					tileInstance,
 					aTs,
 					override,
+					deploy.Region,
+					deploy.Profile,
 					out); err != nil {
 					return err
 				}
@@ -216,20 +221,22 @@ func (d *AssembleData) ProcessTiles(ctx context.Context, aTs *Ts, override map[s
 		executableOrder = executableOrder + 1000
 	}
 	// Process Tiles with dependencies
-	for tileInstance, tile := range toBeProcessedTiles {
+	for tileInstance, deploy := range toBeProcessedTiles {
 		parentTileInstance := "root"
-		if tile.DependsOn != "" {
-			parentTileInstance = tile.DependsOn
+		if deploy.DependsOn != "" {
+			parentTileInstance = deploy.DependsOn
 		}
 		if err := d.PullTile(ctx,
 			tileInstance,
-			tile.TileReference,
-			tile.TileVersion,
+			deploy.TileReference,
+			deploy.TileVersion,
 			executableOrder,
 			parentTileInstance,
 			parentTileInstance,
 			aTs,
 			override,
+			deploy.Region,
+			deploy.Profile,
 			out); err != nil {
 			return err
 		}
@@ -248,6 +255,8 @@ func (d *AssembleData) PullTile(ctx context.Context,
 	rootTileInstance string,
 	aTs *Ts,
 	override map[string]*v1alpha1.TileInputOverride,
+	region string,
+	profile string,
 	out *websocket.Conn) error {
 
 	dSid := ctx.Value("d-sid").(string)
@@ -416,6 +425,8 @@ func (d *AssembleData) PullTile(ctx context.Context,
 			tg.RootTileInstance,
 			aTs,
 			override,
+			region,
+			profile,
 			out); err != nil {
 			return err
 		}
@@ -514,6 +525,8 @@ func (d *AssembleData) PullTile(ctx context.Context,
 		TileCategory:      parsedTile.Metadata.Category,
 		TsManifests:       tm,
 		TileFolder:        "/lib/" + strings.ToLower(parsedTile.Metadata.Name),
+		Region: region,
+		Profile: profile,
 	}
 	if _, ok := aTs.TsStacksMapN[tg.TileInstance]; !ok {
 		aTs.TsStacksMapN[tg.TileInstance] = ts
@@ -656,6 +669,13 @@ func (d *AssembleData) GenerateExecutePlan(ctx context.Context, aTs *Ts, out *we
 		}
 		stage.InjectedEnv = append(stage.InjectedEnv, "export WORK_HOME="+DiceConfig.WorkHome+aTs.DR.SuperFolder)
 		stage.InjectedEnv = append(stage.InjectedEnv, "export TILE_HOME="+DiceConfig.WorkHome+aTs.DR.SuperFolder+ts.TileFolder)
+		if ts.Region != "" {
+			stage.InjectedEnv = append(stage.InjectedEnv, "export AWS_DEFAULT_REGION="+ts.Region)
+		}
+		if ts.Profile != "" {
+			stage.InjectedEnv = append(stage.InjectedEnv, "export AWS_DEFAULT_PROFILE="+ts.Profile)
+		}
+
 
 		if ts.TileCategory == v1alpha1.ContainerApplication.CString() ||
 			ts.TileCategory == v1alpha1.Application.CString() {

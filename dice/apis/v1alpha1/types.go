@@ -100,6 +100,8 @@ type DeploymentTemplateDetail struct {
 	DependsOn     string       `json:"dependsOn"`
 	Inputs        []TileInput  `json:"inputs"`
 	Manifests     TileManifest `json:"manifests"`
+	Region string `json:"region"`
+	Profile string `json:"profile"`
 }
 
 // Tile specification

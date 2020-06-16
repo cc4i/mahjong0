@@ -137,8 +137,8 @@ func (wb *WsBox) Processor(ctx context.Context, messageType int, p []byte, dryRu
 
 }
 
-// RetrieveTemplate download template from S3 repo.
-func RetrieveTemplate(ctx context.Context, c *gin.Context) {
+// Template download template from S3 repo.
+func Template(ctx context.Context, c *gin.Context) {
 	what := c.Param("what")
 
 	switch what {
@@ -165,6 +165,10 @@ func RetrieveTemplate(ctx context.Context, c *gin.Context) {
 	case "super":
 		c.String(http.StatusOK, "not ready yet")
 	}
+}
+
+func Metadata(ctx context.Context, c *gin.Context) {
+
 }
 
 // Ts shows key content in memory as per sid
