@@ -38,12 +38,32 @@
                                 "^.*$": {
                                     "type": "object",
                                     "properties": {
-                                        "inputValue": {"type": "string"},
-                                        "inputValues": {
+                                        "tileReference": {
+                                            "type": "string"
+                                        },
+                                        "tileVersion": {
+                                            "type": "string"
+                                        },
+                                        "inputs": {
                                             "type": "array",
                                             "items": {
-                                                "type": "string"
+                                                "type": "object",
+                                                "properties": {
+                                                    "inputValue": {"type": "string"},
+                                                    "inputValues": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        }
+                                                    }
+                                                }
                                             }
+                                        },
+                                        "region": {
+                                            "type": "string"
+                                        },
+                                        "profile": {
+                                            "type": "string"
                                         }
                                     }
                                 }
