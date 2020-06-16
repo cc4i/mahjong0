@@ -6,7 +6,7 @@
     "spec": {
       "source": {
         "repoURL": "__github_repo__",
-        "path": "manifests/kustomize/staging",
+        "path": "kustomize/staging",
         "targetRevision": "HEAD"
       },
       "destination": {

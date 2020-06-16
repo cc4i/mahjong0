@@ -163,6 +163,21 @@
                     "items": {
                         "type": "string"
                     }
+                },
+                "postRun": {
+                    "type": "object",
+                    "properties": {
+                        "stages": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {"type":"string"},
+                                    "command": {"type": "string"}
+                                }
+                            }
+                        }
+                      }
                 }
             },
             "required":["inputs", "outputs"]
@@ -183,5 +198,6 @@
         "spec": {
             "$ref": "#/definitions/spec"
         }
+
     }
 }

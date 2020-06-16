@@ -23,11 +23,11 @@ var Version = &cobra.Command{
 }
 
 func clientVersion(c *cobra.Command, args []string) {
-	logger.Info("\nClient Version:\n" +
+	logger.Info("\nClient Version:\n"+
 		"\tVersion:\t%s\n"+
-		"\tGo version:\t%s\n" +
+		"\tGo version:\t%s\n"+
 		"\tGit commit:\t%s\n"+
-		"\tBuilt:\t%s\n" +
+		"\tBuilt:\t%s\n"+
 		"\tOS/Arch:\t%s/%s\n", ClientVersion, runtime.Version(), GitCommit, Built, runtime.GOOS, runtime.GOARCH)
 }
 

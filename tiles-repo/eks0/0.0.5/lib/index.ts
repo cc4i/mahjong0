@@ -2,9 +2,8 @@ import * as cdk from '@aws-cdk/core';
 import eks = require('@aws-cdk/aws-eks');
 import ec2 = require('@aws-cdk/aws-ec2');
 import iam = require('@aws-cdk/aws-iam');
-import region = require('@aws-cdk/region-info');
-import { CfnOutput } from '@aws-cdk/core';
 import {NodePolicies} from './policy4eks'
+import { ManagedPolicy, ServicePrincipal, PolicyDocument, PolicyStatement } from '@aws-cdk/aws-iam';
 
 /** Input parameters */
 export interface Eks0Props {
@@ -13,7 +12,7 @@ export interface Eks0Props {
   clusterName: string,
   capacity?: number,
   capacityInstance?: string,
-  version?: string,
+  clusterVersion?: string,
 }
 
 export class Eks0 extends cdk.Construct {
@@ -29,25 +28,12 @@ export class Eks0 extends cdk.Construct {
   constructor(scope: cdk.Construct, id: string, props: Eks0Props) {
     super(scope, id);
 
-    let region = process.env.CDK_DEFAULT_REGION
-    let policies = []
-    if (region == "cn-north-1" || region == "cn-northwest-1" ) {
-      policies = [
-        {managedPolicyArn:  "arn:aws-cn:iam::aws:policy/AmazonEKSServicePolicy"},
-        {managedPolicyArn: "arn:aws-cn:iam::aws:policy/AmazonEKSClusterPolicy"}
-      ]
-    } else {
-      policies = [
-        {managedPolicyArn:  "arn:aws:iam::aws:policy/AmazonEKSServicePolicy"},
-        {managedPolicyArn: "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"}
-      ]
-      
-    }
-
     const eksRole = new iam.Role(this, 'EksClusterMasterRole', {
       assumedBy: new iam.AccountRootPrincipal(),
-      managedPolicies: policies,
-      inlinePolicies: new NodePolicies(scope, "inlinePolicy", {}).eksInlinePolicy
+      managedPolicies: [
+        ManagedPolicy.fromAwsManagedPolicyName("AmazonEKSServicePolicy"),
+        ManagedPolicy.fromAwsManagedPolicyName("AmazonEKSClusterPolicy"),
+      ]
     });
 
 
@@ -71,15 +57,25 @@ export class Eks0 extends cdk.Construct {
       vpc: props.vpc,
       vpcSubnets: vpcSubnets,
       clusterName: props.clusterName,
-      defaultCapacity: props.capacity,
-      defaultCapacityInstance: capacityInstance,
-      version: props.version || '1.16',
+      defaultCapacity: 0,
+      version: props.clusterVersion || '1.16',
       // Master role as initial permission to run Kubectl
       mastersRole: eksRole,
     });
-    // Add tag for beauty
-    cluster.defaultNodegroup!.node.applyAspect(new cdk.Tag("Name",cluster.defaultNodegroup!.nodegroupName));
 
+
+    /** managed nodegroup */
+    const nodegroupRole = new iam.Role(scope, 'NodegroupRole', {
+      assumedBy: new iam.ServicePrincipal("ec2.amazonaws.com"),
+      inlinePolicies: new NodePolicies(scope, "inlinePolicies", {}).eksInlinePolicy
+    });
+    const managed = cluster.addNodegroup("managed-node", {
+      instanceType: capacityInstance,
+      minSize: Math.round(props.capacity!/2),
+      maxSize: props.capacity,
+      nodeRole: nodegroupRole
+    });
+    
 
     /** Added CF Output */
     new cdk.CfnOutput(this,"clusterName", {value: cluster.clusterName})

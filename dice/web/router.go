@@ -1,4 +1,4 @@
-package apis
+package web
 
 import (
 	"context"
@@ -18,11 +18,6 @@ func Router(ctx context.Context) *gin.Engine {
 	store := cookie.NewStore([]byte("secret"))
 	r.Use(sessions.Sessions("server-session", store))
 
-	// Health API
-	r.GET("/ping", func(c *gin.Context) {
-		c.String(http.StatusOK, "pong")
-	})
-
 	// Deployment API through WebSocket
 	r.GET("/v1alpha1/ws", func(c *gin.Context) {
 		WsHandler(ctx, c)
@@ -39,13 +34,18 @@ func Router(ctx context.Context) *gin.Engine {
 
 	// Destroy API through WebSocket
 	r.GET("/v1alpha1/destroy", func(c *gin.Context) {
-		// TODO
-
+		//TODO: delete local cache & print out guide
+		c.String(http.StatusOK, "Coming soon!")
 	})
 
 	// Return url of basic templates as per request
 	r.GET("/v1alpha1/template/:what", func(c *gin.Context) {
-		RetrieveTemplate(ctx, c)
+		Template(ctx, c)
+	})
+
+	// Retrieve metadata from tiles repo
+	r.GET("/v1alpha1/repo", func(c *gin.Context) {
+		Metadata(ctx, c)
 	})
 
 	// Validate Tile specification
@@ -76,6 +76,11 @@ func Router(ctx context.Context) *gin.Engine {
 			utils.Built,
 			runtime.GOOS, runtime.GOARCH)
 		c.String(http.StatusOK, version)
+	})
+
+	// Health API
+	r.GET("/ping", func(c *gin.Context) {
+		c.String(http.StatusOK, "pong")
 	})
 
 	// '/toy' is a page for quick testing

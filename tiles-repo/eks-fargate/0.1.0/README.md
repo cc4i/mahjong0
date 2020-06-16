@@ -1,5 +1,5 @@
 # Eks0
-The Tile repreents a basic EKS cluster, which uses EKS 1.15 as default and depends on Tile - Network0. It will use default nodegroup as capacity.
+The Tile repreents a basic EKS cluster, which uses EKS 1.16 as default and depends on netwrok Tile. The worker nodes will make up with unmanaged nodes, managed nodes and fargate.
 
 ## Dependent Tile
 
@@ -8,11 +8,8 @@ The Tile repreents a basic EKS cluster, which uses EKS 1.15 as default and depen
 ## Inputs
 
 - name: vpc
-- name: vpcSubnets
 - name: clusterName
 - name: clusterVersion
-- name: capacityInstance
-- name: capacity
 
 
 

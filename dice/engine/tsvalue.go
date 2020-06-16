@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"dice/apis/v1alpha1"
 	"errors"
 	"regexp"
 	"sort"
@@ -12,10 +13,10 @@ import (
 type DeploymentStatus int
 
 const (
-	Created DeploymentStatus = iota
-	Progress
-	Done
-	Interrupted
+	Created     DeploymentStatus = iota // Created indicate the deployment just kicks off
+	Progress                            // Progress indicate the deployment is running
+	Done                                // Done indicate the deployment is Done
+	Interrupted                         // Interrupted indicate the deployment stop at somewhere
 )
 
 func (c DeploymentStatus) DSString() string {
@@ -33,11 +34,12 @@ type TilesGrid struct {
 	ParentTileInstance string // ParentTileInstance indicates who's dependent on Me - Tile
 }
 
-// DeploymentR is a record of each deployment
-type DeploymentR struct {
-	SID         string    // session ID for each deployment
-	Name        string    //Unique name for each deployment
-	CreatedTime time.Time // Created time
+// DeploymentRecord is a record of each deployment
+type DeploymentRecord struct {
+	SID         string    // SID is session ID for each deployment
+	Name        string    // Name is unique identifier for each deployment: metadata.name
+	Created     time.Time // Created time
+	Updated     time.Time // Updated time
 	SuperFolder string    // Main folder for all stuff per deployment
 	Status      string    // Status of deployment
 }
@@ -65,6 +67,8 @@ type TsStack struct {
 	InputParameters   map[string]TsInputParameter //input name -> TsInputParameter
 	TsManifests       *TsManifests
 	TileFolder        string // The relative folder for Tile
+	Region string // target region
+	Profile string // specified profile
 }
 
 // TsInputParameter
@@ -105,13 +109,13 @@ type TsOutputDetail struct {
 
 // Ts is key struct to fulfil super.ts template and key element to generate execution plan.
 type Ts struct {
-	Dr           *DeploymentR         // Dr is a deployment record
-	TsLibs       []TsLib              // TsLibs is only for go template
-	TsLibsMap    map[string]TsLib     // TsLibsMap : TileName -> TsLib
-	TsStacks     []*TsStack           // TsStacks is only for go template
-	TsStacksMapN map[string]*TsStack  // TsStacksMap: TileInstance -> TsStack, all initialized values will be store here, include input, env, etc
-	AllTilesN    map[string]*Tile     // AllTiles: TileInstance -> Tile
-	AllOutputsN  map[string]*TsOutput // AllOutputs:  TileInstance ->TsOutput, all output values will be store here
+	DR           *DeploymentRecord         // DR is a deployment record
+	TsLibs       []TsLib                   // TsLibs is only for go template
+	TsLibsMap    map[string]TsLib          // TsLibsMap : TileName -> TsLib
+	TsStacks     []*TsStack                // TsStacks is only for go template
+	TsStacksMapN map[string]*TsStack       // TsStacksMap: TileInstance -> TsStack, all initialized values will be store here, include input, env, etc
+	AllTilesN    map[string]*v1alpha1.Tile // AllTiles: TileInstance -> Tile
+	AllOutputsN  map[string]*TsOutput      // AllOutputs:  TileInstance ->TsOutput, all output values will be store here
 }
 
 // AllTs represents all information about tiles, input, output, etc.,  id(uuid) -> Ts
@@ -136,7 +140,7 @@ func SortedTilesGrid(dSid string) []TilesGrid {
 }
 
 // DependentEKSTile return dependent EKS tile in the the group
-func DependentEKSTile(dSid string, tileInstance string) *Tile {
+func DependentEKSTile(dSid string, tileInstance string) *v1alpha1.Tile {
 
 	pTileInstance := ParentTileInstance(dSid, tileInstance)
 	if allTG, ok := AllTilesGrids[dSid]; ok {
@@ -144,7 +148,7 @@ func DependentEKSTile(dSid string, tileInstance string) *Tile {
 			if v.TileInstance == pTileInstance {
 				if at, ok := AllTs[dSid]; ok {
 					if tile, ok := at.AllTilesN[v.TileInstance]; ok {
-						if tile.Metadata.VendorService == EKS.VSString() {
+						if tile.Metadata.VendorService == v1alpha1.EKS.VSString() {
 							return tile
 						}
 					}
@@ -156,10 +160,10 @@ func DependentEKSTile(dSid string, tileInstance string) *Tile {
 }
 
 // AllDependentTiles return all dependent Tiles
-func AllDependentTiles(dSid string, tileInstance string) []Tile {
+func AllDependentTiles(dSid string, tileInstance string) []v1alpha1.Tile {
 
 	if allTG, ok := AllTilesGrids[dSid]; ok {
-		var tiles []Tile
+		var tiles []v1alpha1.Tile
 		for _, v := range *allTG {
 			if v.ParentTileInstance == tileInstance {
 				if at, ok := AllTs[dSid]; ok {
@@ -348,14 +352,14 @@ func FamilyTileInstance(dSid string, tileInstance string) []string {
 }
 
 // DepName return unique name for Ts
-func DepName(name string) string {
-	for _, ts := range AllTs {
-		if ts.Dr.Name == name {
-			name = name + "-" + RandString(8)
-		}
-	}
-	return name
-}
+//func DepName(name string) string {
+//	for _, ts := range AllTs {
+//		if ts.DR.Name == name {
+//			name = name + "-" + RandString(8)
+//		}
+//	}
+//	return name
+//}
 
 // TsContent returns content as per d-sid
 func TsContent(sid string) *Ts {
@@ -366,10 +370,30 @@ func TsContent(sid string) *Ts {
 }
 
 // AllTsDeployment returns all records of deployment
-func AllTsDeployment() []DeploymentR {
-	var ds []DeploymentR
+func AllTsDeployment() []DeploymentRecord {
+	var ds []DeploymentRecord
 	for _, ts := range AllTs {
-		ds = append(ds, *ts.Dr)
+		ds = append(ds, *ts.DR)
 	}
 	return ds
+}
+
+// IsRepeatedDeployment return flag of repeated deployment and sid if repeated
+func IsRepeatedDeployment(name string) (string, bool) {
+	tss := make([]Ts, 0, len(AllTs))
+	for _, ts := range AllTs {
+		tss = append(tss, ts)
+	}
+	// By create time (descending)
+	sort.SliceStable(tss, func(i, j int) bool {
+		return tss[j].DR.Created.Sub(tss[i].DR.Created) < 0
+	})
+
+	for _, ts := range tss {
+		if ts.DR.Name == name {
+			return ts.DR.SID, true
+		}
+	}
+	return "", false
+
 }

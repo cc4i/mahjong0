@@ -1,18 +1,29 @@
 # Eks0
-The Tile repreents a basic EKS cluster, which uses EKS 1.15 as default and depends on Tile - Network0.
+The Tile repreents a basic EKS cluster, which uses EKS 1.16 as default and depends on network Tile. The worker nodes will be managed nodes.
 
-## Input parameters
+## Dependent Tile
 
-## Output parameters 
+- Network0 [ v0.0.1 ]
 
-## Change logs
-- Update EKS default version to 1.16
-- Expose more options 
+## Inputs
 
-## Notes
+- name: cidr
+- name: vpc
+- name: vpcSubnets
+- name: clusterName
+- name: clusterVersion
+- name: capacityInstance
+- name: capacity
 
-## Useful commands
 
- * `npm run build`   compile typescript to js
- * `npm run watch`   watch for changes and compile
- * `npm run test`    perform the jest unit tests
+
+## Outputs 
+- name: clusterName
+- name: clusterVersion
+- name: clusterArn
+- name: clusterEndpoint
+- name: masterRoleARN
+- name: capacityInstance
+- name: capacity
+
+## Notice

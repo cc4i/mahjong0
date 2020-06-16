@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"github.com/gorilla/websocket"
@@ -8,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 var apiVersion = "v1alpha1"
@@ -24,10 +26,9 @@ func RunGet(addr string, uri string) ([]byte, error) {
 
 func RunGetByVersion(addr string, uri string) ([]byte, error) {
 
-	uri = fmt.Sprintf("%s/%s",apiVersion, uri)
+	uri = fmt.Sprintf("%s/%s", apiVersion, uri)
 	return RunGet(addr, uri)
 }
-
 
 func RunPostByVersion(addr string, uri string, body []byte) (int, error) {
 	u := &url.URL{
@@ -54,13 +55,13 @@ func Run(addr string, dryRun bool, cmd []byte) error {
 }
 
 func Connect2Dice(addr string, dryRun bool) (*websocket.Conn, error) {
-	u := &url.URL {
+	u := &url.URL{
 		Scheme: "ws",
 		Host:   addr,
 		Path:   fmt.Sprintf("/%s/%s", apiVersion, "ws"),
 	}
 	if dryRun {
-		u.RawQuery="dryRun=true"
+		u.RawQuery = "dryRun=true"
 	}
 	logger.Info("Connecting to %s\n", u.String())
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
@@ -84,7 +85,16 @@ func ExecCommand(cmd []byte, c *websocket.Conn) error {
 		if string(message) == "d-done" {
 			return nil
 		} else {
-			logger.Info("%s\n", message)
+			buf,_ := bufio.NewReader(bytes.NewReader(message)).ReadBytes('\n')
+			str := strings.ToLower(string(buf))
+			if strings.Contains(str,"warn") {
+				logger.Warning("%s\n", buf)
+			} else if strings.Contains(str,"error") || strings.Contains(str," err ") {
+				logger.Warning("%s\n", buf)
+			} else {
+				logger.Info("%s\n", buf)
+			}
+
 		}
 	}
 }

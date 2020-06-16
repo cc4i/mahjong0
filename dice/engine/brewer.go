@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"container/list"
 	"context"
+	"dice/apis/v1alpha1"
 	"errors"
 	"fmt"
 	"github.com/gorilla/websocket"
@@ -28,7 +29,7 @@ type ExecutionPlan struct {
 	CurrentStage     *ExecutionStage            `json:"currentStage"`
 	Plan             *list.List                 `json:"plan"`
 	PlanMirror       map[string]*ExecutionStage `json:"planMirror"`
-	OriginDeployment *Deployment                `json:"originDeployment"`
+	OriginDeployment *v1alpha1.Deployment       `json:"originDeployment"`
 }
 
 // ExecutionStage represents an unit of execution plan.
@@ -111,7 +112,7 @@ func (ep *ExecutionPlan) ExecutePlan(ctx context.Context, dryRun bool, out *webs
 			}
 
 			// Extract output values & caching results
-			buf, err := ioutil.ReadFile(DiceConfig.WorkHome + aTs.Dr.SuperFolder + "/" + stage.Name + "-output.log")
+			buf, err := ioutil.ReadFile(DiceConfig.WorkHome + aTs.DR.SuperFolder + "/" + stage.Name + "-output.log")
 			if err != nil {
 				return err
 			}
@@ -218,7 +219,7 @@ func (ep *ExecutionPlan) CommandExecutor(ctx context.Context, dryRun bool, cmdTx
 	var stageLog *log.Logger
 	SR(out, []byte("Initializing stage log file ..."))
 	stageLog = log.New()
-	fileName := DiceConfig.WorkHome + aTs.Dr.SuperFolder + "/" + ep.CurrentStage.Name + "-output.log"
+	fileName := DiceConfig.WorkHome + aTs.DR.SuperFolder + "/" + ep.CurrentStage.Name + "-output.log"
 	logFile, err := os.OpenFile(fileName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
 		SRf(out, "Failed to save stage log, using default stderr, %s\n", err)
@@ -236,7 +237,7 @@ func (ep *ExecutionPlan) CommandExecutor(ctx context.Context, dryRun bool, cmdTx
 	if !dryRun {
 		return ep.LinuxCommandExecutor(ctx, cmdTxt, stageLog, out)
 	} else {
-		testData, err := DiceConfig.LoadTestOutput(ep.CurrentStage.TileName, aTs.Dr.SuperFolder)
+		testData, err := DiceConfig.LoadTestOutput(ep.CurrentStage.TileName, aTs.DR.SuperFolder)
 		if err != nil {
 			log.Printf("No testing output for %s\n", ep.CurrentStage.TileName)
 		} else {
@@ -322,7 +323,7 @@ echo $?
 	if at, ok := AllTs[dSid]; ok {
 		// Looking for initial kube.config. For EKS, require clusterName, masterRoleARN ; For others, not implementing.
 		if tile, ok := at.AllTilesN[ep.CurrentStage.Name]; ok {
-			if tile.Spec.Manifests.ManifestType != "" || tile.Metadata.DependentOnVendorService == EKS.VSString() {
+			if tile.Spec.Manifests.ManifestType != "" || tile.Metadata.DependentOnVendorService == v1alpha1.EKS.VSString() {
 				var clusterName, masterRoleARN string
 				// Tile with dependency
 				if dependentTile := DependentEKSTile(dSid, tile.TileInstance); dependentTile != nil {
@@ -353,8 +354,8 @@ echo $?
 					fmt.Sprintf("aws eks update-kubeconfig --name %s --role-arn %s --kubeconfig %s\nexport KUBECONFIG=%s",
 						clusterName,
 						masterRoleARN,
-						DiceConfig.WorkHome+at.Dr.SuperFolder+at.TsStacksMapN[tile.TileInstance].TileFolder+"/kube.config",
-						DiceConfig.WorkHome+at.Dr.SuperFolder+at.TsStacksMapN[tile.TileInstance].TileFolder+"/kube.config",
+						DiceConfig.WorkHome+at.DR.SuperFolder+at.TsStacksMapN[tile.TileInstance].TileFolder+"/kube.config",
+						DiceConfig.WorkHome+at.DR.SuperFolder+at.TsStacksMapN[tile.TileInstance].TileFolder+"/kube.config",
 					))
 				tContent = tContent4K8s
 			}
@@ -451,7 +452,7 @@ func (ep *ExecutionPlan) ExtractValue(ctx context.Context, buf []byte, out *webs
 			outputs.StageName = ep.CurrentStage.Name
 			for outputName, outputDetail := range outputs.TsOutputs {
 				var regx *regexp.Regexp
-				if tileCategory == ContainerApplication.CString() || tileCategory == Application.CString() {
+				if tileCategory == v1alpha1.ContainerApplication.CString() || tileCategory == v1alpha1.Application.CString() {
 					// Extract dSid, value from Command outputs
 					regx = regexp.MustCompile("^\\{\"(" +
 						outputName +

@@ -1,0 +1,36 @@
+apiVersion: mahjong.io/v1alpha1
+kind: Deployment 
+metadata:
+  name: eks-simple-with-region
+spec:
+  template:
+    tiles:
+      tileEks0005:
+        tileReference: Eks0
+        tileVersion: 0.0.5
+        inputs:
+          - name: clusterName
+            inputValue: mahjong-cluster0
+          - name: capacity
+            inputValue: 3
+          - name: capacityInstance
+            inputValue: m5.large
+          - name: version
+            inputValue: 1.16
+        region: ap-southeast-1
+        profile: sin
+  summary:
+    description: 
+    outputs:
+      - name: EKS Cluster Name
+        value: $(tileEks0005.outputs.clusterName)
+      - name: Master role arn for EKS Cluster
+        value: $(tileEks0005.outputs.masterRoleARN)
+      - name: The API endpoint EKS Cluster
+        value: $(tileEks0005.outputs.clusterEndpoint)
+      - name: Instance type of worker node
+        value: $(tileEks0005.outputs.capacityInstance)
+      - name: Default capacity of worker node
+        value: $(tileEks0005.outputs.capacity)
+
+    notes: []

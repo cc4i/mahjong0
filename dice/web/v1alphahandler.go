@@ -1,7 +1,8 @@
-package apis
+package web
 
 import (
 	"context"
+	"dice/apis/v1alpha1"
 	"dice/engine"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -82,29 +83,38 @@ func WsCloseHandler(cancel context.CancelFunc, code int, txt string) error {
 
 // Processor handle full process of deployment request
 func (wb *WsBox) Processor(ctx context.Context, messageType int, p []byte, dryRun bool) error {
-	sid := uuid.New().String()
-	ctx = context.WithValue(ctx, "d-sid", sid)
-	engine.SRf(wb.out, "Created a new session & d-sid = %s", sid)
 	var ep *engine.ExecutionPlan
 	//
-	// 1. parse yaml +
+	// 1. Parsing YAML
 	engine.SR(wb.out, []byte("Parsing Deployment..."))
-	dt := engine.Data(p)
-	deploy, err := dt.ParseDeployment(ctx)
+	dt := v1alpha1.Data(p)
+	deployment, err := dt.ParseDeployment(ctx)
 	if err != nil {
 		engine.SRf(wb.out, "Parsing Deployment error : %s \n", err)
 		return err
 	}
 	engine.SR(wb.out, []byte("Parsing Deployment was success."))
 	engine.SR(wb.out, []byte("--BO:-------------------------------------------------"))
-	b, _ := yaml.Marshal(deploy)
+	b, _ := yaml.Marshal(deployment)
 	engine.SR(wb.out, b)
 	engine.SR(wb.out, []byte("--EO:-------------------------------------------------"))
 
+	// 2. Looking for the dSid of last deployment
+	rdSid, isRepeated := engine.IsRepeatedDeployment(deployment.Metadata.Name)
+	if isRepeated {
+		engine.SRf(wb.out, "Repeated deployment and last d-dSid = %s", rdSid)
+	}
+	dSid := uuid.New().String()
+	ctx = context.WithValue(ctx, "d-sid", dSid)
+	engine.SRf(wb.out, "Created a new d-dSid = %s", dSid)
+
 	//
-	// 2. assemble super app with base templates +
+	// 3. assemble super app with base templates +
 	engine.SR(wb.out, []byte("Generating main app..."))
-	ep, err = deploy.GenerateMainApp(ctx, wb.out)
+	assemble := engine.AssembleData{
+		Deployment: deployment,
+	}
+	ep, err = assemble.GenerateMainApp(ctx, wb.out)
 	if err != nil {
 		engine.SRf(wb.out, "GenerateMainApp error : %s \n", err)
 		return err
@@ -112,23 +122,23 @@ func (wb *WsBox) Processor(ctx context.Context, messageType int, p []byte, dryRu
 	engine.SR(wb.out, []byte("Generating main app... with success"))
 
 	//
-	// 3. execute cdk / manifest +
+	// 4. execute cdk / manifest +
 	err = ep.ExecutePlan(ctx, dryRun, wb.out)
 	if err != nil {
-		if aTs, ok := engine.AllTs[sid]; ok {
-			aTs.Dr.Status = engine.Interrupted.DSString()
+		if aTs, ok := engine.AllTs[dSid]; ok {
+			engine.UpdateDR(aTs.DR, engine.Interrupted.DSString())
 		}
 	} else {
-		if aTs, ok := engine.AllTs[sid]; ok {
-			aTs.Dr.Status = engine.Done.DSString()
+		if aTs, ok := engine.AllTs[dSid]; ok {
+			engine.UpdateDR(aTs.DR, engine.Done.DSString())
 		}
 	}
 	return err
 
 }
 
-// RetrieveTemplate download template from S3 repo.
-func RetrieveTemplate(ctx context.Context, c *gin.Context) {
+// Template download template from S3 repo.
+func Template(ctx context.Context, c *gin.Context) {
 	what := c.Param("what")
 
 	switch what {
@@ -155,6 +165,10 @@ func RetrieveTemplate(ctx context.Context, c *gin.Context) {
 	case "super":
 		c.String(http.StatusOK, "not ready yet")
 	}
+}
+
+func Metadata(ctx context.Context, c *gin.Context) {
+
 }
 
 // Ts shows key content in memory as per sid
@@ -186,7 +200,7 @@ func Deployment(ctx context.Context, c *gin.Context) {
 		return
 	}
 
-	d := engine.Data(buf)
+	d := v1alpha1.Data(buf)
 	deployment, err := d.ParseDeployment(ctx)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -206,7 +220,7 @@ func Tile(ctx context.Context, c *gin.Context) {
 		return
 	}
 
-	d := engine.Data(buf)
+	d := v1alpha1.Data(buf)
 	tile, err := d.ParseTile(ctx)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
