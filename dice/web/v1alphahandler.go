@@ -4,6 +4,7 @@ import (
 	"context"
 	"dice/apis/v1alpha1"
 	"dice/engine"
+	"dice/utils"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -168,7 +169,11 @@ func Template(ctx context.Context, c *gin.Context) {
 }
 
 func Metadata(ctx context.Context, c *gin.Context) {
-
+	if meta, err := utils.TilesInRepo(ctx,"cc-mahjong-0"); err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+	} else {
+		c.JSON(http.StatusOK, meta)
+	}
 }
 
 // Ts shows key content in memory as per sid

@@ -1,0 +1,39 @@
+apiVersion: mahjong.io/v1alpha1
+kind: Tile
+metadata:
+    name: Mahjong
+    category: Application
+    version: latest
+
+spec:
+  global:
+    env:
+      - name: WHAT_IS_MAHJONG
+        value: mahjong
+
+  preRun:
+    stages:
+      - name: GetDice
+        command: |
+          docker run -d -v ~/.aws:/root/.aws -p 9090:9090 herochinese/dice
+      - name: GetMctl
+        command: |
+          curl -sLO https://github.com/cc4i/mahjong0/releases/download/v0.8.0/mctl_darwin_amd64.gz
+          gzip -d mctl_darwin_amd64.gz
+          mv mctl_darwin_amd64 mctl
+
+  inputs:
+    - name: version
+      inputType: String
+      require: true
+
+          
+  outputs:
+    - name: version
+      outputType: String
+      defaultValue: latest
+      description: Custom::String        
+     
+
+  notes: []
+

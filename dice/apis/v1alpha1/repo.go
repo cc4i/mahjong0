@@ -1,5 +1,7 @@
 package v1alpha1
 
+import "time"
+
 type Repo struct {
 	Tiles []TileMetadata `json:"tiles"`
 	Hu []HuMetadata `json:"hus"`
@@ -7,7 +9,7 @@ type Repo struct {
 
 type License int
 const (
-	Apache2 Category = iota
+	Apache2 License = iota
 	MIT
 )
 
@@ -25,6 +27,7 @@ type TileMetadata struct {
 	Email string `json:"email,omitempty"`
 	License string `json:"license,omitempty"`
 	Dependencies []TileMetadata `json:"dependencies,omitempty"`
+	Released time.Time `json:"released"`
 }
 
 type HuMetadata struct {
@@ -36,4 +39,5 @@ type HuMetadata struct {
 	Email string `json:"email,omitempty"`
 	License string `json:"license,omitempty"`
 	Dependencies []TileMetadata `json:"dependencies"`
+	Released time.Time `json:"released"`
 }
