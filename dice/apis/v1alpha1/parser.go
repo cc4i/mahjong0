@@ -46,24 +46,36 @@ func (d *Data) ParseDeployment(ctx context.Context) (*Deployment, error) {
 	var originalOrder []string
 	for _, item := range mapSlice {
 		if item.Key == "spec" {
-			spec := item.Value.(yamlv2.MapSlice)
-			for _, s := range spec {
-				if s.Key == "template" {
-					template := s.Value.(yamlv2.MapSlice)
-					for _, t := range template {
-						if t.Key == "tiles" {
-							tiles := t.Value.(yamlv2.MapSlice)
-							for _, tile := range tiles {
-								originalOrder = append(originalOrder, tile.Key.(string))
+			if spec, ok := item.Value.(yamlv2.MapSlice); ok {
+				for _, s := range spec {
+					if s.Key == "template" {
+						if template,ok := s.Value.(yamlv2.MapSlice);ok {
+							for _, t := range template {
+								if t.Key == "tiles" {
+									if tiles, ok := t.Value.(yamlv2.MapSlice); ok {
+										for _, tile := range tiles {
+											originalOrder = append(originalOrder, tile.Key.(string))
+										}
+									} else {
+										return &deployment, errors.New("deployment specification was invalid : tiles ")
+									}
+
+								}
 							}
+						} else {
+							return &deployment, errors.New("deployment specification was invalid : template")
 						}
+
 					}
 				}
+			} else {
+				return &deployment, errors.New("deployment specification was invalid : spec")
 			}
+
 		}
 	}
 	if len(originalOrder) < 1 {
-		return &deployment, errors.New(" Deployment specification didn't include tiles")
+		return &deployment, errors.New("deployment specification didn't include tiles")
 	}
 	////
 

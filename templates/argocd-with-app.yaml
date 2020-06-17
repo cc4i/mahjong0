@@ -31,11 +31,11 @@ spec:
             inputValue: <GITHUB TOKEN>
           - name: argocdNamespace
             # <tileInstance.outputs.name>
-            value: $(tileArgocd0152A.outputs.installedNamespace) 
+            inputValue: $(tileArgocd0152A.outputs.installedNamespace) 
           - name: argocdUser
-            value: $(tileArgocd0152A.outputs.user)
+            inputValue: $(tileArgocd0152A.outputs.user)
           - name: argocdPassword
-            value: $(tileArgocd0152A.outputs.password)
+            inputValue: $(tileArgocd0152A.outputs.password)
 
   summary:
       description: Argo CD has been installed in $(tileArgocd0152A.outputs.clusterName) with success and checking out following notes to get started.

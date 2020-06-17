@@ -1,5 +1,7 @@
 package v1alpha1
 
+import "time"
+
 // Enumeration for category of metadata in Tile specification.
 type Category int
 
@@ -120,6 +122,13 @@ type Metadata struct {
 	VendorService            string `json:"vendorService,omitempty"`
 	DependentOnVendorService string `json:"dependentOnVendorService,omitempty"`
 	Version                  string `json:"version"`
+	Description string `json:"description,omitempty"`
+	TileRepo string `json:"tileRepo,omitempty"`
+	VersionTag string `json:"versionTag,omitempty"`
+	Author string `json:"author,omitempty"`
+	Email string `json:"email,omitempty"`
+	License string `json:"license,omitempty"`
+	Released time.Time `json:"released,omitempty"`
 }
 
 // TileSpec tile.spec

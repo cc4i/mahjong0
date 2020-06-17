@@ -1,11 +1,7 @@
-package v1alpha1
+package list
 
 import "time"
 
-type Repo struct {
-	Tiles []TileMetadata `json:"tiles"`
-	Hu []HuMetadata `json:"hus"`
-}
 
 type License int
 const (

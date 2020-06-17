@@ -44,7 +44,7 @@ func Router(ctx context.Context) *gin.Engine {
 	})
 
 	// Retrieve metadata from tiles repo
-	r.GET("/v1alpha1/repo", func(c *gin.Context) {
+	r.GET("/v1alpha1/repo/:what", func(c *gin.Context) {
 		Metadata(ctx, c)
 	})
 

@@ -169,11 +169,22 @@ func Template(ctx context.Context, c *gin.Context) {
 }
 
 func Metadata(ctx context.Context, c *gin.Context) {
-	if meta, err := utils.TilesInRepo(ctx,"cc-mahjong-0"); err != nil {
-		c.JSON(http.StatusInternalServerError, err.Error())
-	} else {
-		c.JSON(http.StatusOK, meta)
+	what := c.Param("what")
+	switch what {
+	case "tile":
+		if meta, err := utils.TilesMetadata(ctx,"cc-mahjong-0"); err != nil {
+			c.JSON(http.StatusInternalServerError, err.Error())
+		} else {
+			c.JSON(http.StatusOK, meta)
+		}
+	case "hu":
+		if meta, err := utils.HusMetadata(ctx,"cc-mahjong-0"); err != nil {
+			c.JSON(http.StatusInternalServerError, err.Error())
+		} else {
+			c.JSON(http.StatusOK, meta)
+		}
 	}
+
 }
 
 // Ts shows key content in memory as per sid

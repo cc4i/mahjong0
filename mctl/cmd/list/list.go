@@ -23,7 +23,24 @@ var TilesInRepo = &cobra.Command{
 	Short: "\tList Tiles in the Repo.",
 	Long:  "\tList Tiles in the Repo.",
 	Run: func(c *cobra.Command, args []string) {
-		logger.Info("Tile")
+		addr, _ := c.Flags().GetString("addr")
+		buf, err := cmd.RunGetByVersion(addr, "repo/tile")
+		if err != nil {
+			logger.Warning("%s\n", err)
+			return
+		}
+		var tms []TileMetadata
+		err = json.Unmarshal(buf, &tms)
+		if err != nil {
+			logger.Warning("%s\n", err)
+			return
+		} else {
+			logger.Info("%s\t\t %s\t\t %s\t\t %s\n", "Name", "Version", "License", "Released")
+			for _, tm := range tms {
+				logger.Info("%s\t\t %s\t\t %s\t\t %s\n", tm.Name, tm.Version, tm.License, tm.Released.Local().Format("2006-01-02 15:04:05"))
+			}
+
+		}
 	},
 }
 
@@ -32,7 +49,25 @@ var HuInRepo = &cobra.Command{
 	Short: "\tList Hu in the Repo.",
 	Long:  "\tList Hu in the Repo.",
 	Run: func(c *cobra.Command, args []string) {
-		logger.Info("Hu")
+		addr, _ := c.Flags().GetString("addr")
+		buf, err := cmd.RunGetByVersion(addr, "repo/hu")
+		if err != nil {
+			logger.Warning("%s\n", err)
+			return
+		}
+		var tms []TileMetadata
+		err = json.Unmarshal(buf, &tms)
+		if err != nil {
+			logger.Warning("%s\n", err)
+			return
+		} else {
+			logger.Info("%s\t\t %s\t\t %s\t\t %s\n", "Name", "Version", "License", "Released")
+			for _, tm := range tms {
+				logger.Info("%s\t\t %s\t\t %s\t\t %s\n", tm.Name, tm.Version, tm.License, tm.Released.Local().Format("2006-01-02 15:04:05"))
+			}
+
+		}
+
 	},
 }
 

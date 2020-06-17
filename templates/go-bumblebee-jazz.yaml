@@ -16,4 +16,7 @@ spec:
           - name: accessToken
             inputValue: <GITHUB TOKEN>
 
-    
+  summary:
+      description: Application demo.
+      outputs: []
+      notes: []
