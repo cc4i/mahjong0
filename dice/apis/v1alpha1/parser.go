@@ -12,6 +12,7 @@ import (
 
 var deploymentSchema = "file://./schema/deployment-schema.json"
 var tileSchema = "file://./schema/tile-schema.json"
+
 // Data as []byte
 type Data []byte
 

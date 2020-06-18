@@ -91,3 +91,7 @@ func TestFamilyTileInstance(t *testing.T) {
 	tileName := FamilyTileInstance(dSid[0], "tileInstance03")
 	assert.Equal(t, 3, len(tileName))
 }
+
+func TestIsDuplicatedCategory(t *testing.T) {
+
+}
