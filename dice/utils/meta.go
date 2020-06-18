@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-func HusMetadata(ctx context.Context, bucket string)([]v1alpha1.HuMetadata, error) {
+func HusMetadata(ctx context.Context, bucket string) ([]v1alpha1.HuMetadata, error) {
 	var hus []v1alpha1.HuMetadata
 	tiles, err := AllTiles(ctx, bucket)
 	if err != nil {
@@ -36,7 +36,7 @@ func HusMetadata(ctx context.Context, bucket string)([]v1alpha1.HuMetadata, erro
 				log.Println("Object:", *obj.Key)
 				objInput := &s3.GetObjectInput{
 					Bucket: aws.String(bucket),
-					Key: obj.Key,
+					Key:    obj.Key,
 				}
 				objOutput, err := svc.GetObject(objInput)
 				if err != nil {
@@ -52,34 +52,34 @@ func HusMetadata(ctx context.Context, bucket string)([]v1alpha1.HuMetadata, erro
 					continue
 				}
 				hu := v1alpha1.HuMetadata{
-					Name: deploy.Metadata.Name,
-					Version: deploy.Metadata.Version,
+					Name:        deploy.Metadata.Name,
+					Version:     deploy.Metadata.Version,
 					Description: deploy.Metadata.Description,
-					RawUrl: deploy.Metadata.TileRepo,
-					Author: deploy.Metadata.Author,
-					Email: deploy.Metadata.Email,
-					License: deploy.Metadata.License,
-					Released: deploy.Metadata.Released,
+					RawUrl:      deploy.Metadata.TileRepo,
+					Author:      deploy.Metadata.Author,
+					Email:       deploy.Metadata.Email,
+					License:     deploy.Metadata.License,
+					Released:    deploy.Metadata.Released,
 				}
 				for _, t := range deploy.Spec.Template.Tiles {
-					dt := dependentTiles(tiles,t.TileReference, t.TileVersion)
+					dt := dependentTiles(tiles, t.TileReference, t.TileVersion)
 					dt[t.TileReference] = t.TileVersion
 					var dtm []v1alpha1.TileMetadata
-					for k,v :=range dt {
+					for k, v := range dt {
 						if tile, ok := tiles[k+"-"+v]; ok {
 							tm := v1alpha1.TileMetadata{
-								Name: tile.Metadata.Name,
-								Version: tile.Metadata.Version,
-								Category: tile.Metadata.Category,
+								Name:        tile.Metadata.Name,
+								Version:     tile.Metadata.Version,
+								Category:    tile.Metadata.Category,
 								Description: tile.Metadata.Description,
-								TileRepo: tile.Metadata.TileRepo,
-								VersionTag: tile.Metadata.Version,
-								Author: tile.Metadata.Author,
-								Email: tile.Metadata.Email,
-								License: tile.Metadata.License,
-								Released: tile.Metadata.Released,
+								TileRepo:    tile.Metadata.TileRepo,
+								VersionTag:  tile.Metadata.Version,
+								Author:      tile.Metadata.Author,
+								Email:       tile.Metadata.Email,
+								License:     tile.Metadata.License,
+								Released:    tile.Metadata.Released,
 							}
-							dtm = append(dtm,tm)
+							dtm = append(dtm, tm)
 						}
 					}
 					hu.Dependencies = dtm
@@ -101,23 +101,23 @@ func TilesMetadata(ctx context.Context, bucket string) ([]v1alpha1.TileMetadata,
 		return nil, err
 	}
 	for _, tile := range tiles {
-		meta[tile.Metadata.Name+"-"+tile.Metadata.Version]=&v1alpha1.TileMetadata{
-			Name: tile.Metadata.Name,
-			Version: tile.Metadata.Version,
-			Category: tile.Metadata.Category,
+		meta[tile.Metadata.Name+"-"+tile.Metadata.Version] = &v1alpha1.TileMetadata{
+			Name:        tile.Metadata.Name,
+			Version:     tile.Metadata.Version,
+			Category:    tile.Metadata.Category,
 			Description: tile.Metadata.Description,
-			TileRepo: tile.Metadata.TileRepo,
-			VersionTag: tile.Metadata.Version,
-			Author: tile.Metadata.Author,
-			Email: tile.Metadata.Email,
-			License: tile.Metadata.License,
-			Released: tile.Metadata.Released,
+			TileRepo:    tile.Metadata.TileRepo,
+			VersionTag:  tile.Metadata.Version,
+			Author:      tile.Metadata.Author,
+			Email:       tile.Metadata.Email,
+			License:     tile.Metadata.License,
+			Released:    tile.Metadata.Released,
 		}
 	}
-	return addDependencies(tiles, meta),err
+	return addDependencies(tiles, meta), err
 }
 
-func AllTiles(ctx context.Context, bucket string) (map[string]v1alpha1.Tile, error){
+func AllTiles(ctx context.Context, bucket string) (map[string]v1alpha1.Tile, error) {
 	var tiles = make(map[string]v1alpha1.Tile)
 	session, err := session.NewSession(&aws.Config{
 		Region: aws.String("ap-southeast-1"),
@@ -138,7 +138,7 @@ func AllTiles(ctx context.Context, bucket string) (map[string]v1alpha1.Tile, err
 				log.Println("Object:", *obj.Key)
 				objInput := &s3.GetObjectInput{
 					Bucket: aws.String(bucket),
-					Key: obj.Key,
+					Key:    obj.Key,
 				}
 				objOutput, err := svc.GetObject(objInput)
 				if err != nil {
@@ -154,15 +154,14 @@ func AllTiles(ctx context.Context, bucket string) (map[string]v1alpha1.Tile, err
 					continue
 				}
 				log.Infof("%s : %s \n", tile.Metadata.Name, tile.Metadata.Version)
-				tiles[tile.Metadata.Name+"-"+tile.Metadata.Version]=*tile
+				tiles[tile.Metadata.Name+"-"+tile.Metadata.Version] = *tile
 			}
 		}
 		return true
 	})
 
-	return tiles,err
+	return tiles, err
 }
-
 
 func addDependencies(tiles map[string]v1alpha1.Tile, meta map[string]*v1alpha1.TileMetadata) []v1alpha1.TileMetadata {
 	var ret []v1alpha1.TileMetadata
@@ -181,12 +180,12 @@ func dependentTiles(tiles map[string]v1alpha1.Tile, tileName string, tileVersion
 	var td = make(map[string]string)
 	if tile, ok := tiles[tileName+"-"+tileVersion]; ok {
 		for _, d := range tile.Spec.Dependencies {
-			td[d.TileReference]= d.TileVersion
-			if subTile, ok := tiles[ d.TileReference+"-"+d.TileVersion]; ok {
-				if len(subTile.Spec.Dependencies)>0 {
+			td[d.TileReference] = d.TileVersion
+			if subTile, ok := tiles[d.TileReference+"-"+d.TileVersion]; ok {
+				if len(subTile.Spec.Dependencies) > 0 {
 					m := dependentTiles(tiles, subTile.Metadata.Name, subTile.Metadata.Version)
-					for k,v := range m {
-						td[k]=v
+					for k, v := range m {
+						td[k] = v
 					}
 				}
 			}

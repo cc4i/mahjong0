@@ -261,7 +261,7 @@ func (d *AssembleData) PullTile(ctx context.Context,
 
 	dSid := ctx.Value("d-sid").(string)
 	ti := generateTileInstance(tileInstance, tileName, rootTileInstance)
-	rStack := "Stack"+ti
+	rStack := "Stack" + ti
 
 	// Pre-Process 1: Loading Tile from s3 & unzip
 	tileSpecFile, err := DiceConfig.LoadTile(tileName, version, aTs.DR.SuperFolder)
@@ -525,8 +525,8 @@ func (d *AssembleData) PullTile(ctx context.Context,
 		TileCategory:      parsedTile.Metadata.Category,
 		TsManifests:       tm,
 		TileFolder:        "/lib/" + strings.ToLower(parsedTile.Metadata.Name),
-		Region: region,
-		Profile: profile,
+		Region:            region,
+		Profile:           profile,
 	}
 	if _, ok := aTs.TsStacksMapN[tg.TileInstance]; !ok {
 		aTs.TsStacksMapN[tg.TileInstance] = ts
@@ -676,7 +676,6 @@ func (d *AssembleData) GenerateExecutePlan(ctx context.Context, aTs *Ts, out *we
 			stage.InjectedEnv = append(stage.InjectedEnv, "export AWS_DEFAULT_PROFILE="+ts.Profile)
 		}
 
-
 		if ts.TileCategory == v1alpha1.ContainerApplication.CString() ||
 			ts.TileCategory == v1alpha1.Application.CString() {
 			// ContainerApplication & Application
@@ -791,7 +790,7 @@ func toFlow(p *ExecutionPlan) string {
 	return flow
 }
 
-func generateTileInstance(tileInstance string,tileName string, rootTileInstance string) string {
+func generateTileInstance(tileInstance string, tileName string, rootTileInstance string) string {
 	if tileInstance == "" {
 		return fmt.Sprintf("%s%s%s", tileName, rootTileInstance, "Generated")
 	} else {

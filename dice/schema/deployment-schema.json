@@ -20,6 +20,27 @@
                 },
                 "version": {
                     "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "tileRepo": {
+                    "type": "string"
+                },
+                "versionTag": {
+                    "type": "string"
+                },
+                "author": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "license": {
+                    "type": "string"
+                },
+                "released": {
+                    "type": "string"
                 }
             },
             "required": [
