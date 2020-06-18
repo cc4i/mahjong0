@@ -181,7 +181,7 @@ type TileInput struct {
 	DefaultValue  string                `json:"defaultValue"`
 	DefaultValues []string              `json:"defaultValues,omitempty"`
 	InputValue    string                `json:"inputValue"`
-	InputValues   []string              `json:"inputValue,omitempty"`
+	InputValues   []string              `json:"inputValues,omitempty"`
 	Require       bool                  `json:"require"` // true/false
 	Override      TileInputOverride     `json:"override"`
 }
