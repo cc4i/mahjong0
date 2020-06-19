@@ -67,6 +67,11 @@ export class Eks0 extends cdk.Construct {
     /** managed nodegroup */
     const nodegroupRole = new iam.Role(scope, 'NodegroupRole', {
       assumedBy: new iam.ServicePrincipal("ec2.amazonaws.com"),
+      managedPolicies: [
+        ManagedPolicy.fromAwsManagedPolicyName("AmazonEKSWorkerNodePolicy"),
+        ManagedPolicy.fromAwsManagedPolicyName("AmazonEKS_CNI_Policy"),
+        ManagedPolicy.fromAwsManagedPolicyName("AmazonEC2ContainerRegistryReadOnly"),
+      ],
       inlinePolicies: new NodePolicies(scope, "inlinePolicies", {}).eksInlinePolicy
     });
     const managed = cluster.addNodegroup("managed-node", {

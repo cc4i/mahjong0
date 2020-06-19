@@ -1,7 +1,7 @@
 apiVersion: mahjong.io/v1alpha1
 kind: Deployment 
 metadata:
-  name: perfect-microservice
+  name: perfect-microservice-jazz
 spec:
   template:
     tiles:

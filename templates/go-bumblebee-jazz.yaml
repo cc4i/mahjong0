@@ -1,7 +1,7 @@
 apiVersion: mahjong.io/v1alpha1
 kind: Deployment 
 metadata:
-  name: go-bumblebee-jazz-application-demo
+  name: go-bumblebee-jazz
 spec:
   template:
     tiles:

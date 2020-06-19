@@ -28,6 +28,7 @@
     "@aws-cdk/aws-elasticache": "1.45.0",
     "@aws-cdk/aws-rds": "1.45.0",
     "@aws-cdk/aws-ssm": "1.45.0",
-    "@aws-cdk/cdk-assets-schema": "1.45.0"
+    "@aws-cdk/cdk-assets-schema": "1.45.0",
+    "@aws-cdk/aws-elasticsearch": "1.45.0"
   }
 }
