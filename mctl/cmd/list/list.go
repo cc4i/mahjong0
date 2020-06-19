@@ -88,11 +88,8 @@ var HuInRepo = &cobra.Command{
 			}
 		}
 
-
 	},
 }
-
-
 
 var Deployment = &cobra.Command{
 	Use:   "deployment",

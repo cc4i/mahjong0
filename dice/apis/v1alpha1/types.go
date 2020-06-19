@@ -162,8 +162,8 @@ type PreRunDetail struct {
 
 // PreRunStage tile.spec.preRun.stage
 type PreRunStage struct {
-	Name    string `json:"name"`
-	Command string `json:"command"`
+	Name           string         `json:"name"`
+	Command        string         `json:"command"`
 	ReadinessProbe ReadinessProbe `json:"readinessProbe"`
 }
 
@@ -226,17 +226,17 @@ type PostRunDetail struct {
 
 // PostRunStage tile.spec.postRun.stage
 type PostRunStage struct {
-	Name    string `json:"name"`
-	Command string `json:"command"`
+	Name           string         `json:"name"`
+	Command        string         `json:"command"`
 	ReadinessProbe ReadinessProbe `json:"readinessProbe"`
 }
 
 // ReadinessProbe present
 type ReadinessProbe struct {
-	Command string `json:"command"`
-	InitialDelaySeconds int `json:"initialDelaySeconds"`
-	PeriodSeconds int `json:"periodSeconds"`
-	TimeoutSeconds int `json:"timeoutSeconds"`
-	SuccessThreshold int `json:"successThreshold"`
-	FailureThreshold int `json:"failureThreshold"`
+	Command             string `json:"command"`
+	InitialDelaySeconds int    `json:"initialDelaySeconds"`
+	PeriodSeconds       int    `json:"periodSeconds"`
+	TimeoutSeconds      int    `json:"timeoutSeconds"`
+	SuccessThreshold    int    `json:"successThreshold"`
+	FailureThreshold    int    `json:"failureThreshold"`
 }

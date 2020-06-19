@@ -171,7 +171,6 @@ func (dc *DiceConfig) LoadTestOutput(tile string, folder string) ([]byte, error)
 	return ioutil.ReadAll(f)
 }
 
-
 func (dc *DiceConfig) LoadTileSpec(tile string, version string) ([]byte, error) {
 	if dc.Mode == "dev" {
 		dest, err := dc.LoadTileSpecDev(tile, version)

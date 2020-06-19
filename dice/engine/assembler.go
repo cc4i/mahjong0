@@ -343,7 +343,6 @@ func (d *AssembleData) PullTile(ctx context.Context,
 					tlo := &v1alpha1.TileInputOverride{
 						Name:  ov.Override.Name,
 						Field: ov.Override.Field,
-
 					}
 					tlo.OverrideValue = array2String(val, ov.InputType)
 					override[tileName+"-"+ov.Override.Field] = tlo
@@ -431,7 +430,7 @@ func (d *AssembleData) PullTile(ctx context.Context,
 	// !!! Place here so that CDK can get dependent stack variables !!!
 	// Step 8. Caching inputs <key, value> for further process
 	// inputs: inputName -> inputValue
-	inputs := make(map[string]TsInputParameter)
+	inputs := make(map[string]*TsInputParameter)
 	for _, tileInput := range parsedTile.Spec.Inputs {
 
 		input := TsInputParameter{
@@ -502,7 +501,7 @@ func (d *AssembleData) PullTile(ctx context.Context,
 		if tileInput.Override.Name != "" {
 			input.IsOverrideField = "yes"
 		}
-		inputs[input.InputName] = input
+		inputs[input.InputName] = &input
 	}
 	////
 
@@ -553,9 +552,9 @@ func (d *AssembleData) PullTile(ctx context.Context,
 func array2String(array []string, inputType string) string {
 
 	val := ""
-	if strings.Contains(inputType, "[]") && len(array)>1 {
+	if strings.Contains(inputType, "[]") && len(array) > 1 {
 		for _, d := range array {
-				val = val + d + ","
+			val = val + d + ","
 		}
 	} else {
 		val = array[0]
@@ -563,8 +562,6 @@ func array2String(array []string, inputType string) string {
 	return val
 
 }
-
-
 
 // ApplyMainTs apply values with super.ts template
 func (d *AssembleData) ApplyMainTs(ctx context.Context, aTs *Ts, out *websocket.Conn) error {
@@ -588,13 +585,13 @@ func (d *AssembleData) ApplyMainTs(ctx context.Context, aTs *Ts, out *websocket.
 	for _, tl := range aTs.TsLibsMap {
 		aTs.TsLibs = append(aTs.TsLibs, tl)
 	}
-	for _,tsStack := range aTs.TsStacks {
+	for _, tsStack := range aTs.TsStacks {
 		for _, ip := range tsStack.InputParameters {
 			switch ip.InputType {
-			case v1alpha1.String.IOTString(), v1alpha1.Secret.IOTString() :
-				ip.InputValueForTemplate = "'"+ip.InputValue+"'"
-			case v1alpha1.String.IOTString()+"[]", v1alpha1.Secret.IOTString()+"[]":
-				values := strings.Split(ip.InputValue,",")
+			case v1alpha1.String.IOTString(), v1alpha1.Secret.IOTString():
+				ip.InputValueForTemplate = "'" + ip.InputValue + "'"
+			case v1alpha1.String.IOTString() + "[]", v1alpha1.Secret.IOTString() + "[]":
+				values := strings.Split(ip.InputValue, ",")
 				str := "['"
 				for _, v := range values {
 					str = v + "','"
@@ -602,7 +599,7 @@ func (d *AssembleData) ApplyMainTs(ctx context.Context, aTs *Ts, out *websocket.
 				ip.InputValueForTemplate = strings.TrimSuffix(str, ",'") + " ]"
 			default:
 				if strings.Contains(ip.InputType, "[]") {
-					ip.InputValueForTemplate = "["+ip.InputValue+"]"
+					ip.InputValueForTemplate = "[" + ip.InputValue + "]"
 				} else {
 					ip.InputValueForTemplate = ip.InputValue
 				}
