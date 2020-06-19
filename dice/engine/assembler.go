@@ -343,14 +343,9 @@ func (d *AssembleData) PullTile(ctx context.Context,
 					tlo := &v1alpha1.TileInputOverride{
 						Name:  ov.Override.Name,
 						Field: ov.Override.Field,
-						//OverrideValue: deploymentInputs
-						//InputName: ov.Name,
+
 					}
-					if len(val) > 1 {
-						tlo.OverrideValue = array2String(val, ov.InputType)
-					} else {
-						tlo.OverrideValue = str2string(val[0], ov.InputType)
-					}
+					tlo.OverrideValue = array2String(val, ov.InputType)
 					override[tileName+"-"+ov.Override.Field] = tlo
 				}
 			}
@@ -439,14 +434,17 @@ func (d *AssembleData) PullTile(ctx context.Context,
 	inputs := make(map[string]TsInputParameter)
 	for _, tileInput := range parsedTile.Spec.Inputs {
 
-		input := TsInputParameter{}
+		input := TsInputParameter{
+			InputName: tileInput.Name,
+			InputType: tileInput.InputType,
+		}
 		if tileInput.Dependencies != nil {
 			// For value dependent on other Tile
 			if parsedTile.Metadata.Category != v1alpha1.ContainerApplication.CString() &&
 				parsedTile.Metadata.Category != v1alpha1.Application.CString() {
 				if len(tileInput.Dependencies) == 1 {
 					// single dependency
-					input.InputName = tileInput.Name
+					//input.InputName = tileInput.Name
 					refTileName := tileDependencies[tileInput.Dependencies[0].Name]
 					tsStack := ReferencedTsStack(dSid, rootTileInstance, refTileName)
 					if tsStack != nil {
@@ -454,7 +452,7 @@ func (d *AssembleData) PullTile(ctx context.Context,
 					}
 				} else {
 					// multiple dependencies will be organized as an array
-					input.InputName = tileInput.Name
+					//input.InputName = tileInput.Name
 					v := "[ "
 					for _, dependency := range tileInput.Dependencies {
 						refTileName := tileDependencies[dependency.Name]
@@ -467,7 +465,7 @@ func (d *AssembleData) PullTile(ctx context.Context,
 			} else {
 				// output value can be retrieved after execution: $D-TBD_TileName.Output-Name
 				// !!!Now support non-CDK tileName can reference value from dependent Tile by injecting ENV!!!
-				input.InputName = tileInput.Name
+				//input.InputName = tileInput.Name
 				input.InputValue = strings.ToUpper("$D_TBD_" +
 					strcase.ToScreamingSnake(parsedTile.Metadata.Name) +
 					"_" +
@@ -475,21 +473,17 @@ func (d *AssembleData) PullTile(ctx context.Context,
 			}
 		} else {
 			// For independent value
-			input.InputName = tileInput.Name
+			//input.InputName = tileInput.Name
 			// Overwrite values by values from Deployment
 			if val, ok := deploymentInputs[parsedTile.Metadata.Name+"-"+tileInput.Name]; ok {
-				if len(val) > 1 {
-					input.InputValue = array2String(val, tileInput.InputType)
-				} else {
-					input.InputValue = str2string(val[0], tileInput.InputType)
-				}
+				input.InputValue = array2String(val, tileInput.InputType)
 
 			} else {
 				if tileInput.DefaultValues != nil {
 					input.InputValue = array2String(tileInput.DefaultValues, tileInput.InputType)
 
 				} else if len(tileInput.DefaultValue) > 0 {
-					input.InputValue = str2string(tileInput.DefaultValue, tileInput.InputType)
+					input.InputValue = array2String([]string{tileInput.DefaultValue}, tileInput.InputType)
 				}
 			}
 
@@ -557,42 +551,20 @@ func (d *AssembleData) PullTile(ctx context.Context,
 }
 
 func array2String(array []string, inputType string) string {
-	val := "[ "
-	switch inputType {
-	case v1alpha1.String.IOTString() + "[]":
-		for _, d := range array {
-			if strings.HasPrefix(d, "$(") || strings.HasPrefix(d, "$cdk(") {
-				val = val + d + ","
-			} else {
-				val = val + "'" + d + "',"
-			}
-		}
-	default:
-		for _, d := range array {
-			val = val + d + ","
-		}
 
-	}
-	val = strings.TrimSuffix(val, ",") + " ]"
-	return val
-}
-
-func str2string(str string, inputType string) string {
 	val := ""
-	switch inputType {
-	case v1alpha1.String.IOTString():
-		if strings.HasPrefix(str, "$(") || strings.HasPrefix(str, "$cdk(") {
-			val = str
-		} else {
-			val = "'" + str + "'"
+	if strings.Contains(inputType, "[]") && len(array)>1 {
+		for _, d := range array {
+				val = val + d + ","
 		}
-
-	default:
-		val = str
-
+	} else {
+		val = array[0]
 	}
 	return val
+
 }
+
+
 
 // ApplyMainTs apply values with super.ts template
 func (d *AssembleData) ApplyMainTs(ctx context.Context, aTs *Ts, out *websocket.Conn) error {
@@ -616,7 +588,29 @@ func (d *AssembleData) ApplyMainTs(ctx context.Context, aTs *Ts, out *websocket.
 	for _, tl := range aTs.TsLibsMap {
 		aTs.TsLibs = append(aTs.TsLibs, tl)
 	}
+	for _,tsStack := range aTs.TsStacks {
+		for _, ip := range tsStack.InputParameters {
+			switch ip.InputType {
+			case v1alpha1.String.IOTString(), v1alpha1.Secret.IOTString() :
+				ip.InputValueForTemplate = "'"+ip.InputValue+"'"
+			case v1alpha1.String.IOTString()+"[]", v1alpha1.Secret.IOTString()+"[]":
+				values := strings.Split(ip.InputValue,",")
+				str := "['"
+				for _, v := range values {
+					str = v + "','"
+				}
+				ip.InputValueForTemplate = strings.TrimSuffix(str, ",'") + " ]"
+			default:
+				if strings.Contains(ip.InputType, "[]") {
+					ip.InputValueForTemplate = "["+ip.InputValue+"]"
+				} else {
+					ip.InputValueForTemplate = ip.InputValue
+				}
 
+			}
+
+		}
+	}
 	err = tp.Execute(tmpFile, aTs)
 	if err != nil {
 		SR(out, []byte(err.Error()))
@@ -629,15 +623,7 @@ func (d *AssembleData) ApplyMainTs(ctx context.Context, aTs *Ts, out *websocket.
 	}
 	os.Rename(superFile, superFile+"_old")
 	os.Rename(superFile+"_new", superFile)
-	//buf, err := ioutil.ReadFile(superFile)
-	//if err != nil {
-	//	SR(out, []byte(err.Error()))
-	//	return err
-	//}
 	SR(out, []byte("Generating main.ts for Super ... with success"))
-	//SR(out, []byte("--BO:-------------------------------------------------"))
-	//SR(out, buf)
-	//SR(out, []byte("--EO:-------------------------------------------------"))
 	return nil
 }
 
@@ -684,11 +670,9 @@ func (d *AssembleData) GenerateExecutePlan(ctx context.Context, aTs *Ts, out *we
 				if ts.TsManifests.Namespace != "" && ts.TsManifests.Namespace != "default" {
 					stage.Preparation = append(stage.Preparation, "kubectl create ns "+ts.TsManifests.Namespace+" || true")
 					stage.InjectedEnv = append(stage.InjectedEnv, "export NAMESPACE="+ts.TsManifests.Namespace)
-					//ts.PredefinedEnv["NAMESPACE"] = ts.TsManifests.Namespace
 				} else {
 					ts.TsManifests.Namespace = "default"
 					stage.InjectedEnv = append(stage.InjectedEnv, "export NAMESPACE=default")
-					//ts.PredefinedEnv["NAMESPACE"] = "default"
 				}
 
 				// Process different manifests

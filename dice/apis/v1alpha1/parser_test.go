@@ -375,8 +375,8 @@ spec:
 
 func TestLicense_LicenseString(t *testing.T) {
 	tests := []struct {
-		name string
-		input string
+		name   string
+		input  string
 		output string
 	}{
 		{"apache2.0", Apache2.LicenseString(), "Apache2.0"},
@@ -384,7 +384,7 @@ func TestLicense_LicenseString(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(testing *testing.T) {
-			assert.Equal(testing, test.output,test.input)
+			assert.Equal(testing, test.output, test.input)
 		})
 	}
 }

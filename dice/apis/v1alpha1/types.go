@@ -43,10 +43,11 @@ const (
 	Number
 	CDKObject
 	FromCommand
+	Secret
 )
 
 func (iot IOType) IOTString() string {
-	return [...]string{"String", "Number", "CDKObject", "FromCommand"}[iot]
+	return [...]string{"String", "Number", "CDKObject", "FromCommand", "Secret"}[iot]
 }
 
 // Manifest for manifest type in Tile specification
@@ -156,13 +157,14 @@ type GlobalDetailEnv struct {
 
 // PreRunDetail tile.spec.preRun
 type PreRunDetail struct {
-	Stages []PreRunStages `json:"stages,omitempty"`
+	Stages []PreRunStage `json:"stages,omitempty"`
 }
 
-// PreRunStages tile.spec.preRun.stage
-type PreRunStages struct {
+// PreRunStage tile.spec.preRun.stage
+type PreRunStage struct {
 	Name    string `json:"name"`
 	Command string `json:"command"`
+	ReadinessProbe ReadinessProbe `json:"readinessProbe"`
 }
 
 // TileDependency tile.spec.dependencies
@@ -219,11 +221,22 @@ type TileOutput struct {
 
 // PostRunDetail tile.spec.postRun
 type PostRunDetail struct {
-	Stages []PostRunStages `json:"stages,omitempty"`
+	Stages []PostRunStage `json:"stages,omitempty"`
 }
 
-// PostRunStages tile.spec.postRun.stage
-type PostRunStages struct {
+// PostRunStage tile.spec.postRun.stage
+type PostRunStage struct {
 	Name    string `json:"name"`
 	Command string `json:"command"`
+	ReadinessProbe ReadinessProbe `json:"readinessProbe"`
+}
+
+// ReadinessProbe present
+type ReadinessProbe struct {
+	Command string `json:"command"`
+	InitialDelaySeconds int `json:"initialDelaySeconds"`
+	PeriodSeconds int `json:"periodSeconds"`
+	TimeoutSeconds int `json:"timeoutSeconds"`
+	SuccessThreshold int `json:"successThreshold"`
+	FailureThreshold int `json:"failureThreshold"`
 }
