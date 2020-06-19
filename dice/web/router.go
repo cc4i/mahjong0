@@ -47,6 +47,14 @@ func Router(ctx context.Context) *gin.Engine {
 	r.GET("/v1alpha1/repo/:what", func(c *gin.Context) {
 		Metadata(ctx, c)
 	})
+	// Retrieve detail of specification tile
+	r.GET("/v1alpha1/tile/:name/:version", func(c *gin.Context) {
+		TileSpec(ctx, c)
+	})
+	// Retrieve detail of specification hu
+	r.GET("/v1alpha1/hu/:name", func(c *gin.Context) {
+		HuSpec(ctx, c)
+	})
 
 	// Validate Tile specification
 	r.POST("/v1alpha1/tile", func(c *gin.Context) {

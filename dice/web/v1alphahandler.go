@@ -187,6 +187,29 @@ func Metadata(ctx context.Context, c *gin.Context) {
 
 }
 
+func TileSpec(ctx context.Context, c *gin.Context) {
+	name := c.Param("name")
+	version := c.Param("version")
+
+	buf, err := engine.DiceConfig.LoadTileSpec(name, version)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+	} else {
+		c.String(http.StatusOK, string(buf))
+	}
+}
+
+func HuSpec(ctx context.Context, c *gin.Context) {
+	name := c.Param("name")
+
+	buf, err := engine.DiceConfig.LoadHuSpec(name)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+	} else {
+		c.String(http.StatusOK, string(buf))
+	}
+}
+
 // Ts shows key content in memory as per sid
 func Ts(ctx context.Context, c *gin.Context) {
 	sid := c.Param("sid")
