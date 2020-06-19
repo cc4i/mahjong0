@@ -25,6 +25,23 @@ spec:
       - name: CreateRepository
         command: |
           curl -H "Authorization: token $GIT_ACCESS_TOKEN" --data '{"name":"'$APP_CONF_REPO'", "private": true}' https://api.github.com/user/repos
+        readinessProbe:
+          command: |
+            cat <<EOF > check.sh
+            #!/bin/bash
+            retcode=`curl -s -o /dev/null -w "%{http_code}" https://github.com/$GITHUB_USER/$APP_CONF_REPO`
+            if [ $retcode -ne 200 ]
+            then
+              echo 'failed to create repo" >&2; exit 1
+              exit 1
+            fi
+            EOF
+            chmod +x check.sh;./check.sh
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 30
+          successThreshold: 1
+          failureThreshold: 1
       - name: SyncContentToRepository
         command: |
           cd $TILE_HOME

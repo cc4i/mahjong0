@@ -10,6 +10,9 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+var deploymentSchema = "file://./schema/deployment-schema.json"
+var tileSchema = "file://./schema/tile-schema.json"
+
 // Data as []byte
 type Data []byte
 
@@ -39,31 +42,43 @@ func (d *Data) ParseDeployment(ctx context.Context) (*Deployment, error) {
 	mapSlice := yamlv2.MapSlice{}
 	if err := yamlv2.Unmarshal(*d, &mapSlice); err != nil {
 		log.Errorf("Unmarshal mapSlice yaml error : %s\n", err)
-		return &deployment, errors.New(" Deployment specification was invalid")
+		return &deployment, errors.New("deployment specification was invalid")
 	}
 
 	// Retrieve original order as presenting in the file
 	var originalOrder []string
 	for _, item := range mapSlice {
 		if item.Key == "spec" {
-			spec := item.Value.(yamlv2.MapSlice)
-			for _, s := range spec {
-				if s.Key == "template" {
-					template := s.Value.(yamlv2.MapSlice)
-					for _, t := range template {
-						if t.Key == "tiles" {
-							tiles := t.Value.(yamlv2.MapSlice)
-							for _, tile := range tiles {
-								originalOrder = append(originalOrder, tile.Key.(string))
+			if spec, ok := item.Value.(yamlv2.MapSlice); ok {
+				for _, s := range spec {
+					if s.Key == "template" {
+						if template, ok := s.Value.(yamlv2.MapSlice); ok {
+							for _, t := range template {
+								if t.Key == "tiles" {
+									if tiles, ok := t.Value.(yamlv2.MapSlice); ok {
+										for _, tile := range tiles {
+											originalOrder = append(originalOrder, tile.Key.(string))
+										}
+									} else {
+										return &deployment, errors.New("deployment specification was invalid : tiles ")
+									}
+
+								}
 							}
+						} else {
+							return &deployment, errors.New("deployment specification was invalid : template")
 						}
+
 					}
 				}
+			} else {
+				return &deployment, errors.New("deployment specification was invalid : spec")
 			}
+
 		}
 	}
 	if len(originalOrder) < 1 {
-		return &deployment, errors.New(" Deployment specification didn't include tiles")
+		return &deployment, errors.New("deployment specification didn't include tiles")
 	}
 	////
 
@@ -87,15 +102,33 @@ func (d *Data) ParseDeployment(ctx context.Context) (*Deployment, error) {
 
 // ValidateTile validates Tile as per tile-spec.yaml
 func (d *Data) ValidateTile(ctx context.Context, tile *Tile) error {
-	//TODO find a better way to verify yaml
-	_, err := valid.ValidateStruct(tile)
+	schemaLoader := gojsonschema.NewReferenceLoader(tileSchema)
+	jsonLoader := gojsonschema.NewGoLoader(tile)
+	result, err := gojsonschema.Validate(schemaLoader, jsonLoader)
+	if err != nil {
+		log.Errorf("Failed to load schema : %s\n", err)
+		return err
+	}
+	if result.Valid() {
+		log.Printf("The document is valid\n")
+	} else {
+		log.Printf("The document is not valid. see errors :\n")
+
+		for _, ret := range result.Errors() {
+			// Err implements the ResultError interface
+			log.Printf("- %s\n", ret)
+			err = errors.Wrap(errors.New(ret.String()), ret.Description())
+		}
+		return err
+
+	}
+	_, err = valid.ValidateStruct(tile)
 	return err
 }
 
 // ValidateDeployment validate Deployment as per deployment-spec.yaml
 func (d *Data) ValidateDeployment(ctx context.Context, deployment *Deployment) error {
-	//TODO find a better way to verify yaml
-	schemaLoader := gojsonschema.NewReferenceLoader("file://./schema/deployment-schema.json")
+	schemaLoader := gojsonschema.NewReferenceLoader(deploymentSchema)
 	jsonLoader := gojsonschema.NewGoLoader(deployment)
 	result, err := gojsonschema.Validate(schemaLoader, jsonLoader)
 	if err != nil {

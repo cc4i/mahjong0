@@ -23,4 +23,10 @@ aws s3 cp ${tile_tgz} \
     --profile ${aws_profile} \
     --acl public-read
 
+aws s3 cp tile-spec.yaml \
+    s3://${s3_bucket}/tiles-repo/${tile_name_lowercase}/${tile_version}/tile-spec.yaml \
+    --profile ${aws_profile} \
+    --acl public-read
+
+
 echo "Synced < ${tile_name} - ${tile_version} > to S3::${s3_bucket}"

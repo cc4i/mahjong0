@@ -85,11 +85,11 @@ func ExecCommand(cmd []byte, c *websocket.Conn) error {
 		if string(message) == "d-done" {
 			return nil
 		} else {
-			buf,_ := bufio.NewReader(bytes.NewReader(message)).ReadBytes('\n')
+			buf, _ := bufio.NewReader(bytes.NewReader(message)).ReadBytes('\n')
 			str := strings.ToLower(string(buf))
-			if strings.Contains(str,"warn") {
+			if strings.Contains(str, "warn") {
 				logger.Warning("%s\n", buf)
-			} else if strings.Contains(str,"error") || strings.Contains(str," err ") {
+			} else if strings.Contains(str, "error") || strings.Contains(str, " err ") {
 				logger.Warning("%s\n", buf)
 			} else {
 				logger.Info("%s\n", buf)

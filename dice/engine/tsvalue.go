@@ -64,17 +64,19 @@ type TsStack struct {
 	TileStackName     string
 	TileStackVariable string
 	TileCategory      string
-	InputParameters   map[string]TsInputParameter //input name -> TsInputParameter
+	InputParameters   map[string]*TsInputParameter //input name -> TsInputParameter
 	TsManifests       *TsManifests
 	TileFolder        string // The relative folder for Tile
-	Region string // target region
-	Profile string // specified profile
+	Region            string // target region
+	Profile           string // specified profile
 }
 
 // TsInputParameter
 type TsInputParameter struct {
 	InputName              string
 	InputValue             string
+	InputValueForTemplate  string
+	InputType              string
 	IsOverrideField        string
 	DependentTileInstance  string
 	DependentTileInputName string
@@ -350,16 +352,6 @@ func FamilyTileInstance(dSid string, tileInstance string) []string {
 	}
 	return nil
 }
-
-// DepName return unique name for Ts
-//func DepName(name string) string {
-//	for _, ts := range AllTs {
-//		if ts.DR.Name == name {
-//			name = name + "-" + RandString(8)
-//		}
-//	}
-//	return name
-//}
 
 // TsContent returns content as per d-sid
 func TsContent(sid string) *Ts {

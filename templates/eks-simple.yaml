@@ -10,7 +10,7 @@ spec:
         tileVersion: 0.0.5
         inputs:
           - name: clusterName
-            inputValue: mahjong-cluster0
+            inputValue: mahjong-cluster101
           - name: capacity
             inputValue: 3
           - name: capacityInstance

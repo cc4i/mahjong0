@@ -33,7 +33,7 @@ export class {{.TileStackName}} extends cdk.Stack {
           {{ $map := .InputParameters }}
           {{ range $key, $value := $map }}
           {{ if (ne $value.IsOverrideField "yes") }}
-          {{ $key }}: {{ $value.InputValue }},
+          {{ $key }}: {{ $value.InputValueForTemplate }},
           {{ end }}
           {{ end }}
       })

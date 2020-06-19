@@ -1,5 +1,7 @@
 package v1alpha1
 
+import "time"
+
 // Enumeration for category of metadata in Tile specification.
 type Category int
 
@@ -41,10 +43,11 @@ const (
 	Number
 	CDKObject
 	FromCommand
+	Secret
 )
 
 func (iot IOType) IOTString() string {
-	return [...]string{"String", "Number", "CDKObject", "FromCommand"}[iot]
+	return [...]string{"String", "Number", "CDKObject", "FromCommand", "Secret"}[iot]
 }
 
 // Manifest for manifest type in Tile specification
@@ -100,8 +103,8 @@ type DeploymentTemplateDetail struct {
 	DependsOn     string       `json:"dependsOn"`
 	Inputs        []TileInput  `json:"inputs"`
 	Manifests     TileManifest `json:"manifests"`
-	Region string `json:"region"`
-	Profile string `json:"profile"`
+	Region        string       `json:"region"`
+	Profile       string       `json:"profile"`
 }
 
 // Tile specification
@@ -115,28 +118,35 @@ type Tile struct {
 
 // Metadata for Tile & Deployment
 type Metadata struct {
-	Name                     string `json:"name"`
-	Category                 string `json:"category"`
-	VendorService            string `json:"vendorService,omitempty"`
-	DependentOnVendorService string `json:"dependentOnVendorService,omitempty"`
-	Version                  string `json:"version"`
+	Name                     string    `json:"name"`
+	Category                 string    `json:"category"`
+	VendorService            string    `json:"vendorService,omitempty"`
+	DependentOnVendorService string    `json:"dependentOnVendorService,omitempty"`
+	Version                  string    `json:"version"`
+	Description              string    `json:"description,omitempty"`
+	TileRepo                 string    `json:"tileRepo,omitempty"`
+	VersionTag               string    `json:"versionTag,omitempty"`
+	Author                   string    `json:"author,omitempty"`
+	Email                    string    `json:"email,omitempty"`
+	License                  string    `json:"license,omitempty"`
+	Released                 time.Time `json:"released,omitempty"`
 }
 
 // TileSpec tile.spec
 type TileSpec struct {
-	Global       GlobalDetail     `json:"global"`
-	PreRun       PreRunDetail     `json:"preRun"`
-	Dependencies []TileDependency `json:"dependencies"`
+	Global       GlobalDetail     `json:"global,omitempty"`
+	PreRun       PreRunDetail     `json:"preRun,omitempty"`
+	Dependencies []TileDependency `json:"dependencies,omitempty"`
 	Inputs       []TileInput      `json:"inputs"`
-	Manifests    TileManifest     `json:"manifests"`
+	Manifests    TileManifest     `json:"manifests,omitempty"`
 	Outputs      []TileOutput     `json:"outputs" `
-	PostRun      PostRunDetail    `json:"PostRun"`
-	Notes        []string         `json:"notes"`
+	PostRun      PostRunDetail    `json:"PostRun,omitempty"`
+	Notes        []string         `json:"notes,omitempty"`
 }
 
 // GlobalDetail tile.spec.global
 type GlobalDetail struct {
-	Env []GlobalDetailEnv `json:"env"`
+	Env []GlobalDetailEnv `json:"env,omitempty"`
 }
 
 // GlobalDetailEnv tile.spec.global.env
@@ -147,13 +157,14 @@ type GlobalDetailEnv struct {
 
 // PreRunDetail tile.spec.preRun
 type PreRunDetail struct {
-	Stages []PreRunStages `json:"stages"`
+	Stages []PreRunStage `json:"stages,omitempty"`
 }
 
-// PreRunStages tile.spec.preRun.stage
-type PreRunStages struct {
-	Name    string `json:"name"`
-	Command string `json:"command"`
+// PreRunStage tile.spec.preRun.stage
+type PreRunStage struct {
+	Name           string         `json:"name"`
+	Command        string         `json:"command"`
+	ReadinessProbe ReadinessProbe `json:"readinessProbe"`
 }
 
 // TileDependency tile.spec.dependencies
@@ -168,11 +179,11 @@ type TileInput struct {
 	Name          string                `json:"name"`
 	InputType     string                `json:"inputType"`
 	Description   string                `json:"description"`
-	Dependencies  []TileInputDependency `json:"dependencies"`
+	Dependencies  []TileInputDependency `json:"dependencies,omitempty"`
 	DefaultValue  string                `json:"defaultValue"`
-	DefaultValues []string              `json:"defaultValues"`
+	DefaultValues []string              `json:"defaultValues,omitempty"`
 	InputValue    string                `json:"inputValue"`
-	InputValues   []string              `json:"inputValues"`
+	InputValues   []string              `json:"inputValues,omitempty"`
 	Require       bool                  `json:"require"` // true/false
 	Override      TileInputOverride     `json:"override"`
 }
@@ -189,8 +200,8 @@ type TileInputOverride struct {
 type TileManifest struct {
 	ManifestType string   `json:"manifestType"`
 	Namespace    string   `json:"namespace"`
-	Files        []string `json:"files"`
-	Folders      []string `json:"folders"`
+	Files        []string `json:"files,omitempty"`
+	Folders      []string `json:"folders,omitempty"`
 }
 
 // TileInputDependency tile.spec.input.dependency
@@ -210,11 +221,22 @@ type TileOutput struct {
 
 // PostRunDetail tile.spec.postRun
 type PostRunDetail struct {
-	Stages []PostRunStages `json:"stages"`
+	Stages []PostRunStage `json:"stages,omitempty"`
 }
 
-// PostRunStages tile.spec.postRun.stage
-type PostRunStages struct {
-	Name    string `json:"name"`
-	Command string `json:"command"`
+// PostRunStage tile.spec.postRun.stage
+type PostRunStage struct {
+	Name           string         `json:"name"`
+	Command        string         `json:"command"`
+	ReadinessProbe ReadinessProbe `json:"readinessProbe"`
+}
+
+// ReadinessProbe present
+type ReadinessProbe struct {
+	Command             string `json:"command"`
+	InitialDelaySeconds int    `json:"initialDelaySeconds"`
+	PeriodSeconds       int    `json:"periodSeconds"`
+	TimeoutSeconds      int    `json:"timeoutSeconds"`
+	SuccessThreshold    int    `json:"successThreshold"`
+	FailureThreshold    int    `json:"failureThreshold"`
 }

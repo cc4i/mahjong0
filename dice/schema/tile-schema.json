@@ -20,6 +20,27 @@
                 },
                 "version": {
                     "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "tileRepo": {
+                    "type": "string"
+                },
+                "versionTag": {
+                    "type": "string"
+                },
+                "author": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "license": {
+                    "type": "string"
+                },
+                "released": {
+                    "type": "string"
                 }
             },
             "required": [
@@ -40,10 +61,10 @@
                                 "type": "object",
                                 "properties": {
                                     "name": {"type":"string"},
-                                    "value": {"type": "string"},
-                                    "valueRef": {"type": "string"}
+                                    "value": {"type": "string"}
                                 }
-                            }
+                            },
+                            "minItems": 0
                         }
                     }
                 },
@@ -58,23 +79,28 @@
                                     "name": {"type":"string"},
                                     "command": {"type": "string"}
                                 }
-                            }
+                            },
+                            "minItems": 0
                         }
                     }
                 },
                 "dependencies": {
-                    "type": "object",
-                    "properties": {
-                        "name": {
-                            "type": "string"
-                        },
-                        "tileReference": {
-                            "type": "string"
-                        },
-                        "tileVersion": {
-                            "type": "string"
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "type": "string"
+                            },
+                            "tileReference": {
+                                "type": "string"
+                            },
+                            "tileVersion": {
+                                "type": "string"
+                            }
                         }
-                    }
+                    },
+                    "minItems": 0
                 },
                 "inputs": {
                     "type": "array",
@@ -84,6 +110,7 @@
                             "name": {
                                 "type": "string"
                             },
+                            "description": {"type": "string"},
                             "inputType": {
                                 "type": "string"
                             },
@@ -98,13 +125,15 @@
                                         "field": {
                                             "type": "string"
                                         }
-                                    }
+                                    },
+                                    "minItems": 0
                                 }
                             },
                             "defaultValue": {"type": "string"},
                             "defaultValues": {
                                 "type": "array",
-                                "items": { "type": "string" }
+                                "items": { "type": "string" },
+                                "minItems": 0
                             },
                             "override": {
                                 "type": "object",
@@ -124,25 +153,23 @@
                     "type": "object",
                     "properties": {
                         "manifestType": {"type":"string"},
+                        "namespace": {"type": "string"},
                         "files": {
                             "type": "array",
                             "items": {
                                 "type": "string"
-                            }
+                            },
+                            "minItems": 0
                         },
                         "folders": {
                             "type": "array",
                             "items": {
                                 "type": "string"
-                            }
-                        },
-                        "dependencies": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
+                            },
+                            "minItems": 0
                         }
                     }
+
                 },
                 "outputs": {
                     "type": "array",
@@ -162,7 +189,8 @@
                     "uniqueItems": true,
                     "items": {
                         "type": "string"
-                    }
+                    },
+                    "minItems": 0
                 },
                 "postRun": {
                     "type": "object",
@@ -175,7 +203,8 @@
                                     "name": {"type":"string"},
                                     "command": {"type": "string"}
                                 }
-                            }
+                            },
+                            "minItems": 0
                         }
                       }
                 }

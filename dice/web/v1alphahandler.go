@@ -4,6 +4,7 @@ import (
 	"context"
 	"dice/apis/v1alpha1"
 	"dice/engine"
+	"dice/utils"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -168,7 +169,45 @@ func Template(ctx context.Context, c *gin.Context) {
 }
 
 func Metadata(ctx context.Context, c *gin.Context) {
+	what := c.Param("what")
+	switch what {
+	case "tile":
+		if meta, err := utils.TilesMetadata(ctx, "cc-mahjong-0"); err != nil {
+			c.JSON(http.StatusInternalServerError, err.Error())
+		} else {
+			c.JSON(http.StatusOK, meta)
+		}
+	case "hu":
+		if meta, err := utils.HusMetadata(ctx, "cc-mahjong-0"); err != nil {
+			c.JSON(http.StatusInternalServerError, err.Error())
+		} else {
+			c.JSON(http.StatusOK, meta)
+		}
+	}
 
+}
+
+func TileSpec(ctx context.Context, c *gin.Context) {
+	name := c.Param("name")
+	version := c.Param("version")
+
+	buf, err := engine.DiceConfig.LoadTileSpec(name, version)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+	} else {
+		c.String(http.StatusOK, string(buf))
+	}
+}
+
+func HuSpec(ctx context.Context, c *gin.Context) {
+	name := c.Param("name")
+
+	buf, err := engine.DiceConfig.LoadHuSpec(name)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+	} else {
+		c.String(http.StatusOK, string(buf))
+	}
 }
 
 // Ts shows key content in memory as per sid
