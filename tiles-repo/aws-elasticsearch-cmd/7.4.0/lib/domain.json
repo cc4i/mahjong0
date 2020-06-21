@@ -1,0 +1,33 @@
+
+{
+    "DomainName": "__domain_name__",
+    "ElasticsearchVersion": "__elasticsearch_version_",
+    "ElasticsearchClusterConfig": {
+        "InstanceType": "__data_instance_type__",
+        "InstanceCount": __data_instance_count_,
+        "DedicatedMasterEnabled": true,
+        "ZoneAwarenessEnabled": true,
+        "DedicatedMasterType": "__master_instance_type__",
+        "DedicatedMasterCount": __master_instance_count__,
+        "WarmEnabled": true,
+        "WarmType": "ultrawarm1.medium.elasticsearch",
+        "WarmCount": 2
+    },
+    "EBSOptions": {
+        "EBSEnabled": true,
+        "VolumeType": "__instance_volume_type__",
+        "VolumeSize": __instance_volume_size__
+    },
+    "AccessPolicies": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"__elasticsearch_role_for_app__\"},\"Action\":\"es:*\",\"Resource\":\"arn:aws:es:__aws_region__:__account_id__:domain/__domain_name__/*\"}]}",
+
+    "EncryptionAtRestOptions": {
+        "Enabled": true
+    },
+    "NodeToNodeEncryptionOptions": {
+        "Enabled": true
+    },
+    "DomainEndpointOptions": {
+        "EnforceHTTPS": true,
+        "TLSSecurityPolicy": "Policy-Min-TLS-1-2-2019-07"
+    }
+}

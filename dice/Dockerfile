@@ -22,9 +22,26 @@ RUN CGO_ENABLED=0 GOOS=linux go build \
         -a -installsuffix cgo \
         -o /go/bin/dice
 
+# Step 2 prepare probe
+FROM golang:alpine as probebuilder
+
+ENV GO111MODULE=on
+
+# Install git
+RUN apk update && apk add git
+COPY . $GOPATH/src/mypackage/myapp/
+WORKDIR $GOPATH/src/mypackage/myapp/
+
+# Get dependancies
+RUN go get -d -v
+
+# Building the binary
+RUN CGO_ENABLED=0 GOOS=linux go build \
+        -a -installsuffix cgo \
+        -o /go/bin/probe
 
 
-# STEP 2 build release package
+# STEP 3 build release package
 FROM alpine:3.11
 
 ARG BUILT
@@ -94,6 +111,8 @@ RUN apk add --no-cache ca-certificates \
 
 # Copy dice from Step 1
 COPY --from=dicebuilder /go/bin/dice /usr/local/bin/dice
+# Copy probe from Step 2
+COPY --from=probebuilder /go/bin/probe /usr/local/bin/probe
 # Copy static files
 COPY ./toy /workspace/toy
 COPY ./schema /workspace/schema

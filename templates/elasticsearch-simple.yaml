@@ -6,7 +6,7 @@ spec:
   template:
     tiles:
       tileAwsElasticSearch740:
-        tileReference: AWS-ElasticSearch
+        tileReference: AWS-ElasticSearch-CMD
         tileVersion: 7.4.0
         inputs:
           - name: domainName

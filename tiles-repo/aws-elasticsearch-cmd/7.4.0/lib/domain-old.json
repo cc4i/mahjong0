@@ -1,0 +1,33 @@
+
+{
+    "DomainName": "es-simple-cmd101",
+    "ElasticsearchVersion": "7.4",
+    "ElasticsearchClusterConfig": {
+        "InstanceType": "r5.large.elasticsearch",
+        "InstanceCount": 2,
+        "DedicatedMasterEnabled": true,
+        "ZoneAwarenessEnabled": true,
+        "DedicatedMasterType": "r5.large.elasticsearch",
+        "DedicatedMasterCount": 2,
+        "WarmEnabled": true,
+        "WarmType": "ultrawarm1.medium.elasticsearch",
+        "WarmCount": 2
+    },
+    "EBSOptions": {
+        "EBSEnabled": true,
+        "VolumeType": "gp2",
+        "VolumeSize": 40
+    },
+    "AccessPolicies": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"arn:aws:iam::530820415924:role/ElasticsearchRoleforApp\"},\"Action\":\"es:*\",\"Resource\":\"arn:aws:es:us-west-2:530820415924:domain/es-simple-cmd/*\"}]}",
+
+    "EncryptionAtRestOptions": {
+        "Enabled": true
+    },
+    "NodeToNodeEncryptionOptions": {
+        "Enabled": true
+    },
+    "DomainEndpointOptions": {
+        "EnforceHTTPS": true,
+        "TLSSecurityPolicy": "Policy-Min-TLS-1-2-2019-07"
+    }
+}

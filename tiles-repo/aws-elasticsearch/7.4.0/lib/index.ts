@@ -57,7 +57,7 @@ export class AWSElasticSearch extends cdk.Construct {
           {
             "Effect": "Allow",
             "Principal": {
-              "AWS": "*"
+              "AWS": accountId
             },
             "Action": "es:*",
             "Resource": "arn:"+partition+":es:"+region+":"+accountId+":domain/"+props.domainName+"/*",

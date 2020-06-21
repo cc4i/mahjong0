@@ -4,6 +4,7 @@ metadata:
     name: Go-Bumblebee-Jazz
     category: Application
     version: 0.7.1
+    dependentOnVendorService: EKS
 spec:
   global:
     env:
@@ -22,6 +23,10 @@ spec:
 
   preRun:
     stages:
+      - name: SetupDependentConfig
+        command: |
+          cd $TILE_HOME/manifest/kustomize/air
+          #sed -i -e 's/redis-cart:6379/$(self.inputs.redisEndpoint)/g' air-deployment.yaml
       - name: CreateRepository
         command: |
           curl -H "Authorization: token $GIT_ACCESS_TOKEN" --data '{"name":"'$APP_CONF_REPO'", "private": true}' https://api.github.com/user/repos
@@ -147,7 +152,7 @@ spec:
       require: true
     - name: stageMasterRoleARN
       inputType: String
-      require: true      
+      require: true  
 
   # Ouptputs represnt output value after launched, for 'ContainerApplication' might need leverage specific command to retrive output.
   outputs:

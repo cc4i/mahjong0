@@ -6,14 +6,15 @@
 namespace: go-bumblebee
 
 resources:
+- ns.yaml
 - ../../gql
 
 
 # all with following *kustomization*
 images:
 - name: herochinese/go-bumblebee-gql
-  newName: 530820415924.dkr.ecr.us-west-2.amazonaws.com/herochinese/go-bumblebee-gql
-  newTag: new-combo-jazz
+  newName: __gql_docker_image__
+  newTag: __gql_image_tag__
 
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization

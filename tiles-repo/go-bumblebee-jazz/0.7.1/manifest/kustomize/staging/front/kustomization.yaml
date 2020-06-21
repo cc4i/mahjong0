@@ -6,14 +6,15 @@
 namespace: go-bumblebee
 
 resources:
+- ns.yaml
 - ../../front
 
 
 # all with following *kustomization*
 images:
 - name: herochinese/go-bumblebee-front
-  newName: 530820415924.dkr.ecr.us-west-2.amazonaws.com/herochinese/go-bumblebee-front
-  newTag: 56b02c7a52cb33a2c3aa20db6cd19e4c9d4d1a97
+  newName: __fromt_docker_image__
+  newTag: __front_image_tag__
 
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization

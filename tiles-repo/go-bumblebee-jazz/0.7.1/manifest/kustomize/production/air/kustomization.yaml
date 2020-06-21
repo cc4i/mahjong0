@@ -6,14 +6,15 @@
 namespace: go-bumblebee
 
 resources:
+- ns.yaml
 - ../../air
 
 
 # all with following *kustomization*
 images:
 - name: herochinese/go-bumblebee-air
-  newName: 530820415924.dkr.ecr.us-west-2.amazonaws.com/herochinese/go-bumblebee-air
-  newTag: new-combo-jazz
+  newName: __air_docker_image__
+  newTag: __air_image_tag__
 
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization

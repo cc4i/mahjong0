@@ -6,14 +6,15 @@
 namespace: go-bumblebee
 
 resources:
+- ns.yaml
 - ../../locust
 
 
 # all with following *kustomization*
 images:
 - name: herochinese/go-bumblebee-locust
-  newName: 530820415924.dkr.ecr.us-west-2.amazonaws.com/herochinese/go-bumblebee-locust
-  newTag: new-combo-jazz
+  newName: __locust_docker_image__
+  newTag: __locust_image_tag__
 
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization

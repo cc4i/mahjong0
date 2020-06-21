@@ -7,6 +7,7 @@ import (
 	"dice/utils"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/iancoleman/strcase"
 	log "github.com/sirupsen/logrus"
@@ -636,12 +637,13 @@ func (d *AssembleData) GenerateExecutePlan(ctx context.Context, aTs *Ts, out *we
 	for _, ts := range aTs.TsStacks {
 		workHome := DiceConfig.WorkHome + aTs.DR.SuperFolder
 		stage := ExecutionStage{
-			Name:        ts.TileInstance,
-			Kind:        ts.TileCategory,
-			WorkHome:    workHome,
-			Preparation: []string{"cd $WORK_HOME"},
-			TileName:    ts.TileName,
-			TileVersion: ts.TileVersion,
+			Name:          ts.TileInstance,
+			Kind:          ts.TileCategory,
+			WorkHome:      workHome,
+			Preparation:   []string{"cd $WORK_HOME"},
+			TileName:      ts.TileName,
+			TileVersion:   ts.TileVersion,
+			ProbeCommands: make(map[string]v1alpha1.ReadinessProbe),
 		}
 		// Define Kind of Stage
 		if ts.TileCategory == v1alpha1.ContainerApplication.CString() ||
@@ -738,11 +740,22 @@ func (d *AssembleData) GenerateExecutePlan(ctx context.Context, aTs *Ts, out *we
 				// Adding PreRun's commands into stage.Preparation
 				for _, s := range tile.Spec.PreRun.Stages {
 					stage.Preparation = append(stage.Preparation, s.Command)
+					if s.ReadinessProbe != nil {
+						id := "dice-probe-" + uuid.New().String()
+						stage.Preparation = append(stage.Preparation, id)
+						stage.ProbeCommands[id] = *s.ReadinessProbe
+					}
+
 				}
 
 				// Adding PostRun's commands into stage.PostRunCommands
 				for _, s := range tile.Spec.PostRun.Stages {
 					stage.PostRunCommands = append(stage.PostRunCommands, s.Command)
+					if s.ReadinessProbe != nil {
+						id := "dice-probe-" + uuid.New().String()
+						stage.PostRunCommands = append(stage.PostRunCommands, id)
+						stage.ProbeCommands[id] = *s.ReadinessProbe
+					}
 				}
 			}
 		}
