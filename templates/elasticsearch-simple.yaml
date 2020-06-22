@@ -10,11 +10,7 @@ spec:
         tileVersion: 7.4.0
         inputs:
           - name: domainName
-            inputValue: es-simple        
-          - name: masterUserName
-            inputValue: admin
-          - name: masterUserPassword
-            inputValue: WER@#$SDFS$#%asdasd      
+            inputValue: mahjong-es-simple401        
           
 
   summary:

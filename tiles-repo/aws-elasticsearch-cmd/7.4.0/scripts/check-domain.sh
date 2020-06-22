@@ -6,6 +6,6 @@ endpoint=`aws es describe-elasticsearch-domain \
 if [ $endpoint = "null" ]
 then 
     echo "Domain : $1 is not ready yet."
-    exit 111
+    exit 1
 fi
 echo "Domain : $1 is ready : $endpoint."

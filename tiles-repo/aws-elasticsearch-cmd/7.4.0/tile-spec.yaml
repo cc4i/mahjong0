@@ -12,7 +12,7 @@ spec:
         command: |
           cd $TILE_HOME/scripts
           ./create-iam-role.sh
-          elasticsearch_role_for_app=`cat role.arn`
+          elasticsearch_role_for_app=$(cat role.arn | sed -e "s#/#\\\/#g")
           
       - name: ProvisionDomain
         command: |
@@ -38,9 +38,20 @@ spec:
             ./check-domain.sh $(self.inputs.domainName)
           initialDelaySeconds: 120
           periodSeconds: 10
-          timeoutSeconds: 600
+          timeoutSeconds: 1200
           successThreshold: 1
-          failureThreshold: 1
+          failureThreshold: -1
+      - name: UpdateAccessPolices
+        command: |
+          aes_access_role_arn=$(self.inputs.aesAccessRoleArn)
+          [[ -z "$aes_access_role_arn" ]] || elasticsearch_role_for_app=$aes_access_role_arn
+          OldPolicy="{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"__elasticsearch_role_for_app__\"},\"Action\":\"es:*\",\"Resource\":\"arn:aws:es:__aws_region__:__account_id__:domain/__domain_name__/*\"}]}"
+          NewPolicy=$(echo $OldPolicy | sed -e 's/__domain_name__/$(self.inputs.domainName)/g' \
+              -e 's/__elasticsearch_role_for_app__/'$elasticsearch_role_for_app'/g' \
+              -e 's/__aws_region__/'$aws_region'/g' \
+              -e 's/__account_id__/'$account_id'/g')
+          aws es update-elasticsearch-domain-config --domain-name $(self.inputs.domainName) --access-policies $NewPolicy
+
   inputs:
     - name: elasticsearchVersion
       inputType: String
@@ -81,17 +92,22 @@ spec:
       description: 'instance type for master node'
       defaultValue: r5.large.elasticsearch
       require: false
-
+    - name: aesAccessRoleArn
+      inputType: String
+      description: 'Role ARN for access AES'
+      require: false
 
   outputs:
     # String
     - name: domainName
       outputType: String
+      defaultValueCommand: aws es describe-elasticsearch-domain --domain-name $(self.inputs.domainName) |jq -r '.DomainStatus.DomainName'
       description: AWS::ElasticSearch::Domain
     - name: domainEndpoint
       outputType: FromCommand
       defaultValueCommand: aws es describe-elasticsearch-domain --domain-name $(self.inputs.domainName) |jq -r '.DomainStatus.Endpoint'
       description: AWS::ElasticSearch::Domain
+
 
   # Notes are description list for addtional information.
   notes: []
