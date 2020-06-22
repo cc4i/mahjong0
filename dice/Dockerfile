@@ -107,7 +107,9 @@ RUN apk add --no-cache ca-certificates \
     && echo export M_MODE=${M_MODE} >>/root/env \
     && echo export M_S3_BUCKET_REGION=${M_S3_BUCKET_REGION} >>/root/env \
     && echo export M_S3_BUCKET=${M_S3_BUCKET} >>/root/env \
-    && echo export M_LOCAL_TILE_REPO=${M_LOCAL_TILE_REPO} >>/root/env
+    && echo export M_LOCAL_TILE_REPO=${M_LOCAL_TILE_REPO} >>/root/env \
+    && git config --global user.email "robot@mahjong.io" \
+    && git config --global user.name "robot"
 
 # Copy dice from Step 1
 COPY --from=dicebuilder /go/bin/dice /usr/local/bin/dice

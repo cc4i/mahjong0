@@ -20,14 +20,14 @@ func probeCmd(command string, periodSeconds int, successThreshold int, failureTh
 	failure := 0
 	success := 0
 
-	cmd := exec.Command(command)
-	stdout, _ := cmd.StdoutPipe()
-	stderr, _ := cmd.StderrPipe()
-
 	for {
+		cmd := exec.Command(command)
+		stdout, _ := cmd.StdoutPipe()
+		stderr, _ := cmd.StderrPipe()
 		err := cmd.Start()
 		if err != nil {
-			return err
+			log.Error(err)
+			failure++
 		}
 		tail(stdout, false)
 		tail(stderr, true)
@@ -37,14 +37,25 @@ func probeCmd(command string, periodSeconds int, successThreshold int, failureTh
 		} else {
 			success++
 		}
+
 		if failure >= failureThreshold && failureThreshold != -1 {
+			log.Infof("Exit at failure : failure=%d, success=%d", failure, success)
 			log.Error(err)
 			return err
 		}
 		if success >= successThreshold && successThreshold != -1 {
+			log.Infof("exit at success : failure=%d, success=%d", failure, success)
 			log.Info("The service is ready!")
 			return nil
 		}
+		if !cmd.ProcessState.Exited() {
+			err = cmd.Process.Kill()
+			if err != nil {
+				log.Errorf("!!!Not exited and failed to kill!!! : failure=%d, success=%d : error=%s", failure, success, err)
+			}
+		}
+
+		log.Infof("!!!In the Loop!!!: failure=%d, success=%d", failure, success)
 
 		time.Sleep(time.Duration(periodSeconds) * time.Second)
 	}
@@ -65,6 +76,7 @@ func tail(reader io.ReadCloser, isErr bool) {
 	}
 
 }
+
 
 func main() {
 
