@@ -23,10 +23,6 @@ spec:
 
   preRun:
     stages:
-      - name: SetupDependentConfig
-        command: |
-          cd $TILE_HOME/manifest/kustomize/air
-          #sed -i -e 's/redis-cart:6379/$(self.inputs.redisEndpoint)/g' air-deployment.yaml
       - name: CreateRepository
         command: |
           curl -H "Authorization: token $GIT_ACCESS_TOKEN" --data '{"name":"'$APP_CONF_REPO'", "private": true}' https://api.github.com/user/repos
@@ -50,6 +46,12 @@ spec:
           cd $APP_REPO
           git checkout $APP_BRANCH
           git pull
+          prod_redis_endpoint=$(self.inputs.prodRedisEndpoint)
+          if [ $prod_redis_endpoint = "" ]
+          then 
+            cd manifest/kustomize/prod/air
+            sed -i -e 's/redis-cart:6379/'$prod_redis_endpoint'/g' air-deployment.yaml
+          fi
       - name: SyncAppContentToRepository
         command: |
           cd $TILE_HOME
@@ -158,6 +160,10 @@ spec:
     - name: stageMasterRoleARN
       inputType: String
       require: true  
+    - name: prodRedisEndpoint
+      inputType: String
+      require: true  
+
 
   # Ouptputs represnt output value after launched, for 'ContainerApplication' might need leverage specific command to retrive output.
   outputs:
