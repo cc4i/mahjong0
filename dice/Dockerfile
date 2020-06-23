@@ -78,7 +78,7 @@ RUN apk add --no-cache ca-certificates \
     && chmod +x /usr/local/bin/aws-iam-authenticator \
     && wget -q https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz -O - | tar -xzO linux-amd64/helm > /usr/local/bin/helm \
     && chmod +x /usr/local/bin/helm \
-    && wget https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv3.5.5/kustomize_v3.5.5_linux_amd64.tar.gz -O - | tar -xzO kustomize > /usr/local/bin/kustomize \
+    && wget https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv3.6.1/kustomize_v3.6.1_linux_amd64.tar.gz -O - | tar -xzO kustomize > /usr/local/bin/kustomize \
     && chmod +x /usr/local/bin/kustomize \
     && wget https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.12.4/kubeseal-linux-amd64 -O /usr/local/bin/kubeseal \
     && chmod +x /usr/local/bin/kubeseal \
