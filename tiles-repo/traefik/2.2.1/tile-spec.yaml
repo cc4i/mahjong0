@@ -1,0 +1,40 @@
+apiVersion: mahjong.io/v1alpha1
+kind: Tile
+metadata:
+    name: Traefik
+    category: ContainerApplication
+    version: 2.2.1
+    dependentOnVendorService: EKS
+# Specification
+spec: 
+
+  inputs:
+    # String
+    - name: clusterName
+      inputType: String
+      require: true
+    # String
+    - name: masterRoleARN
+      inputType: String
+      require: true
+
+  manifests:
+    manifestType: Helm
+    namespace: traefik-v2 
+    folders:
+      - traefik
+    flags:
+      - --set="additionalArguments={--log.level=DEBUG}"
+
+          
+  # Ouptputs represnt output value after launched, for 'ContainerApplication' might need leverage specific command to retrive output.
+  outputs:
+    # String
+    - name: ingressEndpoint
+      outputType: String
+      defaultValueCommand: k get svc -n traefik-v2 -o json | jq -r '.items[0].status.loadBalancer.ingress[0].hostname'
+      description: Custom::String
+
+
+  notes: []
+
