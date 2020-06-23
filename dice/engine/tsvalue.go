@@ -89,6 +89,7 @@ type TsManifests struct {
 	Files        []string
 	Folders      []string
 	TileInstance string
+	Flags []string
 }
 
 // TsOutput

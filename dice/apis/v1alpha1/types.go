@@ -202,6 +202,7 @@ type TileManifest struct {
 	Namespace    string   `json:"namespace"`
 	Files        []string `json:"files,omitempty"`
 	Folders      []string `json:"folders,omitempty"`
+	Flags []string `json:"flags,omitempty"`
 }
 
 // TileInputDependency tile.spec.input.dependency

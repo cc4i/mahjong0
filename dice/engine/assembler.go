@@ -372,40 +372,20 @@ func (d *AssembleData) PullTile(ctx context.Context,
 	tm := &TsManifests{
 		ManifestType: parsedTile.Spec.Manifests.ManifestType,
 	}
-	ns := ""
-	for _, m := range d.Deployment.Spec.Template.Tiles {
-		if m.TileReference == parsedTile.Metadata.Name {
-			ns = m.Manifests.Namespace
-		}
+	if ns := namespace(parsedTile.Metadata.Name, d.Deployment);  ns == "" {
+		tm.Namespace = parsedTile.Spec.Manifests.Namespace
+	} else {
+		tm.Namespace = ns
 	}
-	if ns == "" {
-		ns = parsedTile.Spec.Manifests.Namespace
+
+	if parsedTile.Spec.Manifests.Files != nil {
+		tm.Files = append(tm.Files, parsedTile.Spec.Manifests.Files...)
 	}
-	tm.Namespace = ns
-	// Overwrite files/folders as deployment
-	var ffs []string
-	var fds []string
-	for _, m := range d.Deployment.Spec.Template.Tiles {
-		if m.TileReference == parsedTile.Metadata.Name {
-			if m.Manifests.Files != nil {
-				ffs = m.Manifests.Files
-			}
-			if m.Manifests.Folders != nil {
-				fds = m.Manifests.Folders
-			}
-		}
+	if parsedTile.Spec.Manifests.Folders != nil {
+		tm.Folders = append(tm.Folders, parsedTile.Spec.Manifests.Folders...)
 	}
-	if ffs == nil {
-		ffs = parsedTile.Spec.Manifests.Files
-	}
-	for _, m := range parsedTile.Spec.Manifests.Files {
-		tm.Files = append(tm.Files, m)
-	}
-	if fds == nil {
-		fds = parsedTile.Spec.Manifests.Folders
-	}
-	for _, m := range parsedTile.Spec.Manifests.Folders {
-		tm.Folders = append(tm.Folders, m)
+	if parsedTile.Spec.Manifests.Flags!=nil {
+		tm.Flags = append(tm.Flags, parsedTile.Spec.Manifests.Flags...)
 	}
 	////
 
@@ -550,6 +530,15 @@ func (d *AssembleData) PullTile(ctx context.Context,
 	return nil
 }
 
+func  namespace(tileName string, deployment *v1alpha1.Deployment) string {
+	for _, m := range deployment.Spec.Template.Tiles {
+		if m.TileReference == tileName {
+			return m.Manifests.Namespace
+		}
+	}
+	return ""
+}
+
 func array2String(array []string, inputType string) string {
 
 	val := ""
@@ -675,25 +664,36 @@ func (d *AssembleData) GenerateExecutePlan(ctx context.Context, aTs *Ts, out *we
 				}
 
 				// Process different manifests
+				prefix := DiceConfig.WorkHome+aTs.DR.SuperFolder+ts.TileFolder+"/lib"
 				switch ts.TsManifests.ManifestType {
 				case v1alpha1.K8s.MTString():
 
 					for _, f := range ts.TsManifests.Files {
 						var cmd string
-						cmd = "kubectl apply -f ./lib/" + strings.ToLower(ts.TileName) + "/lib/" + f + " -n " + ts.TsManifests.Namespace
+						cmd = "kubectl apply -f" +
+								" " + prefix + f + // applied file
+								" -n " + ts.TsManifests.Namespace // namespace
 						stage.Commands = append(stage.Commands, cmd)
 					}
 				case v1alpha1.Helm.MTString():
-					// TODO: not quite yet to support Helm
+					flags := ""
+					for _, flag := range ts.TsManifests.Flags {
+						flags = flags + " " + flag
+					}
 					for _, f := range ts.TsManifests.Folders {
-						cmd := "helm install " + ts.TileName + " ./lib/" + strings.ToLower(ts.TileName) + "/lib/" + f + " -n " + ts.TsManifests.Namespace
+						cmd := "helm install  --namespace=" + ts.TsManifests.Namespace +
+							flags + // flags
+							" -g" + //generate the name // !!!or ts.TileInstance + // helm name!!!
+							" " + prefix + f // applied folder
 						stage.Commands = append(stage.Commands, cmd)
 					}
 
 				case v1alpha1.Kustomize.MTString():
 					// TODO: not quite yet to support Kustomize
 					for _, f := range ts.TsManifests.Folders {
-						cmd := "kustomize build -f ./lib/" + strings.ToLower(ts.TileName) + "/lib/" + f + "|kubectl -f - " + " -n " + ts.TsManifests.Namespace
+						cmd := "kustomize build -f"+
+							" " + prefix + f + " | kubectl -f - " + // applied folder
+							" -n " + ts.TsManifests.Namespace // namespace
 						stage.Commands = append(stage.Commands, cmd)
 					}
 				}
