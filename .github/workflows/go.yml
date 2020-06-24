@@ -27,3 +27,7 @@ jobs:
         cd dice
         make test
         make docker-build
+        cd ../mctl 
+        make test
+        cd ../probe
+        make test
