@@ -22,9 +22,26 @@ RUN CGO_ENABLED=0 GOOS=linux go build \
         -a -installsuffix cgo \
         -o /go/bin/dice
 
+# Step 2 prepare probe
+FROM golang:alpine as probebuilder
+
+ENV GO111MODULE=on
+
+# Install git
+RUN apk update && apk add git
+COPY . $GOPATH/src/mypackage/myapp/
+WORKDIR $GOPATH/src/mypackage/myapp/
+
+# Get dependancies
+RUN go get -d -v
+
+# Building the binary
+RUN CGO_ENABLED=0 GOOS=linux go build \
+        -a -installsuffix cgo \
+        -o /go/bin/probe
 
 
-# STEP 2 build release package
+# STEP 3 build release package
 FROM alpine:3.11
 
 ARG BUILT
@@ -61,7 +78,7 @@ RUN apk add --no-cache ca-certificates \
     && chmod +x /usr/local/bin/aws-iam-authenticator \
     && wget -q https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz -O - | tar -xzO linux-amd64/helm > /usr/local/bin/helm \
     && chmod +x /usr/local/bin/helm \
-    && wget https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv3.5.5/kustomize_v3.5.5_linux_amd64.tar.gz -O - | tar -xzO kustomize > /usr/local/bin/kustomize \
+    && wget https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv3.6.1/kustomize_v3.6.1_linux_amd64.tar.gz -O - | tar -xzO kustomize > /usr/local/bin/kustomize \
     && chmod +x /usr/local/bin/kustomize \
     && wget https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.12.4/kubeseal-linux-amd64 -O /usr/local/bin/kubeseal \
     && chmod +x /usr/local/bin/kubeseal \
@@ -90,10 +107,14 @@ RUN apk add --no-cache ca-certificates \
     && echo export M_MODE=${M_MODE} >>/root/env \
     && echo export M_S3_BUCKET_REGION=${M_S3_BUCKET_REGION} >>/root/env \
     && echo export M_S3_BUCKET=${M_S3_BUCKET} >>/root/env \
-    && echo export M_LOCAL_TILE_REPO=${M_LOCAL_TILE_REPO} >>/root/env
+    && echo export M_LOCAL_TILE_REPO=${M_LOCAL_TILE_REPO} >>/root/env \
+    && git config --global user.email "robot@mahjong.io" \
+    && git config --global user.name "robot"
 
 # Copy dice from Step 1
 COPY --from=dicebuilder /go/bin/dice /usr/local/bin/dice
+# Copy probe from Step 2
+COPY --from=probebuilder /go/bin/probe /usr/local/bin/probe
 # Copy static files
 COPY ./toy /workspace/toy
 COPY ./schema /workspace/schema

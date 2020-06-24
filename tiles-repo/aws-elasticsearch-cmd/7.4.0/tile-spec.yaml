@@ -1,0 +1,115 @@
+apiVersion: mahjong.io/v1alpha1
+kind: Tile
+metadata:
+    name: AWS-ElasticSearch-CMD
+    category: Application
+    version: 7.4.0
+spec:
+        
+  preRun:
+    stages:
+      - name: CreateIAMRole
+        command: |
+          cd $TILE_HOME/scripts
+          ./create-iam-role.sh
+          elasticsearch_role_for_app=$(cat role.arn | sed -e "s#/#\\\/#g")
+          
+      - name: ProvisionDomain
+        command: |
+          cd $TILE_HOME/lib
+          aws_region=`aws configure get region`
+          account_id=`aws sts get-caller-identity --query Account --output text`
+          sed -e 's/__domain_name__/$(self.inputs.domainName)/g' \
+              -e 's/__elasticsearch_version_/$(self.inputs.elasticsearchVersion)/g' \
+              -e 's/__data_instance_type__/$(self.inputs.dataInstanceType)/g' \
+              -e 's/__data_instance_count_/$(self.inputs.dataInstanceCount)/g' \
+              -e 's/__master_instance_type__/$(self.inputs.masterInstanceType)/g' \
+              -e 's/__master_instance_count__/$(self.inputs.masterInstanceCount)/g' \
+              -e 's/__instance_volume_type__/$(self.inputs.instanceVolumeType)/g' \
+              -e 's/__instance_volume_size__/$(self.inputs.instanceVolumeSize)/g' \
+              -e 's/__elasticsearch_role_for_app__/'$elasticsearch_role_for_app'/g' \
+              -e 's/__aws_region__/'$aws_region'/g' \
+              -e 's/__account_id__/'$account_id'/g' \
+            ./domain.json > ./domain-go.json
+          aws es create-elasticsearch-domain --cli-input-json file://domain-go.json
+        readinessProbe:
+          command: |
+            cd $TILE_HOME/scripts
+            ./check-domain.sh $(self.inputs.domainName)
+          initialDelaySeconds: 120
+          periodSeconds: 10
+          timeoutSeconds: 1200
+          successThreshold: 1
+          failureThreshold: -1
+      - name: UpdateAccessPolices
+        command: |
+          aes_access_role_arn=$(self.inputs.aesAccessRoleArn)
+          [[ -z "$aes_access_role_arn" ]] && elasticsearch_role_for_app=$(cat role.arn | sed -e "s#/#\\\/#g") || elasticsearch_role_for_app=$aes_access_role_arn
+          elasticsearch_role_for_app=$(echo -n $elasticsearch_role_for_app | sed -e "s#/#\\\/#g")
+          OldPolicy="{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"__elasticsearch_role_for_app__\"},\"Action\":\"es:*\",\"Resource\":\"arn:aws:es:__aws_region__:__account_id__:domain/__domain_name__/*\"}]}"
+          NewPolicy=$(echo $OldPolicy | sed -e 's/__domain_name__/$(self.inputs.domainName)/g' \
+              -e 's/__elasticsearch_role_for_app__/'$elasticsearch_role_for_app'/g' \
+              -e 's/__aws_region__/'$aws_region'/g' \
+              -e 's/__account_id__/'$account_id'/g')
+          aws es update-elasticsearch-domain-config --domain-name $(self.inputs.domainName) --access-policies $NewPolicy
+
+  inputs:
+    - name: elasticsearchVersion
+      inputType: String
+      description: 'elsatic search version'
+      defaultValue: 7.4
+      require: false
+    - name: domainName
+      inputType: String
+      description: 'doamin name for es'
+      require: true
+    - name: dataInstanceCount
+      inputType: Number
+      description: 'number of data instance'
+      defaultValue: 2
+      require: false
+    - name: dataInstanceType
+      inputType: String
+      description: 'instance type for data node'
+      defaultValue: r5.large.elasticsearch
+      require: false
+    - name: instanceVolumeSize
+      inputType: Number
+      description: 'storage size'
+      defaultValue: 20
+      require: false
+    - name: instanceVolumeType
+      inputType: String
+      description: 'type of storage'
+      defaultValue: gp2
+      require: false
+    - name: masterInstanceCount
+      inputType: Number
+      description: 'number of master node'
+      defaultValue: 2
+      require: false
+    - name: masterInstanceType
+      inputType: String
+      description: 'instance type for master node'
+      defaultValue: r5.large.elasticsearch
+      require: false
+    - name: aesAccessRoleArn
+      inputType: String
+      description: 'Role ARN for access AES'
+      require: false
+
+  outputs:
+    # String
+    - name: domainName
+      outputType: String
+      defaultValueCommand: aws es describe-elasticsearch-domain --domain-name $(self.inputs.domainName) |jq -r '.DomainStatus.DomainName'
+      description: AWS::ElasticSearch::Domain
+    - name: domainEndpoint
+      outputType: FromCommand
+      defaultValueCommand: aws es describe-elasticsearch-domain --domain-name $(self.inputs.domainName) |jq -r '.DomainStatus.Endpoint'
+      description: AWS::ElasticSearch::Domain
+
+
+  # Notes are description list for addtional information.
+  notes: []
+

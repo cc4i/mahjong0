@@ -1,0 +1,494 @@
+{"level":"info","msg":"+ export WORK_HOME=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple"}
+{"level":"info","msg":"+ WORK_HOME=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple"}
+{"level":"info","msg":"+ export TILE_HOME=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd"}
+{"level":"info","msg":"+ TILE_HOME=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd"}
+{"level":"info","msg":"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple"}
+{"level":"info","msg":"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts"}
+{"level":"info","msg":"+ ./create-iam-role.sh"}
+{"level":"info","msg":"{"}
+{"level":"info","msg":"    \"Role\": {"}
+{"level":"info","msg":"        \"Path\": \"/\","}
+{"level":"info","msg":"        \"RoleName\": \"ElasticsearchRoleforApp\","}
+{"level":"info","msg":"        \"RoleId\": \"AROAXXF24YG2PQ36GFRKX\","}
+{"level":"info","msg":"        \"Arn\": \"arn:aws:iam::530820415924:role/ElasticsearchRoleforApp\","}
+{"level":"info","msg":"        \"CreateDate\": \"2020-06-22T07:13:12Z\","}
+{"level":"info","msg":"        \"AssumeRolePolicyDocument\": {"}
+{"level":"info","msg":"            \"Version\": \"2012-10-17\","}
+{"level":"info","msg":"            \"Statement\": ["}
+{"level":"info","msg":"                {"}
+{"level":"info","msg":"                    \"Effect\": \"Allow\","}
+{"level":"info","msg":"                    \"Principal\": {"}
+{"level":"info","msg":"                        \"Service\": \"ec2.amazonaws.com\""}
+{"level":"info","msg":"                    },"}
+{"level":"info","msg":"                    \"Action\": \"sts:AssumeRole\""}
+{"level":"info","msg":"                }"}
+{"level":"info","msg":"            ]"}
+{"level":"info","msg":"        },"}
+{"level":"info","msg":"        \"MaxSessionDuration\": 3600,"}
+{"level":"info","msg":"        \"RoleLastUsed\": {}"}
+{"level":"info","msg":"    }"}
+{"level":"info","msg":"}"}
+{"level":"info","msg":"Deleted ElasticsearchRoleforApp"}
+{"level":"info","msg":"++ cat role.arn"}
+{"level":"info","msg":"++ sed -e 's#/#\\\\/#g'"}
+{"level":"info","msg":"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/lib"}
+{"level":"info","msg":"++ aws configure get region"}
+{"level":"info","msg":"+ aws_region=us-west-2"}
+{"level":"info","msg":"++ aws sts get-caller-identity --query Account --output text"}
+{"level":"info","msg":"+ sed -e s/__domain_name__/mahjong-es-simple104/g -e s/__elasticsearch_version_/7.4/g -e s/__data_instance_type__/r5.large.elasticsearch/g -e s/__data_instance_count_/2/g -e s/__master_instance_type__/r5.large.elasticsearch/g -e s/__master_instance_count__/2/g -e s/__instance_volume_type__/gp2/g -e s/__instance_volume_size__/20/g -e 's/__elasticsearch_role_for_app__/arn:aws:iam::530820415924:role\\/ElasticsearchRoleforApp/g' -e s/__aws_region__/us-west-2/g -e s/__account_id__/530820415924/g ./domain.json"}
+{"level":"info","msg":"+ aws es create-elasticsearch-domain --cli-input-json file://domain-go.json"}
+{"level":"info","msg":"{"}
+{"level":"info","msg":"    \"DomainStatus\": {"}
+{"level":"info","msg":"        \"DomainName\": \"mahjong-es-simple104\","}
+{"level":"info","msg":"        \"Created\": true,"}
+{"level":"info","msg":"        \"Deleted\": false,"}
+{"level":"info","msg":"        \"Processing\": true,"}
+{"level":"info","msg":"        \"UpgradeProcessing\": false,"}
+{"level":"info","msg":"        \"ElasticsearchVersion\": \"7.4\","}
+{"level":"info","msg":"        \"ElasticsearchClusterConfig\": {"}
+{"level":"info","msg":"            \"InstanceType\": \"r5.large.elasticsearch\","}
+{"level":"info","msg":"            \"InstanceCount\": 2,"}
+{"level":"info","msg":"            \"DedicatedMasterEnabled\": true,"}
+{"level":"info","msg":"            \"ZoneAwarenessEnabled\": true,"}
+{"level":"info","msg":"            \"ZoneAwarenessConfig\": {"}
+{"level":"info","msg":"                \"AvailabilityZoneCount\": 2"}
+{"level":"info","msg":"            },"}
+{"level":"info","msg":"            \"DedicatedMasterType\": \"r5.large.elasticsearch\","}
+{"level":"info","msg":"            \"DedicatedMasterCount\": 2,"}
+{"level":"info","msg":"            \"WarmEnabled\": true,"}
+{"level":"info","msg":"            \"WarmType\": \"ultrawarm1.medium.elasticsearch\","}
+{"level":"info","msg":"            \"WarmCount\": 2"}
+{"level":"info","msg":"        },"}
+{"level":"info","msg":"        \"EBSOptions\": {"}
+{"level":"info","msg":"            \"EBSEnabled\": true,"}
+{"level":"info","msg":"            \"VolumeType\": \"gp2\","}
+{"level":"info","msg":"            \"VolumeSize\": 20"}
+{"level":"info","msg":"        },"}
+{"level":"info","msg":"        \"SnapshotOptions\": {"}
+{"level":"info","msg":"            \"AutomatedSnapshotStartHour\": 0"}
+{"level":"info","msg":"        },"}
+{"level":"info","msg":"        \"CognitoOptions\": {"}
+{"level":"info","msg":"            \"Enabled\": false"}
+{"level":"info","msg":"        },"}
+{"level":"info","msg":"        \"EncryptionAtRestOptions\": {"}
+{"level":"info","msg":"            \"Enabled\": true,"}
+{"level":"info","msg":"        },"}
+{"level":"info","msg":"        \"NodeToNodeEncryptionOptions\": {"}
+{"level":"info","msg":"            \"Enabled\": true"}
+{"level":"info","msg":"        },"}
+{"level":"info","msg":"        \"AdvancedOptions\": {"}
+{"level":"info","msg":"            \"rest.action.multi.allow_explicit_index\": \"true\""}
+{"level":"info","msg":"        },"}
+{"level":"info","msg":"        \"ServiceSoftwareOptions\": {"}
+{"level":"info","msg":"            \"CurrentVersion\": \"\","}
+{"level":"info","msg":"            \"NewVersion\": \"\","}
+{"level":"info","msg":"            \"UpdateAvailable\": false,"}
+{"level":"info","msg":"            \"Cancellable\": false,"}
+{"level":"info","msg":"            \"UpdateStatus\": \"COMPLETED\","}
+{"level":"info","msg":"            \"Description\": \"There is no software update available for this domain.\","}
+{"level":"info","msg":"            \"AutomatedUpdateDate\": 0.0"}
+{"level":"info","msg":"        },"}
+{"level":"info","msg":"        \"DomainEndpointOptions\": {"}
+{"level":"info","msg":"            \"EnforceHTTPS\": true,"}
+{"level":"info","msg":"            \"TLSSecurityPolicy\": \"Policy-Min-TLS-1-2-2019-07\""}
+{"level":"info","msg":"        },"}
+{"level":"info","msg":"        \"AdvancedSecurityOptions\": {"}
+{"level":"info","msg":"            \"Enabled\": false,"}
+{"level":"info","msg":"            \"InternalUserDatabaseEnabled\": false"}
+{"level":"info","msg":"        }"}
+{"level":"info","msg":"    }"}
+{"level":"info","msg":"}"}
+{"level":"info","msg":"+ probe -command /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/dice-probe-578f58d4-599a-4f01-99f8-d5af4c9d5bb6-RRm9CUwg.sh -initialDelaySeconds 120 -periodSeconds 10 -timeoutSeconds 1200 -successThreshold 1 -failureThreshold -1"}
+{"level":"info","msg":"time=\"2020-06-22T20:22:53+12:00\" level=info msg=\"The probe is kicking start ...\""}
+{"level":"info","msg":"time=\"2020-06-22T20:24:56+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:24:56+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:24:56+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:24:56+12:00\" level=info msg=\"!!!In the Loop!!!: failure=1, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:25:08+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:25:08+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:25:08+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:25:08+12:00\" level=info msg=\"!!!In the Loop!!!: failure=2, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:25:20+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:25:20+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:25:20+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:25:20+12:00\" level=info msg=\"!!!In the Loop!!!: failure=3, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:25:32+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:25:32+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:25:32+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:25:32+12:00\" level=info msg=\"!!!In the Loop!!!: failure=4, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:25:44+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:25:44+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:25:44+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:25:44+12:00\" level=info msg=\"!!!In the Loop!!!: failure=5, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:25:56+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:25:56+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:25:56+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:25:56+12:00\" level=info msg=\"!!!In the Loop!!!: failure=6, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:26:08+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:26:08+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:26:08+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:26:08+12:00\" level=info msg=\"!!!In the Loop!!!: failure=7, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:26:20+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:26:20+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:26:20+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:26:20+12:00\" level=info msg=\"!!!In the Loop!!!: failure=8, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:26:32+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:26:32+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:26:32+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:26:32+12:00\" level=info msg=\"!!!In the Loop!!!: failure=9, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:26:44+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:26:44+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:26:44+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:26:44+12:00\" level=info msg=\"!!!In the Loop!!!: failure=10, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:26:56+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:26:56+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:26:56+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:26:56+12:00\" level=info msg=\"!!!In the Loop!!!: failure=11, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:27:09+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:27:09+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:27:09+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:27:09+12:00\" level=info msg=\"!!!In the Loop!!!: failure=12, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:27:21+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:27:21+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:27:21+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:27:21+12:00\" level=info msg=\"!!!In the Loop!!!: failure=13, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:27:34+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:27:34+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:27:34+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:27:34+12:00\" level=info msg=\"!!!In the Loop!!!: failure=14, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:27:46+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:27:46+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:27:46+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:27:46+12:00\" level=info msg=\"!!!In the Loop!!!: failure=15, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:27:58+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:27:58+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:27:58+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:27:58+12:00\" level=info msg=\"!!!In the Loop!!!: failure=16, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:28:10+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:28:10+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:28:10+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:28:10+12:00\" level=info msg=\"!!!In the Loop!!!: failure=17, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:28:22+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:28:22+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:28:22+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:28:22+12:00\" level=info msg=\"!!!In the Loop!!!: failure=18, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:28:34+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:28:34+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:28:34+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:28:34+12:00\" level=info msg=\"!!!In the Loop!!!: failure=19, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:28:46+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:28:46+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:28:46+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:28:46+12:00\" level=info msg=\"!!!In the Loop!!!: failure=20, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:28:58+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:28:58+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:28:58+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:28:58+12:00\" level=info msg=\"!!!In the Loop!!!: failure=21, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:29:11+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:29:11+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:29:11+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:29:11+12:00\" level=info msg=\"!!!In the Loop!!!: failure=22, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:29:23+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:29:23+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:29:23+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:29:23+12:00\" level=info msg=\"!!!In the Loop!!!: failure=23, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:29:35+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:29:35+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:29:35+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:29:35+12:00\" level=info msg=\"!!!In the Loop!!!: failure=24, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:29:47+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:29:47+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:29:47+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:29:47+12:00\" level=info msg=\"!!!In the Loop!!!: failure=25, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:29:59+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:29:59+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:29:59+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:29:59+12:00\" level=info msg=\"!!!In the Loop!!!: failure=26, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:30:11+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:30:11+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:30:11+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:30:11+12:00\" level=info msg=\"!!!In the Loop!!!: failure=27, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:30:23+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:30:23+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:30:23+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:30:23+12:00\" level=info msg=\"!!!In the Loop!!!: failure=28, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:30:35+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:30:35+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:30:35+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:30:35+12:00\" level=info msg=\"!!!In the Loop!!!: failure=29, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:30:47+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:30:47+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:30:47+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:30:47+12:00\" level=info msg=\"!!!In the Loop!!!: failure=30, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:31:00+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:31:00+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:31:00+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:31:00+12:00\" level=info msg=\"!!!In the Loop!!!: failure=31, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:31:12+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:31:12+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:31:12+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:31:12+12:00\" level=info msg=\"!!!In the Loop!!!: failure=32, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:31:24+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:31:24+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:31:24+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:31:24+12:00\" level=info msg=\"!!!In the Loop!!!: failure=33, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:31:36+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:31:36+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:31:36+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:31:36+12:00\" level=info msg=\"!!!In the Loop!!!: failure=34, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:31:49+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:31:49+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:31:49+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:31:49+12:00\" level=info msg=\"!!!In the Loop!!!: failure=35, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:32:01+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:32:01+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:32:01+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:32:01+12:00\" level=info msg=\"!!!In the Loop!!!: failure=36, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:32:13+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:32:13+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:32:13+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:32:13+12:00\" level=info msg=\"!!!In the Loop!!!: failure=37, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:32:25+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:32:25+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:32:25+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:32:25+12:00\" level=info msg=\"!!!In the Loop!!!: failure=38, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:32:37+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:32:37+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:32:37+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:32:37+12:00\" level=info msg=\"!!!In the Loop!!!: failure=39, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:32:50+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:32:50+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:32:50+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:32:50+12:00\" level=info msg=\"!!!In the Loop!!!: failure=40, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:33:02+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:33:02+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:33:02+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:33:02+12:00\" level=info msg=\"!!!In the Loop!!!: failure=41, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:33:15+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:33:15+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:33:15+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:33:15+12:00\" level=info msg=\"!!!In the Loop!!!: failure=42, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:33:29+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:33:29+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:33:29+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:33:29+12:00\" level=info msg=\"!!!In the Loop!!!: failure=43, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:33:40+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:33:40+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:33:40+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:33:40+12:00\" level=info msg=\"!!!In the Loop!!!: failure=44, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:33:53+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:33:53+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:33:53+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:33:53+12:00\" level=info msg=\"!!!In the Loop!!!: failure=45, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:34:05+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:34:05+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:34:05+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:34:05+12:00\" level=info msg=\"!!!In the Loop!!!: failure=46, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:34:18+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:34:18+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:34:18+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:34:18+12:00\" level=info msg=\"!!!In the Loop!!!: failure=47, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:34:30+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:34:30+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:34:30+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:34:30+12:00\" level=info msg=\"!!!In the Loop!!!: failure=48, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:34:42+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:34:42+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:34:42+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:34:42+12:00\" level=info msg=\"!!!In the Loop!!!: failure=49, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:34:54+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:34:54+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:34:54+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:34:54+12:00\" level=info msg=\"!!!In the Loop!!!: failure=50, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:35:05+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:35:05+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:35:05+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:35:05+12:00\" level=info msg=\"!!!In the Loop!!!: failure=51, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:35:17+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is not ready yet.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:35:17+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:35:17+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:35:17+12:00\" level=info msg=\"!!!In the Loop!!!: failure=52, success=0\""}
+{"level":"info","msg":"time=\"2020-06-22T20:35:29+12:00\" level=info msg=\"Domain : mahjong-es-simple104 is ready : search-mahjong-es-simple104-wo3ipacwlacond5sybjdu7pbge.us-west-2.es.amazonaws.com.\""}
+{"level":"info","msg":"time=\"2020-06-22T20:35:29+12:00\" level=error msg=\"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/lib/aws-elasticsearch-cmd/scripts\""}
+{"level":"info","msg":"time=\"2020-06-22T20:35:29+12:00\" level=error msg=\"+ ./check-domain.sh mahjong-es-simple104\""}
+{"level":"info","msg":"time=\"2020-06-22T20:35:29+12:00\" level=info msg=\"exit at success : failure=52, success=1\""}
+{"level":"info","msg":"time=\"2020-06-22T20:35:29+12:00\" level=info msg=\"The service is ready!\""}
+{"level":"info","msg":"time=\"2020-06-22T20:35:29+12:00\" level=info msg=\"Probe - /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/elasticsearch-simple/dice-probe-578f58d4-599a-4f01-99f8-d5af4c9d5bb6-RRm9CUwg.sh was success\""}
+{"level":"info","msg":"time=\"2020-06-22T20:35:29+12:00\" level=info msg=Done"}
+{"level":"info","msg":"+ OldPolicy='{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"__elasticsearch_role_for_app__\"},\"Action\":\"es:*\",\"Resource\":\"arn:aws:es:__aws_region__:__account_id__:domain/__domain_name__/*\"}]}'"}
+{"level":"info","msg":"++ echo '{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"__elasticsearch_role_for_app__\"},\"Action\":\"es:*\",\"Resource\":\"arn:aws:es:__aws_region__:__account_id__:domain/__domain_name__/*\"}]}'"}
+{"level":"info","msg":"++ sed -e s/__domain_name__/mahjong-es-simple104/g -e 's/__elasticsearch_role_for_app__/arn:aws:iam::530820415924:role\\/ElasticsearchRoleforApp/g' -e s/__aws_region__/us-west-2/g -e s/__account_id__/530820415924/g"}
+{"level":"info","msg":"+ NewPolicy='{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"arn:aws:iam::530820415924:role/ElasticsearchRoleforApp\"},\"Action\":\"es:*\",\"Resource\":\"arn:aws:es:us-west-2:530820415924:domain/mahjong-es-simple104/*\"}]}'"}
+{"level":"info","msg":"+ aws es update-elasticsearch-domain-config --domain-name mahjong-es-simple104 --access-policies '{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"arn:aws:iam::530820415924:role/ElasticsearchRoleforApp\"},\"Action\":\"es:*\",\"Resource\":\"arn:aws:es:us-west-2:530820415924:domain/mahjong-es-simple104/*\"}]}'"}
+{"level":"info","msg":"{"}
+{"level":"info","msg":"    \"DomainConfig\": {"}
+{"level":"info","msg":"        \"ElasticsearchVersion\": {"}
+{"level":"info","msg":"            \"Options\": \"7.4\","}
+{"level":"info","msg":"            \"Status\": {"}
+{"level":"info","msg":"                \"CreationDate\": 1592814172.924,"}
+{"level":"info","msg":"                \"UpdateDate\": 1592814879.912,"}
+{"level":"info","msg":"                \"UpdateVersion\": 7,"}
+{"level":"info","msg":"                \"State\": \"Active\","}
+{"level":"info","msg":"                \"PendingDeletion\": false"}
+{"level":"info","msg":"            }"}
+{"level":"info","msg":"        },"}
+{"level":"info","msg":"        \"ElasticsearchClusterConfig\": {"}
+{"level":"info","msg":"            \"Options\": {"}
+{"level":"info","msg":"                \"InstanceType\": \"r5.large.elasticsearch\","}
+{"level":"info","msg":"                \"InstanceCount\": 2,"}
+{"level":"info","msg":"                \"DedicatedMasterEnabled\": true,"}
+{"level":"info","msg":"                \"ZoneAwarenessEnabled\": true,"}
+{"level":"info","msg":"                \"ZoneAwarenessConfig\": {"}
+{"level":"info","msg":"                    \"AvailabilityZoneCount\": 2"}
+{"level":"info","msg":"                },"}
+{"level":"info","msg":"                \"DedicatedMasterType\": \"r5.large.elasticsearch\","}
+{"level":"info","msg":"                \"DedicatedMasterCount\": 2,"}
+{"level":"info","msg":"                \"WarmEnabled\": true,"}
+{"level":"info","msg":"                \"WarmType\": \"ultrawarm1.medium.elasticsearch\","}
+{"level":"info","msg":"                \"WarmCount\": 2"}
+{"level":"info","msg":"            },"}
+{"level":"info","msg":"            \"Status\": {"}
+{"level":"info","msg":"                \"CreationDate\": 1592814172.924,"}
+{"level":"info","msg":"                \"UpdateDate\": 1592814879.912,"}
+{"level":"info","msg":"                \"UpdateVersion\": 7,"}
+{"level":"info","msg":"                \"State\": \"Active\","}
+{"level":"info","msg":"                \"PendingDeletion\": false"}
+{"level":"info","msg":"            }"}
+{"level":"info","msg":"        },"}
+{"level":"info","msg":"        \"EBSOptions\": {"}
+{"level":"info","msg":"            \"Options\": {"}
+{"level":"info","msg":"                \"EBSEnabled\": true,"}
+{"level":"info","msg":"                \"VolumeType\": \"gp2\","}
+{"level":"info","msg":"                \"VolumeSize\": 20"}
+{"level":"info","msg":"            },"}
+{"level":"info","msg":"            \"Status\": {"}
+{"level":"info","msg":"                \"CreationDate\": 1592814172.924,"}
+{"level":"info","msg":"                \"UpdateDate\": 1592814879.912,"}
+{"level":"info","msg":"                \"UpdateVersion\": 7,"}
+{"level":"info","msg":"                \"State\": \"Active\","}
+{"level":"info","msg":"                \"PendingDeletion\": false"}
+{"level":"info","msg":"            }"}
+{"level":"info","msg":"        },"}
+{"level":"info","msg":"        \"AccessPolicies\": {"}
+{"level":"info","msg":"            \"Status\": {"}
+{"level":"info","msg":"                \"CreationDate\": 1592814172.924,"}
+{"level":"info","msg":"                \"UpdateDate\": 1592814938.012,"}
+{"level":"info","msg":"                \"UpdateVersion\": 11,"}
+{"level":"info","msg":"                \"State\": \"Processing\","}
+{"level":"info","msg":"                \"PendingDeletion\": false"}
+{"level":"info","msg":"            }"}
+{"level":"info","msg":"        },"}
+{"level":"info","msg":"        \"SnapshotOptions\": {"}
+{"level":"info","msg":"            \"Options\": {"}
+{"level":"info","msg":"                \"AutomatedSnapshotStartHour\": 0"}
+{"level":"info","msg":"            },"}
+{"level":"info","msg":"            \"Status\": {"}
+{"level":"info","msg":"                \"CreationDate\": 1592814172.924,"}
+{"level":"info","msg":"                \"UpdateDate\": 1592814879.912,"}
+{"level":"info","msg":"                \"UpdateVersion\": 7,"}
+{"level":"info","msg":"                \"State\": \"Active\","}
+{"level":"info","msg":"                \"PendingDeletion\": false"}
+{"level":"info","msg":"            }"}
+{"level":"info","msg":"        },"}
+{"level":"info","msg":"        \"VPCOptions\": {"}
+{"level":"info","msg":"            \"Options\": {},"}
+{"level":"info","msg":"            \"Status\": {"}
+{"level":"info","msg":"                \"CreationDate\": 1592814938.266,"}
+{"level":"info","msg":"                \"UpdateDate\": 1592814938.266,"}
+{"level":"info","msg":"                \"UpdateVersion\": 11,"}
+{"level":"info","msg":"                \"State\": \"Active\","}
+{"level":"info","msg":"                \"PendingDeletion\": false"}
+{"level":"info","msg":"            }"}
+{"level":"info","msg":"        },"}
+{"level":"info","msg":"        \"CognitoOptions\": {"}
+{"level":"info","msg":"            \"Options\": {"}
+{"level":"info","msg":"                \"Enabled\": false"}
+{"level":"info","msg":"            },"}
+{"level":"info","msg":"            \"Status\": {"}
+{"level":"info","msg":"                \"CreationDate\": 1592814938.266,"}
+{"level":"info","msg":"                \"UpdateDate\": 1592814938.266,"}
+{"level":"info","msg":"                \"UpdateVersion\": 11,"}
+{"level":"info","msg":"                \"State\": \"Active\","}
+{"level":"info","msg":"                \"PendingDeletion\": false"}
+{"level":"info","msg":"            }"}
+{"level":"info","msg":"            \"Status\": {"}
+{"level":"info","msg":"                \"CreationDate\": 1592814172.924,"}
+{"level":"info","msg":"                \"UpdateDate\": 1592814879.912,"}
+{"level":"info","msg":"                \"UpdateVersion\": 7,"}
+{"level":"info","msg":"                \"State\": \"Active\","}
+{"level":"info","msg":"                \"PendingDeletion\": false"}
+{"level":"info","msg":"            }"}
+{"level":"info","msg":"        },"}
+{"level":"info","msg":"        \"NodeToNodeEncryptionOptions\": {"}
+{"level":"info","msg":"            \"Options\": {"}
+{"level":"info","msg":"                \"Enabled\": true"}
+{"level":"info","msg":"            },"}
+{"level":"info","msg":"            \"Status\": {"}
+{"level":"info","msg":"                \"CreationDate\": 1592814172.924,"}
+{"level":"info","msg":"                \"UpdateDate\": 1592814879.912,"}
+{"level":"info","msg":"                \"UpdateVersion\": 7,"}
+{"level":"info","msg":"                \"State\": \"Active\","}
+{"level":"info","msg":"                \"PendingDeletion\": false"}
+{"level":"info","msg":"            }"}
+{"level":"info","msg":"        },"}
+{"level":"info","msg":"        \"AdvancedOptions\": {"}
+{"level":"info","msg":"            \"Options\": {"}
+{"level":"info","msg":"                \"rest.action.multi.allow_explicit_index\": \"true\""}
+{"level":"info","msg":"            },"}
+{"level":"info","msg":"            \"Status\": {"}
+{"level":"info","msg":"                \"CreationDate\": 1592814938.266,"}
+{"level":"info","msg":"                \"UpdateDate\": 1592814938.266,"}
+{"level":"info","msg":"                \"UpdateVersion\": 11,"}
+{"level":"info","msg":"                \"State\": \"Active\","}
+{"level":"info","msg":"                \"PendingDeletion\": false"}
+{"level":"info","msg":"            }"}
+{"level":"info","msg":"        },"}
+{"level":"info","msg":"        \"LogPublishingOptions\": {"}
+{"level":"info","msg":"            \"Options\": {},"}
+{"level":"info","msg":"            \"Status\": {"}
+{"level":"info","msg":"                \"CreationDate\": 1592814938.268,"}
+{"level":"info","msg":"                \"UpdateDate\": 1592814938.268,"}
+{"level":"info","msg":"                \"UpdateVersion\": 11,"}
+{"level":"info","msg":"                \"State\": \"Active\","}
+{"level":"info","msg":"                \"PendingDeletion\": false"}
+{"level":"info","msg":"            }"}
+{"level":"info","msg":"        },"}
+{"level":"info","msg":"        \"DomainEndpointOptions\": {"}
+{"level":"info","msg":"            \"Options\": {"}
+{"level":"info","msg":"                \"EnforceHTTPS\": true,"}
+{"level":"info","msg":"                \"TLSSecurityPolicy\": \"Policy-Min-TLS-1-2-2019-07\""}
+{"level":"info","msg":"            },"}
+{"level":"info","msg":"            \"Status\": {"}
+{"level":"info","msg":"                \"CreationDate\": 1592814172.924,"}
+{"level":"info","msg":"                \"UpdateDate\": 1592814879.912,"}
+{"level":"info","msg":"                \"UpdateVersion\": 7,"}
+{"level":"info","msg":"                \"State\": \"Active\","}
+{"level":"info","msg":"                \"PendingDeletion\": false"}
+{"level":"info","msg":"            }"}
+{"level":"info","msg":"        },"}
+{"level":"info","msg":"        \"AdvancedSecurityOptions\": {"}
+{"level":"info","msg":"            \"Options\": {"}
+{"level":"info","msg":"                \"Enabled\": false,"}
+{"level":"info","msg":"                \"InternalUserDatabaseEnabled\": false"}
+{"level":"info","msg":"            },"}
+{"level":"info","msg":"            \"Status\": {"}
+{"level":"info","msg":"                \"CreationDate\": 1592814172.924,"}
+{"level":"info","msg":"                \"UpdateDate\": 1592814879.912,"}
+{"level":"info","msg":"                \"UpdateVersion\": 7,"}
+{"level":"info","msg":"                \"State\": \"Active\","}
+{"level":"info","msg":"                \"PendingDeletion\": false"}
+{"level":"info","msg":"            }"}
+{"level":"info","msg":"        }"}
+{"level":"info","msg":"    }"}
+{"level":"info","msg":"}"}
+{"level":"info","msg":"+ sleep 10"}
+{"level":"info","msg":"++ aws es describe-elasticsearch-domain --domain-name mahjong-es-simple104"}
+{"level":"info","msg":"++ jq -r .DomainStatus.DomainName"}
+{"level":"info","msg":"+ echo '{\"domainName=mahjong-es-simple104\"}'"}
+{"domainName=mahjong-es-simple104"}
+{"level":"info","msg":"++ aws es describe-elasticsearch-domain --domain-name mahjong-es-simple104"}
+{"level":"info","msg":"++ jq -r .DomainStatus.Endpoint"}
+{"level":"info","msg":"+ echo '{\"domainEndpoint=search-mahjong-es-simple104-wo3ipacwlacond5sybjdu7pbge.us-west-2.es.amazonaws.com\"}'"}
+{"domainEndpoint=search-mahjong-es-simple104-wo3ipacwlacond5sybjdu7pbge.us-west-2.es.amazonaws.com"}
+{"level":"info","msg":"0"}
+{"level":"info","msg":"+ echo 0"}

@@ -1,0 +1,24 @@
+suite: Traefik configuration
+templates:
+  - deployment.yaml
+tests:
+  - it: should have no custom arguments when specified by default
+    set:
+      additionalArguments:
+        - --the.force.is.with.me=true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--the.force.is.with.me=true"
+  - it: should have namespace restriction if rbac is namespaced
+    set:
+      rbac:
+        namespaced: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--providers.kubernetesingress.namespaces=NAMESPACE"
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--providers.kubernetescrd.namespaces=NAMESPACE"
+

@@ -37,14 +37,15 @@ type ExecutionStage struct {
 	// Name
 	Name string `json:"name"` // = TileInstance
 	// Stage type
-	Kind            string   `json:"kind"`        // CDK/Command
-	WorkHome        string   `json:"workHome"`    // root folder for execution
-	InjectedEnv     []string `json:"injectedEnv"` // example: "export variable=value"
-	Preparation     []string `json:"preparation"`
-	Commands        []string `json:"commands"`
-	TileName        string   `json:"tileName"`
-	TileVersion     string   `json:"tileVersion"`
-	PostRunCommands []string `json:"postRunCommands"`
+	Kind            string                             `json:"kind"`        // CDK/Command
+	WorkHome        string                             `json:"workHome"`    // root folder for execution
+	InjectedEnv     []string                           `json:"injectedEnv"` // example: "export variable=value"
+	Preparation     []string                           `json:"preparation"`
+	Commands        []string                           `json:"commands"`
+	TileName        string                             `json:"tileName"`
+	TileVersion     string                             `json:"tileVersion"`
+	PostRunCommands []string                           `json:"postRunCommands"`
+	ProbeCommands   map[string]v1alpha1.ReadinessProbe `json:"probeCommands"`
 }
 
 // StageKind defines type of stage
@@ -190,7 +191,9 @@ func (ep *ExecutionPlan) ReplaceAllValueRef(str string, dSid string, ti string) 
 				log.Errorf("Replace value reference was failed : %s \n", err)
 				break
 			} else {
-				str = strings.ReplaceAll(str, s[1], v)
+				if v!="" {
+					str = strings.ReplaceAll(str, s[1], v)
+				}
 			}
 		} else {
 			break
@@ -398,8 +401,19 @@ echo $?
 		ep.CurrentStage.Preparation,
 		ep.CurrentStage.Commands} {
 		for i, _ := range kvs {
+
 			kvs[i] = ep.ReplaceAllValueRef(kvs[i], dSid, ep.CurrentStage.Name) //replace 'self'
 			kvs[i] = ep.ReplaceAllValueRef(kvs[i], dSid, "")                   //replace 'anything else'
+		}
+	}
+	// !!! setup probe !!!
+	for i, _ := range ep.CurrentStage.Preparation {
+		if strings.Contains(ep.CurrentStage.Preparation[i], "dice-probe-") {
+			newCmd, err := ep.ProbeWrapper(ctx, ep.CurrentStage.Preparation[i], ep.CurrentStage.ProbeCommands[ep.CurrentStage.Preparation[i]])
+			if err != nil {
+				return script, err
+			}
+			ep.CurrentStage.Preparation[i] = newCmd
 		}
 	}
 	////
@@ -418,6 +432,49 @@ echo $?
 
 	return script, err
 
+}
+
+func (ep *ExecutionPlan) ProbeWrapper(ctx context.Context, id string, probe v1alpha1.ReadinessProbe) (string, error) {
+	dSid := ctx.Value(`d-sid`).(string)
+	script := ep.CurrentStage.WorkHome + "/" + id + "-" + RandString(8) + ".sh"
+	tContent := `#!/bin/bash
+set -xe
+
+{{.}}
+`
+	file, err := os.OpenFile(script, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755) //Create(script)
+	if err != nil {
+		return script, err
+	}
+	defer file.Close()
+
+	tp := template.New("script")
+	tp, err = tp.Parse(tContent)
+	if err != nil {
+		return script, err
+	}
+
+	// !!! Replace $(value) to actual value !!!
+	probe.Command = ep.ReplaceAllValueRef(probe.Command, dSid, ep.CurrentStage.Name) //replace 'self'
+	probe.Command = ep.ReplaceAllValueRef(probe.Command, dSid, "")                   //replace 'anything else'
+	////
+
+	err = tp.Execute(file, probe.Command)
+	if err != nil {
+		return script, err
+	}
+	return fmt.Sprintf("probe -command %s "+
+		"-initialDelaySeconds %d "+
+		"-periodSeconds %d "+
+		"-timeoutSeconds %d "+
+		"-successThreshold %d "+
+		"-failureThreshold %d",
+		script,
+		probe.InitialDelaySeconds,
+		probe.PeriodSeconds,
+		probe.TimeoutSeconds,
+		probe.SuccessThreshold,
+		probe.FailureThreshold), nil
 }
 
 // WsTail collect output from stdout/stderr, and also catch up defined output value & persist them.
@@ -568,6 +625,17 @@ echo $?
 		ep.CurrentStage.PostRunCommands[i] = ep.ReplaceAllValueRef(ep.CurrentStage.PostRunCommands[i], dSid, ep.CurrentStage.Name) //replace 'self'
 		ep.CurrentStage.PostRunCommands[i] = ep.ReplaceAllValueRef(ep.CurrentStage.PostRunCommands[i], dSid, "")                   //replace 'anything else'
 	}
+	// !!! setup probe !!!
+	for i, _ := range ep.CurrentStage.PostRunCommands {
+		if strings.Contains(ep.CurrentStage.PostRunCommands[i], "dice-probe-") {
+			newCmd, err := ep.ProbeWrapper(ctx, ep.CurrentStage.PostRunCommands[i], ep.CurrentStage.ProbeCommands[ep.CurrentStage.PostRunCommands[i]])
+			if err != nil {
+				return err
+			}
+			ep.CurrentStage.PostRunCommands[i] = newCmd
+		}
+	}
+	////
 
 	err = tp.Execute(file, stage)
 	if err != nil {

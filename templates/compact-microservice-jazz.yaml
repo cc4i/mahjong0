@@ -1,7 +1,7 @@
 apiVersion: mahjong.io/v1alpha1
 kind: Deployment 
 metadata:
-  name: perfect-microservice-jazz
+  name: compact-microservice-jazz
 spec:
   template:
     tiles:
@@ -68,35 +68,6 @@ spec:
           - name: redisClusterName
             inputValue: mahjong-redis-prod
 
-      # AuroraMySQL for Prod
-      tileAuroraMysqlProd:
-        tileReference: AWS-Aurora-Mysql
-        tileVersion: 2.07.2
-        dependsOn: tileEksWithSpotProd
-        inputs:
-          - name: vpc
-            inputValue: $cdk(tileEksWithSpotProd.Network0.baseVpc)        
-          - name: clusterIdentifier
-            inputValue: mahjong-mysql-prod        
-          - name: masterUser
-            inputValue: admin        
-          - name: defaultDatabaseName
-            inputValue: testDb     
-      # AuroraMySQL for Stage
-      tileAuroraMysqlStage:
-        tileReference: AWS-Aurora-Mysql
-        tileVersion: 2.07.2
-        dependsOn: tileEksWithSpotStage
-        inputs:
-          - name: vpc
-            inputValue: $cdk(tileEksWithSpotStage.Network0.baseVpc)        
-          - name: clusterIdentifier
-            inputValue: mahjong-mysql-stage       
-          - name: masterUser
-            inputValue: admin        
-          - name: defaultDatabaseName
-            inputValue: testDb   
-
       # ElasticSearch for Prod
       tileElasticsearchCmdProd:
         tileReference: AWS-ElasticSearch-CMD
@@ -108,17 +79,6 @@ spec:
           - name: aesAccessRoleArn
             inputValue: $(tileEksWithSpotProd.outputs.nodesRoleARN)
       
-      # ElasticSearch for Stage
-      tileElasticsearchCmdStage:
-        tileReference: AWS-ElasticSearch-CMD
-        tileVersion: 7.4.0
-        dependsOn: tileEksWithSpotStage
-        inputs:
-          - name: domainName
-            inputValue: mahjong-es-stage       
-          - name: aesAccessRoleArn
-            inputValue: $(tileEksWithSpotStage.outputs.nodesRoleARN)
-
       # FluentBit for Prod
       tileFluentBit4AesProd:
         tileReference: FluentBit-For-AES
@@ -131,18 +91,6 @@ spec:
             inputValue: $(tileEksWithSpotProd.outputs.masterRoleARN)
           - name: aesEndpoint
             inputValue: https://$(tileElasticsearchCmdProd.outputs.masterRoleARN)
-      # FluentBit for Stage
-      tileFluentBit4AesStage:
-        tileReference: FluentBit-For-AES
-        tileVersion: 1.4.6
-        dependsOn: tileEksWithSpotStage
-        inputs:
-          - name: clusterName
-            inputValue: $(tileEksWithSpotStage.outputs.clusterName)       
-          - name: masterRoleARN
-            inputValue: $(tileEksWithSpotStage.outputs.masterRoleARN)
-          - name: aesEndpoint
-            inputValue: https://$(tileElasticsearchCmdStage.outputs.masterRoleARN)
 
       # Istio for Prod
       tileIstio0ForProd:

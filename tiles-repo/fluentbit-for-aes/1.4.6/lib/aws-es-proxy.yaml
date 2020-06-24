@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment 
+metadata:
+  name: aws-es-proxy
+  namespace: logging
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: aws-es-proxy 
+  template:
+    metadata:
+      labels: 
+        app: aws-es-proxy 
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: aws-es-proxy
+        image:  abutaha/aws-es-proxy:v1.1
+        env:
+        - name: AWS_ELASTICSEARCH_ENDPOINT
+          value: __aws_elasticsearch_endpoint__
+        command: ["aws-es-proxy"]
+        args: ["-endpoint","$(AWS_ELASTICSEARCH_ENDPOINT)", "-listen","0.0.0.0:9200"]
+        ports:
+          - name: http
+            containerPort: 9200
+        resources:
+          requests: 
+            cpu: 100m
+            memory: 64Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aws-es-proxy
+  namespace: logging
+spec: 
+  type: ClusterIP
+  selector:
+    app: aws-es-proxy
+  ports:
+  - name: http
+    port: 9200
+    targetPort: 9200
+

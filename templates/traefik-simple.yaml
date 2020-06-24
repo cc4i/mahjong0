@@ -1,0 +1,26 @@
+apiVersion: mahjong.io/v1alpha1
+kind: Deployment 
+metadata:
+  name: traefik-simple
+spec:
+  template:
+    tiles:
+      tileTraefik221:
+        tileReference: Traefik
+        tileVersion: 2.2.1
+        inputs:
+          - name: clusterName
+            inputValue: __eks_cluster_name__
+          - name: masterRoleARN
+            inputValue: __iam_role_arn__
+        manifests:
+          namespace: traefik-v2
+
+  summary:
+      description: demo.
+      outputs:
+        - name: endpoint
+          value: $(tileTraefik221.outputs.ingressEndpoint)
+
+      notes: []
+    

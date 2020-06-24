@@ -162,9 +162,9 @@ type PreRunDetail struct {
 
 // PreRunStage tile.spec.preRun.stage
 type PreRunStage struct {
-	Name           string         `json:"name"`
-	Command        string         `json:"command"`
-	ReadinessProbe ReadinessProbe `json:"readinessProbe"`
+	Name           string          `json:"name"`
+	Command        string          `json:"command"`
+	ReadinessProbe *ReadinessProbe `json:"readinessProbe,omitempty"`
 }
 
 // TileDependency tile.spec.dependencies
@@ -202,6 +202,7 @@ type TileManifest struct {
 	Namespace    string   `json:"namespace"`
 	Files        []string `json:"files,omitempty"`
 	Folders      []string `json:"folders,omitempty"`
+	Flags []string `json:"flags,omitempty"`
 }
 
 // TileInputDependency tile.spec.input.dependency
@@ -226,9 +227,9 @@ type PostRunDetail struct {
 
 // PostRunStage tile.spec.postRun.stage
 type PostRunStage struct {
-	Name           string         `json:"name"`
-	Command        string         `json:"command"`
-	ReadinessProbe ReadinessProbe `json:"readinessProbe"`
+	Name           string          `json:"name"`
+	Command        string          `json:"command"`
+	ReadinessProbe *ReadinessProbe `json:"readinessProbe,omitempty"`
 }
 
 // ReadinessProbe present

@@ -1,0 +1,52 @@
+apiVersion: mahjong.io/v1alpha1
+kind: Tile
+metadata:
+    name: FluentBit-For-AES
+    category: ContainerApplication
+    version: 1.4.6
+    dependentOnVendorService: EKS
+spec:
+
+  preRun:
+    stages:
+      - name: UpdateAESEndpoint
+        command: |
+          cd $TILE_HOME/lib
+          aes_endpoint=$(echo -n $(self.inputs.aesEndpoint) | sed -e "s#/#\\\/#g")
+          sed -e 's/__aws_elasticsearch_endpoint__/'$aes_endpoint'/g' ./aws-es-proxy.yaml > ./aws-es-proxy-go.yaml
+
+  inputs:
+    - name: clusterName
+      inputType: String
+      require: true
+    - name: masterRoleARN
+      inputType: String
+      require: true
+    - name: aesEndpoint
+      inputType: String
+      require: true
+
+
+  manifests:
+    manifestType: K8s
+    namespace: logging 
+    files:
+      - aws-es-proxy-go.yaml
+      - fluent-bit-service-account.yaml
+      - fluent-bit-role.yaml
+      - fluent-bit-role-binding.yaml
+      - fluent-bit-configmap.yaml
+      - fluent-bit-ds.yaml
+
+          
+  # Ouptputs represnt output value after launched, for 'ContainerApplication' might need leverage specific command to retrive output.
+  outputs:
+    # String
+    - name: user
+      outputType: String
+      defaultValue: admin
+      description: Custom::String
+   
+
+  notes: []
+
