@@ -191,7 +191,9 @@ func (ep *ExecutionPlan) ReplaceAllValueRef(str string, dSid string, ti string) 
 				log.Errorf("Replace value reference was failed : %s \n", err)
 				break
 			} else {
-				str = strings.ReplaceAll(str, s[1], v)
+				if v!="" {
+					str = strings.ReplaceAll(str, s[1], v)
+				}
 			}
 		} else {
 			break

@@ -433,14 +433,14 @@ func (d *AssembleData) PullTile(ctx context.Context,
 				} else {
 					// multiple dependencies will be organized as an array
 					//input.InputName = tileInput.Name
-					v := "[ "
+					v := ""
 					for _, dependency := range tileInput.Dependencies {
 						refTileName := tileDependencies[dependency.Name]
 						tsStack := ReferencedTsStack(dSid, rootTileInstance, refTileName)
 						val := tsStack.TileStackVariable + "." + tsStack.TileVariable + "." + dependency.Field
 						v = v + val + ","
 					}
-					input.InputValue = strings.TrimSuffix(v, ",") + " ]"
+					input.InputValue = strings.TrimSuffix(v, ",")
 				}
 			} else {
 				// output value can be retrieved after execution: $D-TBD_TileName.Output-Name
@@ -546,6 +546,7 @@ func array2String(array []string, inputType string) string {
 		for _, d := range array {
 			val = val + d + ","
 		}
+		val = strings.TrimSuffix(val, ",")
 	} else {
 		val = array[0]
 	}
@@ -584,7 +585,7 @@ func (d *AssembleData) ApplyMainTs(ctx context.Context, aTs *Ts, out *websocket.
 				values := strings.Split(ip.InputValue, ",")
 				str := "['"
 				for _, v := range values {
-					str = v + "','"
+					str = str + v + "','"
 				}
 				ip.InputValueForTemplate = strings.TrimSuffix(str, ",'") + " ]"
 			default:
@@ -664,7 +665,7 @@ func (d *AssembleData) GenerateExecutePlan(ctx context.Context, aTs *Ts, out *we
 				}
 
 				// Process different manifests
-				prefix := DiceConfig.WorkHome+aTs.DR.SuperFolder+ts.TileFolder+"/lib"
+				prefix := DiceConfig.WorkHome+aTs.DR.SuperFolder+ts.TileFolder+"/lib/"
 				switch ts.TsManifests.ManifestType {
 				case v1alpha1.K8s.MTString():
 
