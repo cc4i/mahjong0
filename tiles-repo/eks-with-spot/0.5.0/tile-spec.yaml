@@ -153,8 +153,8 @@ spec:
       - name: UpdateConfigMap
         command: |
           cd $TILE_HOME
-          MasterRoleARN=$(echo ${D_TBD_EKS_WITH_SPOT_MASTERROLEARN} | sed -e "s#/#\\\/#g")
-          NodeRoleARN=$(echo ${D_TBD_EKS_WITH_SPOT_NODESROLEARN} | sed -e "s#/#\\\/#g")
+          MasterRoleARN=$(echo -n ${D_TBD_EKS_WITH_SPOT_MASTERROLEARN} | sed -e "s#/#\\\/#g")
+          NodeRoleARN=$(echo -n ${D_TBD_EKS_WITH_SPOT_NODESROLEARN} | sed -e "s#/#\\\/#g")
           
           sed -e 's/__EKSClusterMasterRoleARN__/'$MasterRoleARN'/g' \
               -e 's/__NodeGroupRoleARN__/'$NodeRoleARN'/g' \

@@ -44,7 +44,8 @@ spec:
       - name: UpdateAccessPolices
         command: |
           aes_access_role_arn=$(self.inputs.aesAccessRoleArn)
-          [[ -z "$aes_access_role_arn" ]] || elasticsearch_role_for_app=$aes_access_role_arn
+          [[ -z "$aes_access_role_arn" ]] && elasticsearch_role_for_app=$(cat role.arn | sed -e "s#/#\\\/#g") || elasticsearch_role_for_app=$aes_access_role_arn
+          elasticsearch_role_for_app=$(echo -n $elasticsearch_role_for_app | sed -e "s#/#\\\/#g")
           OldPolicy="{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"__elasticsearch_role_for_app__\"},\"Action\":\"es:*\",\"Resource\":\"arn:aws:es:__aws_region__:__account_id__:domain/__domain_name__/*\"}]}"
           NewPolicy=$(echo $OldPolicy | sed -e 's/__domain_name__/$(self.inputs.domainName)/g' \
               -e 's/__elasticsearch_role_for_app__/'$elasticsearch_role_for_app'/g' \

@@ -12,7 +12,7 @@ spec:
       - name: UpdateAESEndpoint
         command: |
           cd $TILE_HOME/lib
-          aes_endpoint=$(echo $(self.inputs.aesEndpoint) | sed -e "s#/#\\\/#g")
+          aes_endpoint=$(echo -n $(self.inputs.aesEndpoint) | sed -e "s#/#\\\/#g")
           sed -e 's/__aws_elasticsearch_endpoint__/'$aes_endpoint'/g' ./aws-es-proxy.yaml > ./aws-es-proxy-go.yaml
 
   inputs:
