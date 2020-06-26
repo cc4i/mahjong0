@@ -1,0 +1,66 @@
+apiVersion: mahjong.io/v1alpha1
+kind: Tile
+metadata:
+    name: Jaeger-Tracing
+    category: ContainerApplication
+    version: 1.8.1
+    dependentOnVendorService: EKS
+# Specification
+spec: 
+  preRun:
+    stages:
+      - name: InstalJaeger
+        command: |
+            cd $TILE_HOME
+            kubectl create namespace observability
+            kubectl create -f lib/jaegertracing.io_jaegers_crd.yaml
+            kubectl create -n observability lib/service_account.yaml
+            kubectl create -n observability lib/role.yaml
+            kubectl create -n observability -f lib/role_binding.yaml
+            kubectl create -n observability -f lib/operator.yaml
+
+            # kubectl create -f lib/cluster_role.yaml
+            # kubectl create -f lib/cluster_role_binding.yaml
+        readinessProbe:
+          command: |
+            kubectl get deployment jaeger-operator -n observability   
+          initialDelaySeconds: 120
+          periodSeconds: 10
+          timeoutSeconds: 1200
+          successThreshold: 1
+          failureThreshold: -1
+      - name: SetupJaeger
+        command: |
+          strategy=$(self.inputs.deploymentStrategy)
+          if [ $strategy = "prod" ]
+          then
+            kubectl apply -f lib/prod-setup.yaml
+          else
+            kubectl apply -f lib/simple-setup.yaml
+          fi   
+  inputs:
+    # String
+    - name: clusterName
+      inputType: String
+      require: true
+    # String
+    - name: masterRoleARN
+      inputType: String
+      require: true
+    - name: deploymentStrategy
+      inputType: String
+      descritpion: 'simple - for dev/test; prod - for production'
+      require: true
+
+          
+  # Ouptputs represnt output value after launched, for 'ContainerApplication' might need leverage specific command to retrive output.
+  outputs:
+    # String
+    - name: installedNamespace
+      outputType: String
+      defaultValue: linkerd
+      description: Custom::String
+
+
+  notes: []
+

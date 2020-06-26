@@ -41,7 +41,7 @@ spec:
           - name: cidr
             inputValue: 192.0.0.0/16
           - name: clusterName
-            inputValue: mahjong-eks-
+            inputValue: mahjong-eks-stage
           - name: clusterVersion
             inputValue: 1.16
           - name: keyPair4EC2
@@ -136,7 +136,7 @@ spec:
           - name: appBranch
             inputValue: new-combo-jazz
           - name: appConfRepo
-            inputValue: go-bumblebee-jazz-config2
+            inputValue: go-bumblebee-jazz-config
           - name: kmsKeyID
             inputValue: $(tileAwsKmsKeyGenerator010.outputs.symmetricKeyID)
           - name: argocdBaseUrl

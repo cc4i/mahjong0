@@ -70,6 +70,13 @@ func Router(ctx context.Context) *gin.Engine {
 	r.GET("/v1alpha1/ts/:sid", func(c *gin.Context) {
 		Ts(ctx, c)
 	})
+	r.GET("/v1alpha1/ts/:sid/plan", func(c *gin.Context) {
+		Plan(ctx, c)
+	})
+	r.GET("/v1alpha1/ts/:sid/plan/order", func(c *gin.Context) {
+		PlanOrder(ctx, c)
+	})
+
 	// List deployments in memory
 	r.GET("/v1alpha1/ts", func(c *gin.Context) {
 		AllTsD(ctx, c)

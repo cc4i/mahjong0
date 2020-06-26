@@ -17,7 +17,7 @@ spec:
             kubectl get pods -n istio-operator
             
             # Create namespace for Istio
-            kubectl create ns istio-system
+            kubectl create ns istio-system || true
 
             # Active Istio with demo profile
             kubectl apply -f lib/control-plane.yaml
@@ -26,6 +26,20 @@ spec:
             kubectl get ns
             kubectl get pods -n istio-system
             kubectl get svc -n istio-system
+        readinessProbe:
+          command: |
+            hostname=`kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'`
+            if [ $hostname = "" ]
+            then
+              echo "Failed to get hostname"
+              exit 1
+            fi
+            echo "hostname = $hostname"
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 300
+          successThreshold: 1
+          failureThreshold: -1    
   inputs:
     # String
     - name: clusterName
@@ -36,15 +50,7 @@ spec:
       inputType: String
       require: true
 
-  # manifests:
-  #   # Type of manifest
-  #   manifestType: helm
-  #   namespace: istio-system 
-  #   # manifest folder
-  #   folders:
-  #     - k8s
 
-          
   # Ouptputs represnt output value after launched, for 'ContainerApplication' might need leverage specific command to retrive output.
   outputs:
     # String

@@ -5,6 +5,7 @@ import (
 	"dice/apis/v1alpha1"
 	"dice/engine"
 	"dice/utils"
+	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -95,10 +96,10 @@ func (wb *WsBox) Processor(ctx context.Context, messageType int, p []byte, dryRu
 		return err
 	}
 	engine.SR(wb.out, []byte("Parsing Deployment was success."))
-	engine.SR(wb.out, []byte("--BO:-------------------------------------------------"))
-	b, _ := yaml.Marshal(deployment)
-	engine.SR(wb.out, b)
-	engine.SR(wb.out, []byte("--EO:-------------------------------------------------"))
+	//engine.SR(wb.out, []byte("--BO:-------------------------------------------------"))
+	//b, _ := yaml.Marshal(deployment)
+	//engine.SR(wb.out, b)
+	//engine.SR(wb.out, []byte("--EO:-------------------------------------------------"))
 
 	// 2. Looking for the dSid of last deployment
 	rdSid, isRepeated := engine.IsRepeatedDeployment(deployment.Metadata.Name)
@@ -222,6 +223,32 @@ func Ts(ctx context.Context, c *gin.Context) {
 
 	} else {
 		c.String(http.StatusNotFound, "Session ID : %s is not existed and checked out with CC.", sid)
+	}
+}
+
+func Plan(ctx context.Context, c *gin.Context) {
+	sid := c.Param("sid")
+	if plan, ok := engine.AllPlans[sid]; ok {
+		buf, err := json.Marshal(plan)
+		if err != nil {
+			c.String(http.StatusInternalServerError, err.Error())
+		} else {
+			c.String(http.StatusOK, string(buf))
+		}
+	}
+}
+
+func PlanOrder(ctx context.Context, c *gin.Context) {
+	sid := c.Param("sid")
+	if plan, ok := engine.AllPlans[sid]; ok {
+
+		flow := " \n{Start}"
+		for e := plan.Plan.Back(); e != nil; e = e.Prev() {
+			stage := e.Value.(*engine.ExecutionStage)
+			flow = flow + " -> " + stage.Name
+		}
+		flow = flow + " -> {Stop}"
+		c.String(http.StatusOK, flow)
 	}
 }
 

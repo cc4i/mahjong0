@@ -27,12 +27,44 @@ type ParserCore interface {
 // ParseTile parse Tile
 func (d *Data) ParseTile(ctx context.Context) (*Tile, error) {
 	var tile Tile
+	mapSlice := yamlv2.MapSlice{}
+	if err := yamlv2.Unmarshal(*d, &mapSlice); err != nil {
+		log.Errorf("Unmarshal mapSlice yaml error : %s\n", err)
+		return &tile, errors.New("tile specification was invalid")
+	}
+	// Order for outputs
+	var outputsOrder []string
+	for _, item := range mapSlice {
+		if item.Key == "spec" {
+			if spec, ok := item.Value.(yamlv2.MapSlice); ok {
+				for _, s := range spec {
+					if s.Key == "outputs" {
+						if outputs, ok := s.Value.([]interface{}); ok {
+							for _, output := range outputs {
+								if o, ok := output.(yamlv2.MapSlice); ok {
+									for _, it := range o {
+										if it.Key == "name" {
+											outputsOrder = append(outputsOrder, it.Value.(string))
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	if outputsOrder == nil {
+		return &tile, errors.New("tile specification was invalid without ordered outputs")
+	}
 
 	err := yaml.UnmarshalStrict(*d, &tile)
 	if err != nil {
 		return &tile, err
 	}
-
+	//Attache outputs order
+	tile.Spec.OutputsOrder = outputsOrder
 	return &tile, d.ValidateTile(ctx, &tile)
 }
 

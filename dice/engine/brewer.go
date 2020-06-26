@@ -25,11 +25,12 @@ import (
 
 // ExecutionPlan represents complete plan.
 type ExecutionPlan struct {
-	Name             string                     `json:"name"`
-	CurrentStage     *ExecutionStage            `json:"currentStage"`
-	Plan             *list.List                 `json:"plan"`
+	Name             string                     `json:"name"`         // The name of execution plan
+	CurrentStage     *ExecutionStage            `json:"currentStage"` // Current executing stage
+	Plan             *list.List                 `json:"plan"`         // Ordered plans
 	PlanMirror       map[string]*ExecutionStage `json:"planMirror"`
-	OriginDeployment *v1alpha1.Deployment       `json:"originDeployment"`
+	ParallelPlan     []list.List                `json:"parallelPlan"`     // Parallel plans
+	OriginDeployment *v1alpha1.Deployment       `json:"originDeployment"` // Original deployment data
 }
 
 // ExecutionStage represents an unit of execution plan.
@@ -37,15 +38,15 @@ type ExecutionStage struct {
 	// Name
 	Name string `json:"name"` // = TileInstance
 	// Stage type
-	Kind            string                             `json:"kind"`        // CDK/Command
-	WorkHome        string                             `json:"workHome"`    // root folder for execution
-	InjectedEnv     []string                           `json:"injectedEnv"` // example: "export variable=value"
-	Preparation     []string                           `json:"preparation"`
-	Commands        []string                           `json:"commands"`
-	TileName        string                             `json:"tileName"`
-	TileVersion     string                             `json:"tileVersion"`
-	PostRunCommands []string                           `json:"postRunCommands"`
-	ProbeCommands   map[string]v1alpha1.ReadinessProbe `json:"probeCommands"`
+	Kind            string                             `json:"kind"`            // CDK/Command
+	WorkHome        string                             `json:"workHome"`        // root folder for execution
+	InjectedEnv     []string                           `json:"injectedEnv"`     // example: "export variable=value"
+	Preparation     []string                           `json:"preparation"`     // Includes pre-run commands
+	Commands        []string                           `json:"commands"`        // Command
+	TileName        string                             `json:"tileName"`        // The name of Tile
+	TileVersion     string                             `json:"tileVersion"`     // Tile version
+	PostRunCommands []string                           `json:"postRunCommands"` // Includes post-run commands
+	ProbeCommands   map[string]v1alpha1.ReadinessProbe `json:"probeCommands"`   // Commands for readiness probe
 }
 
 // StageKind defines type of stage
@@ -69,17 +70,19 @@ type BrewerCore interface {
 	// ExecutePlan executes the generated plan
 	ExecutePlan(ctx context.Context, dryRun bool, out *websocket.Conn) error
 	// CommandExecutor executes the generated script or wire simulated data
-	CommandExecutor(ctx context.Context, dryRun bool, cmd []byte, out *websocket.Conn) error
+	CommandExecutor(ctx context.Context, dryRun bool, cmdTxt []byte, out *websocket.Conn) error
 	// LinuxCommandExecutor run a command/script
 	LinuxCommandExecutor(ctx context.Context, cmdTxt []byte, stageLog *log.Logger, out *websocket.Conn) error
 	// CommandWrapperExecutor wrap all parameters and commands into a script
 	CommandWrapperExecutor(ctx context.Context, dryRun bool, out *websocket.Conn) (string, error)
 	// WsTail collects all output data
-	WsTail(ctx context.Context, reader io.ReadCloser, stageLog *log.Logger, out *websocket.Conn)
+	WsTail(ctx context.Context, reader io.ReadCloser, stageLog *log.Logger, wg *sync.WaitGroup, out *websocket.Conn)
 	// ExtractValue extract output data from logs
 	ExtractValue(ctx context.Context, buf []byte, out *websocket.Conn) error
+	// ScanOutput scans output values from logs
+	ScanOutput(regx *regexp.Regexp, buf []byte, outputDetail *TsOutputDetail, out *websocket.Conn) error
 	// PostRun execute post jobs after major work
-	PostRun(ctx context.Context, dryRun bool, buf []byte, out *websocket.Conn) error
+	PostRun(ctx context.Context, dryRun bool, out *websocket.Conn) error
 	// GenerateSummary generate report for Deployment
 	GenerateSummary(ctx context.Context, out *websocket.Conn) error
 	// ExtractAllEnv extracts all possible key,value from environment variables
@@ -87,7 +90,7 @@ type BrewerCore interface {
 	// ReplaceAll replaces value reference and environment variable to actual value
 	ReplaceAll(str string, dSid string, kv map[string]string) string
 	// ReplaceAllEnv replaces environment variable to actual value
-	ReplaceAllEnv(str string, kv map[string]string) string
+	ReplaceAllEnv(str string, allEnv map[string]string) string
 	// ReplaceAllValueRef replaces value reference to actual value
 	ReplaceAllValueRef(str string, dSid string, ti string) string
 }
@@ -101,34 +104,44 @@ func (ep *ExecutionPlan) ExecutePlan(ctx context.Context, dryRun bool, out *webs
 		for e := ep.Plan.Back(); e != nil; e = e.Prev() {
 			stage := e.Value.(*ExecutionStage)
 			ep.CurrentStage = stage
-			// Wrap commands into a shell script
+			// 1. Wrap commands into a shell script
 			cmd, err := ep.CommandWrapperExecutor(ctx, dryRun, out)
 			if err != nil {
 				return err
 			}
+			//
 
-			// Execute wrapped script
+			// 2. Execute wrapped script
 			if err := ep.CommandExecutor(ctx, dryRun, []byte(cmd), out); err != nil {
 				return err
 			}
+			//
 
-			// Extract output values & caching results
+			// 3.Extract output values & caching results
 			buf, err := ioutil.ReadFile(DiceConfig.WorkHome + aTs.DR.SuperFolder + "/" + stage.Name + "-output.log")
 			if err != nil {
 				return err
 			}
-			ep.ExtractValue(ctx, buf, out)
+			err = ep.ExtractValue(ctx, buf, out)
+			if err != nil {
+				return err
+			}
+			//
 
-			// Post run with commands
+			// 4. Post run with commands
 			if ep.CurrentStage.PostRunCommands != nil {
-				if err := ep.PostRun(ctx, dryRun, buf, out); err != nil {
+				if err := ep.PostRun(ctx, dryRun, out); err != nil {
 					return err
 				}
 			}
+			//
+
 		}
+		// 5. GENERATE REPORT
 		if ep.Plan.Len() > 0 { //avoid empty plan
 			ep.GenerateSummary(ctx, out)
 		}
+		//
 	}
 	return nil
 }
@@ -191,7 +204,7 @@ func (ep *ExecutionPlan) ReplaceAllValueRef(str string, dSid string, ti string) 
 				log.Errorf("Replace value reference was failed : %s \n", err)
 				break
 			} else {
-				if v!="" {
+				if v != "" {
 					str = strings.ReplaceAll(str, s[1], v)
 				}
 			}
@@ -330,11 +343,11 @@ echo $?
 				var clusterName, masterRoleARN string
 				// Tile with dependency
 				if dependentTile := DependentEKSTile(dSid, tile.TileInstance); dependentTile != nil {
-					if outputs, ok := at.AllOutputsN[dependentTile.TileInstance]; ok {
-						if cn, ok := outputs.TsOutputs["clusterName"]; ok {
+					if outputs, ok := (*at.AllOutputsN)[dependentTile.TileInstance]; ok {
+						if cn, ok := (*outputs.TsOutputs)["clusterName"]; ok {
 							clusterName = cn.OutputValue
 						}
-						if arn, ok := outputs.TsOutputs["masterRoleARN"]; ok {
+						if arn, ok := (*outputs.TsOutputs)["masterRoleARN"]; ok {
 							masterRoleARN = arn.OutputValue
 						}
 					}
@@ -342,10 +355,12 @@ echo $?
 				// Tile without dependency but input parameters
 				if s, ok := at.TsStacksMapN[ep.CurrentStage.Name]; ok && (clusterName == "" || masterRoleARN == "") {
 					if inputParameters, ok := s.InputParameters["clusterName"]; ok {
-						clusterName = inputParameters.InputValue
+						clusterName = ep.ReplaceAllValueRef(inputParameters.InputValue, dSid, ep.CurrentStage.Name)
+						clusterName = ep.ReplaceAllValueRef(inputParameters.InputValue, dSid, "")
 					}
 					if inputParameters, ok := s.InputParameters["masterRoleARN"]; ok {
-						masterRoleARN = inputParameters.InputValue
+						masterRoleARN = ep.ReplaceAllValueRef(inputParameters.InputValue, dSid, ep.CurrentStage.Name)
+						masterRoleARN = ep.ReplaceAllValueRef(inputParameters.InputValue, dSid, "")
 					}
 				}
 
@@ -368,8 +383,8 @@ echo $?
 		// Inject output values as env which can be retrieved only after execution
 		dependentTiles := AllDependentTiles(dSid, ep.CurrentStage.Name)
 		for _, tile := range dependentTiles {
-			if to, ok := at.AllOutputsN[tile.TileInstance]; ok {
-				for k, v := range to.TsOutputs {
+			if to, ok := (*at.AllOutputsN)[tile.TileInstance]; ok {
+				for k, v := range *to.TsOutputs {
 					//$D-TBD_TileName.Output-Name
 					if v.OutputValue != "" {
 						ep.CurrentStage.InjectedEnv = append(ep.CurrentStage.InjectedEnv, fmt.Sprintf("export D_TBD_%s_%s=%s",
@@ -505,66 +520,73 @@ func (ep *ExecutionPlan) ExtractValue(ctx context.Context, buf []byte, out *webs
 			tileCategory = stack.TileCategory
 		}
 
-		if outputs, ok := ts.AllOutputsN[tileInstance]; ok {
+		if outputs, ok := (*ts.AllOutputsN)[tileInstance]; ok {
 			outputs.StageName = ep.CurrentStage.Name
-			for outputName, outputDetail := range outputs.TsOutputs {
-				var regx *regexp.Regexp
-				if tileCategory == v1alpha1.ContainerApplication.CString() || tileCategory == v1alpha1.Application.CString() {
-					// Extract dSid, value from Command outputs
-					regx = regexp.MustCompile("^\\{\"(" +
-						outputName +
-						"=" +
-						".*?)\"}$")
-				} else {
-					// Extract dSid, value from CDK outputs
-					if stack, ok := ts.TsStacksMapN[tileInstance]; ok {
-						regx = regexp.MustCompile("^\\{\"level\":\"info\"\\,\"msg\":\"(" +
+			for _, outputName := range outputs.OutputsOrder {
+				if outputDetail, ok := (*outputs.TsOutputs)[outputName]; ok {
+					if tileCategory == v1alpha1.ContainerApplication.CString() || tileCategory == v1alpha1.Application.CString() {
+						// Extract dSid, value from Command outputs
+						regx := regexp.MustCompile("^\\{\"(" +
+							outputName +
+							"=" +
+							".*?)\"}$")
+						regxO := regexp.MustCompile("^\\{\"level\":\"info\"\\,\"msg\":\"(" +
+							outputName +
+							"=" +
+							".*?)\"}$")
+						err := ep.ScanOutput(regx, buf, outputDetail, out)
+						if err != nil {
+							return err
+						}
+						err = ep.ScanOutput(regxO, buf, outputDetail, out)
+						if err != nil {
+							return err
+						}
+
+					} else if stack, ok := ts.TsStacksMapN[tileInstance]; ok {
+						// Extract dSid, value from CDK outputs
+						regx := regexp.MustCompile("^\\{\"level\":\"info\"\\,\"msg\":\"(" +
 							strcase.ToCamel(stack.TileName) + "." +
 							".*" +
 							outputName +
 							".*?)\"}$")
-					}
-				}
-				if regx != nil {
-					scanner := bufio.NewScanner(bytes.NewReader(buf))
-					scanner.Split(bufio.ScanLines)
-					for scanner.Scan() {
-						txt := scanner.Text()
-						match := regx.FindStringSubmatch(txt)
-						if len(match) > 0 {
-							kv := strings.Split(match[1], "=")
-							outputDetail.OutputValue = strings.TrimSpace(kv[1])
-							SRf(out, "Extract outputs: [%s] = [%s] ", outputName, strings.TrimSpace(kv[1]))
-							break
+						err := ep.ScanOutput(regx, buf, outputDetail, out)
+						if err != nil {
+							return err
 						}
+
+					} else {
+						return errors.New("the handler of regular expression wasn't existed")
 					}
+
 					// Replace possible ENV in output
 					if strings.Contains(outputDetail.OutputValue, "$") {
 						outputDetail.OutputValue = ep.ReplaceAllEnv(outputDetail.OutputValue, allEnv)
 					}
+
 				} else {
-					return errors.New("the handler of regular expression wasn't existed")
+					return errors.New("outputs & outputs' order weren't consistent")
+				}
+			}
+		}
+
+		// Replace possible value reference
+		if outputs, ok := (*ts.AllOutputsN)[tileInstance]; ok {
+			for outputName, outputDetail := range *outputs.TsOutputs {
+				if strings.Contains(outputDetail.OutputValue, "$") {
+					outputDetail.OutputValue = ep.ReplaceAllValueRef(outputDetail.OutputValue, dSid, ep.CurrentStage.Name)
+					SRf(out, "Replace reference for extracted output: [%s] = [%s] ", outputName, outputDetail.OutputValue)
 				}
 			}
 		}
 
 		// Pass output values to parent stack
 		if parentTileInstance := ParentTileInstance(dSid, tileInstance); parentTileInstance != "" {
-			if outputs, ok := ts.AllOutputsN[tileInstance]; ok {
-				if parentOutputs, ok := ts.AllOutputsN[parentTileInstance]; ok {
-					for k, v := range outputs.TsOutputs {
-						parentOutputs.TsOutputs[k] = v
+			if outputs, ok := (*ts.AllOutputsN)[tileInstance]; ok {
+				if parentOutputs, ok := (*ts.AllOutputsN)[parentTileInstance]; ok {
+					for k, v := range *outputs.TsOutputs {
+						(*parentOutputs.TsOutputs)[k] = v
 					}
-				}
-			}
-		}
-
-		// Replace possible value reference
-		if outputs, ok := ts.AllOutputsN[tileInstance]; ok {
-			for outputName, outputDetail := range outputs.TsOutputs {
-				if strings.Contains(outputDetail.OutputValue, "$") {
-					outputDetail.OutputValue = ep.ReplaceAllValueRef(outputDetail.OutputValue, dSid, ep.CurrentStage.Name)
-					SRf(out, "Replace reference for extracted output: [%s] = [%s] ", outputName, outputDetail.OutputValue)
 				}
 			}
 		}
@@ -573,8 +595,50 @@ func (ep *ExecutionPlan) ExtractValue(ctx context.Context, buf []byte, out *webs
 	return nil
 }
 
+func (ep *ExecutionPlan) ScanOutput(regx *regexp.Regexp, buf []byte, outputDetail *TsOutputDetail, out *websocket.Conn) error {
+	scanner := bufio.NewScanner(bytes.NewReader(buf))
+	scanner.Split(bufio.ScanLines)
+	for scanner.Scan() {
+		txt := scanner.Text()
+		match := regx.FindStringSubmatch(txt)
+		if len(match) > 1 {
+			key, value, err := FindPair(match[1])
+			if err != nil {
+				return err
+			} else if !strings.Contains(key, outputDetail.Name) {
+				return errors.New("matched name wasn't expected: " + key)
+			} else {
+				outputDetail.OutputValue = value
+				SRf(out, "Extract outputs: [%s] = [%s] ", outputDetail.Name, outputDetail.OutputValue)
+				break
+			}
+		}
+	}
+	return nil
+}
+
+func FindPair(str string) (string, string, error) {
+	key := ""
+	value := ""
+	kv := strings.Split(str, " = ")
+	if len(kv) < 2 {
+		kv = strings.Split(str, "=")
+	}
+	if len(kv) < 2 {
+		return "", "", errors.New("found matched string but failed to extract values")
+	} else {
+		key = strings.TrimSpace(kv[0])
+		if len(kv) == 2 {
+			value = strings.TrimSpace(kv[1])
+		} else {
+			value=strings.TrimSpace(str[len(kv[0])+1:])
+		}
+	}
+	return key, value, nil
+}
+
 // PostRun manages and executes commands after provision
-func (ep *ExecutionPlan) PostRun(ctx context.Context, dryRun bool, buf []byte, out *websocket.Conn) error {
+func (ep *ExecutionPlan) PostRun(ctx context.Context, dryRun bool, out *websocket.Conn) error {
 	stage := ep.CurrentStage
 	script := stage.WorkHome + "/script-" + stage.Name + "-Post-" + RandString(8) + ".sh"
 	file, err := os.OpenFile(script, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755) //Create(script)
@@ -600,8 +664,8 @@ echo $?
 	dSid := ctx.Value(`d-sid`).(string)
 	if at, ok := AllTs[dSid]; ok {
 		if tile, ok := at.AllTilesN[stage.Name]; ok {
-			if to, ok := at.AllOutputsN[tile.TileInstance]; ok {
-				for k, v := range to.TsOutputs {
+			if to, ok := (*at.AllOutputsN)[tile.TileInstance]; ok {
+				for k, v := range *to.TsOutputs {
 					//$D-TBD_TileName.Output-Name
 					if v.OutputValue != "" {
 						stage.InjectedEnv = append(stage.InjectedEnv, fmt.Sprintf("export D_TBD_%s_%s=%s",

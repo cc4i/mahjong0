@@ -78,6 +78,12 @@ mctl deploy -f try-my-tile.yaml
 
 ## Useful Tips
 
+0. Key factors for a good Tile
+
+- Think about handle repeated deployment
+- Think about multiple Tiles could be deploy at sametime
+- Manage all kinds of potential errors
+
 1. How to get rid of back slash
 ```bash
 

@@ -24,12 +24,15 @@ type AssembleData struct {
 }
 
 // AssemblerCore represents a group of functions to assemble CDK App.
-type AssemblerCore interface {
+type AssembleCore interface {
 	// GenerateMainApp generate main app from base template with necessary tiles
 	GenerateMainApp(ctx context.Context, out *websocket.Conn) (*ExecutionPlan, error)
 
+	// validateDependsOn validates dependent tiles
+	validateDependsOn(tileInstance string) error
+
 	// ProcessTiles controls Tile processing
-	ProcessTiles(ctx context.Context, aTs *Ts, override map[string]*v1alpha1.TileInputOverride, out *websocket.Conn)
+	ProcessTiles(ctx context.Context, aTs *Ts, override map[string]*v1alpha1.TileInputOverride, out *websocket.Conn) error
 	// PullTile pulls Tile from repo
 	PullTile(ctx context.Context,
 		tileInstance string,
@@ -49,6 +52,9 @@ type AssemblerCore interface {
 
 	//GenerateExecutePlan generates execution plan to direct provision resources
 	GenerateExecutePlan(ctx context.Context, aTs *Ts, out *websocket.Conn) (*ExecutionPlan, error)
+
+	//GenerateParallelPlan generates parallel plan
+	GenerateParallelPlan(ctx context.Context, aTs *Ts, out *websocket.Conn) error
 }
 
 var DiceConfig *utils.DiceConfig
@@ -102,7 +108,7 @@ func UpdateDR(dr *DeploymentRecord, status string) {
 func (d *AssembleData) GenerateMainApp(ctx context.Context, out *websocket.Conn) (*ExecutionPlan, error) {
 
 	dSid := ctx.Value("d-sid").(string)
-	//dn := DepName(d.Deployment.Metadata.Name)
+	aon := make(map[string]*TsOutput)
 	var aTs = &Ts{
 		DR: &DeploymentRecord{
 			SID:         dSid,
@@ -114,8 +120,9 @@ func (d *AssembleData) GenerateMainApp(ctx context.Context, out *websocket.Conn)
 		AllTilesN:    make(map[string]*v1alpha1.Tile),
 		TsLibsMap:    make(map[string]TsLib),
 		TsStacksMapN: make(map[string]*TsStack),
-		AllOutputsN:  make(map[string]*TsOutput),
+		AllOutputsN:  &aon,
 	}
+
 	// 1. Caching Ts
 	// Cached here with point, so can be used in following procedures
 	AllTs[dSid] = *aTs
@@ -154,6 +161,8 @@ func (d *AssembleData) GenerateMainApp(ctx context.Context, out *websocket.Conn)
 		UpdateDR(aTs.DR, Interrupted.DSString())
 		return nil, err
 	}
+	// 6. Store execution plan
+	AllPlans[dSid] = plan
 	return plan, nil
 }
 
@@ -372,7 +381,7 @@ func (d *AssembleData) PullTile(ctx context.Context,
 	tm := &TsManifests{
 		ManifestType: parsedTile.Spec.Manifests.ManifestType,
 	}
-	if ns := namespace(parsedTile.Metadata.Name, d.Deployment);  ns == "" {
+	if ns := namespace(parsedTile.Metadata.Name, d.Deployment); ns == "" {
 		tm.Namespace = parsedTile.Spec.Manifests.Namespace
 	} else {
 		tm.Namespace = ns
@@ -384,7 +393,7 @@ func (d *AssembleData) PullTile(ctx context.Context,
 	if parsedTile.Spec.Manifests.Folders != nil {
 		tm.Folders = append(tm.Folders, parsedTile.Spec.Manifests.Folders...)
 	}
-	if parsedTile.Spec.Manifests.Flags!=nil {
+	if parsedTile.Spec.Manifests.Flags != nil {
 		tm.Flags = append(tm.Flags, parsedTile.Spec.Manifests.Flags...)
 	}
 	////
@@ -508,13 +517,15 @@ func (d *AssembleData) PullTile(ctx context.Context,
 	////
 
 	// Step 10. !!!Caching Outputs
+	tos := make(map[string]*TsOutputDetail)
 	to := &TsOutput{
-		TileName:    tileName,
-		TileVersion: parsedTile.Metadata.Version,
-		TsOutputs:   make(map[string]*TsOutputDetail),
+		TileName:     tileName,
+		TileVersion:  parsedTile.Metadata.Version,
+		TsOutputs:    &tos,
+		OutputsOrder: parsedTile.Spec.OutputsOrder,
 	}
 	for _, o := range parsedTile.Spec.Outputs {
-		to.TsOutputs[o.Name] = &TsOutputDetail{
+		(*to.TsOutputs)[o.Name] = &TsOutputDetail{
 			Name:                o.Name,
 			OutputType:          o.OutputType,
 			DefaultValue:        o.DefaultValue,
@@ -523,14 +534,14 @@ func (d *AssembleData) PullTile(ctx context.Context,
 			Description:         o.Description,
 		}
 	}
-	aTs.AllOutputsN[tg.TileInstance] = to
+	(*aTs.AllOutputsN)[tg.TileInstance] = to
 	////
 
 	SRf(out, "Parsing specification of Tile: < %s - %s > was success.\n", tileName, version)
 	return nil
 }
 
-func  namespace(tileName string, deployment *v1alpha1.Deployment) string {
+func namespace(tileName string, deployment *v1alpha1.Deployment) string {
 	for _, m := range deployment.Spec.Template.Tiles {
 		if m.TileReference == tileName {
 			return m.Manifests.Namespace
@@ -609,8 +620,16 @@ func (d *AssembleData) ApplyMainTs(ctx context.Context, aTs *Ts, out *websocket.
 		SR(out, []byte(err.Error()))
 		return err
 	}
-	os.Rename(superFile, superFile+"_old")
-	os.Rename(superFile+"_new", superFile)
+	err = os.Rename(superFile, superFile+"_old")
+	if err != nil {
+		SR(out, []byte(err.Error()))
+		return err
+	}
+	err = os.Rename(superFile+"_new", superFile)
+	if err != nil {
+		SR(out, []byte(err.Error()))
+		return err
+	}
 	SR(out, []byte("Generating main.ts for Super ... with success"))
 	return nil
 }
@@ -665,15 +684,15 @@ func (d *AssembleData) GenerateExecutePlan(ctx context.Context, aTs *Ts, out *we
 				}
 
 				// Process different manifests
-				prefix := DiceConfig.WorkHome+aTs.DR.SuperFolder+ts.TileFolder+"/lib/"
+				prefix := DiceConfig.WorkHome + aTs.DR.SuperFolder + ts.TileFolder + "/lib/"
 				switch ts.TsManifests.ManifestType {
 				case v1alpha1.K8s.MTString():
 
 					for _, f := range ts.TsManifests.Files {
 						var cmd string
 						cmd = "kubectl apply -f" +
-								" " + prefix + f + // applied file
-								" -n " + ts.TsManifests.Namespace // namespace
+							" " + prefix + f + // applied file
+							" -n " + ts.TsManifests.Namespace // namespace
 						stage.Commands = append(stage.Commands, cmd)
 					}
 				case v1alpha1.Helm.MTString():
@@ -692,7 +711,7 @@ func (d *AssembleData) GenerateExecutePlan(ctx context.Context, aTs *Ts, out *we
 				case v1alpha1.Kustomize.MTString():
 					// TODO: not quite yet to support Kustomize
 					for _, f := range ts.TsManifests.Folders {
-						cmd := "kustomize build -f"+
+						cmd := "kustomize build -f" +
 							" " + prefix + f + " | kubectl -f - " + // applied folder
 							" -n " + ts.TsManifests.Namespace // namespace
 						stage.Commands = append(stage.Commands, cmd)
@@ -706,11 +725,17 @@ func (d *AssembleData) GenerateExecutePlan(ctx context.Context, aTs *Ts, out *we
 			stage.Commands = append(stage.Commands, "sleep 10")
 			if tile, ok := aTs.AllTilesN[ts.TileInstance]; ok {
 				for _, o := range tile.Spec.Outputs {
+					cmd := ""
 					if o.DefaultValueCommand != "" {
-						cmd := `echo "{\"` + o.Name + "=`" + o.DefaultValueCommand + "`" + `\"}" >>` + fileName
-						stage.Commands = append(stage.Commands, cmd)
+						cmd = `echo "{\"` + o.Name + "=`" + o.DefaultValueCommand + "`" + `\"}" >>` + fileName
 					} else if o.DefaultValue != "" {
-						cmd := `echo "{\"` + o.Name + "=" + o.DefaultValue + `\"}" >>` + fileName
+						cmd = `echo "{\"` + o.Name + "=" + o.DefaultValue + `\"}" >>` + fileName
+					}
+					// Replace $( -> \$( to avoid "command not found" error in script
+					if cmd != "" {
+						if strings.Contains(cmd, `$(`) {
+							cmd = strings.ReplaceAll(cmd, `$(`, `\$(`)
+						}
 						stage.Commands = append(stage.Commands, cmd)
 					}
 				}
@@ -720,7 +745,13 @@ func (d *AssembleData) GenerateExecutePlan(ctx context.Context, aTs *Ts, out *we
 			stage.Preparation = append(stage.Preparation, "npm install")
 			stage.Preparation = append(stage.Preparation, "npm run build")
 			stage.Preparation = append(stage.Preparation, "cdk list")
-			cmd := "cdk deploy " + ts.TileStackName + " --require-approval never"
+			cmd := "cdk deploy " + ts.TileStackName + " --require-approval never --exclusively true"
+			stage.Commands = append(stage.Commands, cmd)
+			// Force to get output in case CDK doesn't output all
+			cmd = `aws cloudformation describe-stacks --stack-name ` +
+				ts.TileStackName + ` --query "Stacks[0].Outputs[]" | ` +
+				`jq -r  '.[] | [.OutputKey, .OutputValue] | reduce .[1:][] as $i ("` +
+				ts.TileStackName + `\(.[0])"; . + " = \($i)")'`
 			stage.Commands = append(stage.Commands, cmd)
 		}
 
@@ -765,13 +796,18 @@ func (d *AssembleData) GenerateExecutePlan(ctx context.Context, aTs *Ts, out *we
 		p.PlanMirror[ts.TileInstance] = &stage
 	}
 
-	buf, err := yaml.Marshal(p)
-	SR(out, buf)
+	//buf, err := yaml.Marshal(p)
+	//SR(out, buf)
 	SR(out, []byte("Generating execution plan... with success"))
 	SR(out, []byte("\n+--------------Execution Flow--------------+\n"))
 	SR(out, []byte(toFlow(&p)))
 	SR(out, []byte("\n+--------------Execution Flow--------------+\n"))
-	return &p, err
+	return &p, nil
+}
+
+func (d *AssembleData) GenerateParallelPlan(ctx context.Context, aTs *Ts, out *websocket.Conn) error {
+	//TODO not implemented, call AllRootTileInstance and group into multiple List to execute
+	return nil
 }
 
 func toFlow(p *ExecutionPlan) string {

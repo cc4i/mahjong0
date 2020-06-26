@@ -101,6 +101,7 @@ spec:
           curl -s -k $(self.inputs.argocdBaseUrl)/api/v1/applications -H "Authorization: Bearer $ARGOCD_TOKEN" -d "@stage-all-in-one-go.json"
 
           # add production cluster
+          aws eks update-kubeconfig --name $(self.inputs.prodClusterName) --region $AWS_REGION --role-arn $(self.inputs.prodMasterRoleARN) --kubeconfig $TILE_HOME/kube.config
           kubectl apply -f ./argocd-remote.yaml
           prodClusterArn=$(echo -n $(self.inputs.prodClusterArn) | sed -e "s#/#\\\/#g")
           prodClusterEndpoint=$(echo -n $(self.inputs.prodClusterEndpoint) | sed -e "s#/#\\\/#g")
