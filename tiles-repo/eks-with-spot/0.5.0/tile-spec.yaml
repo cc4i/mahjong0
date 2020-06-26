@@ -176,7 +176,7 @@ spec:
           kubectl get pods -n kube-system
           sleep 10
           kubectl apply -f lib/yaml/cluster-autoscaler-autodiscover-go.yaml
-          kubectl -n kube-system annotate deployment.apps/cluster-autoscaler cluster-autoscaler.kubernetes.io/safe-to-evict="false"
+          kubectl -n kube-system annotate deployment.apps/cluster-autoscaler cluster-autoscaler.kubernetes.io/safe-to-evict="false" --overwrite=true
           kubectl -n kube-system set image deployment.apps/cluster-autoscaler cluster-autoscaler=us.gcr.io/k8s-artifacts-prod/autoscaling/cluster-autoscaler:v$D_TBD_EKS_WITH_SPOT_CLUSTERVERSION.5          
       - name: InstallHorizontalPodAutoscaler
         command: |

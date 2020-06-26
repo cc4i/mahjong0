@@ -122,7 +122,7 @@ export class EksWithSpot extends cdk.Construct {
 
     /** Added CF Output */
     new cdk.CfnOutput(scope,"regionOfCluster", {value: process.env.CDK_DEFAULT_REGION || ""})
-    new cdk.CfnOutput(scope,"clusterName", {value: cluster.clusterName})
+    new cdk.CfnOutput(scope,"clusterName", {value: props.clusterName})
     new cdk.CfnOutput(scope,"clusterVersion", {value: props.clusterVersion || '1.16'})
     new cdk.CfnOutput(scope,"masterRoleARN", {value: eksRole.roleArn})
     new cdk.CfnOutput(scope,"clusterEndpoint", {value: cluster.clusterEndpoint})

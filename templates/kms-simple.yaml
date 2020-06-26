@@ -1,0 +1,21 @@
+apiVersion: mahjong.io/v1alpha1
+kind: Deployment 
+metadata:
+  name: kms-simple
+spec:
+  template:
+    tiles:
+      # Generating master key
+      tileAwsKmsKeyGenerator010:
+        tileReference: AWS-KMS-KeyGenerator
+        tileVersion: 0.1.0
+        inputs:
+          - name: symmetricKeyAlias
+            inputValue: majhong/symmetric-key_0
+          - name: asymmetricKeyAlias
+            inputValue: majhong/asymmetric-key_0
+
+  summary:
+    description: simple
+    outputs: []
+    notes: []

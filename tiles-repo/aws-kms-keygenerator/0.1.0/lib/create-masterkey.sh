@@ -34,9 +34,9 @@ then
     echo "Done"
 fi
 
-echo '{"symmetricKeyID='$SYMMETRIC_KEY_ID'"}'
-echo '{"symmetricKeyArn='$SYMMETRIC_KEY_ARN'"}'
-echo '{"symmetricKeyAlias='$SYMMETRIC_KEY_ALIAS'"}'
-echo '{"asymmetricKeyID='$ASYMMETRIC_KEY_ID'"}'
-echo '{"asymmetricKeyArn='$ASYMMETRIC_KEY_ARN'"}'
-echo '{"asymmetricKeyAlias='$ASYMMETRIC_KEY_ALIAS'"}'
+echo symmetricKeyID=$SYMMETRIC_KEY_ID
+echo symmetricKeyArn=$SYMMETRIC_KEY_ARN
+echo symmetricKeyAlias=$SYMMETRIC_KEY_ALIAS
+echo asymmetricKeyID=$ASYMMETRIC_KEY_ID
+echo asymmetricKeyArn=$ASYMMETRIC_KEY_ARN
+echo asymmetricKeyAlias=$ASYMMETRIC_KEY_ALIAS

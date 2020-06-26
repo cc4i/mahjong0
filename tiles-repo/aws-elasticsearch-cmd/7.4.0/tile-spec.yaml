@@ -16,22 +16,26 @@ spec:
           
       - name: ProvisionDomain
         command: |
-          cd $TILE_HOME/lib
-          aws_region=`aws configure get region`
-          account_id=`aws sts get-caller-identity --query Account --output text`
-          sed -e 's/__domain_name__/$(self.inputs.domainName)/g' \
-              -e 's/__elasticsearch_version_/$(self.inputs.elasticsearchVersion)/g' \
-              -e 's/__data_instance_type__/$(self.inputs.dataInstanceType)/g' \
-              -e 's/__data_instance_count_/$(self.inputs.dataInstanceCount)/g' \
-              -e 's/__master_instance_type__/$(self.inputs.masterInstanceType)/g' \
-              -e 's/__master_instance_count__/$(self.inputs.masterInstanceCount)/g' \
-              -e 's/__instance_volume_type__/$(self.inputs.instanceVolumeType)/g' \
-              -e 's/__instance_volume_size__/$(self.inputs.instanceVolumeSize)/g' \
-              -e 's/__elasticsearch_role_for_app__/'$elasticsearch_role_for_app'/g' \
-              -e 's/__aws_region__/'$aws_region'/g' \
-              -e 's/__account_id__/'$account_id'/g' \
-            ./domain.json > ./domain-go.json
-          aws es create-elasticsearch-domain --cli-input-json file://domain-go.json
+          endpoint=`aws es describe-elasticsearch-domain --domain-name $(self.inputs.domainName) |jq -r '.DomainStatus.Endpoint'`
+          if [[ $endpoint = "null" || $endpoint = "" ]]
+          then 
+            cd $TILE_HOME/lib
+            aws_region=`aws configure get region`
+            account_id=`aws sts get-caller-identity --query Account --output text`
+            sed -e 's/__domain_name__/$(self.inputs.domainName)/g' \
+                -e 's/__elasticsearch_version_/$(self.inputs.elasticsearchVersion)/g' \
+                -e 's/__data_instance_type__/$(self.inputs.dataInstanceType)/g' \
+                -e 's/__data_instance_count_/$(self.inputs.dataInstanceCount)/g' \
+                -e 's/__master_instance_type__/$(self.inputs.masterInstanceType)/g' \
+                -e 's/__master_instance_count__/$(self.inputs.masterInstanceCount)/g' \
+                -e 's/__instance_volume_type__/$(self.inputs.instanceVolumeType)/g' \
+                -e 's/__instance_volume_size__/$(self.inputs.instanceVolumeSize)/g' \
+                -e 's/__elasticsearch_role_for_app__/'$elasticsearch_role_for_app'/g' \
+                -e 's/__aws_region__/'$aws_region'/g' \
+                -e 's/__account_id__/'$account_id'/g' \
+              ./domain.json > ./domain-go.json
+            aws es create-elasticsearch-domain --cli-input-json file://domain-go.json
+          fi
         readinessProbe:
           command: |
             cd $TILE_HOME/scripts

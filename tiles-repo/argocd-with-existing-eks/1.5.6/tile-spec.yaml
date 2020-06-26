@@ -9,6 +9,39 @@ metadata:
     dependentOnVendorService: EKS
 # Specification
 spec:
+  preRun:
+    stages:
+      - name: InstallArgoCD
+        command: |
+          cd $TILE_HOME
+          kubectl create ns argocd || true
+          kubectl apply -f lib/k8s/install.yaml -n argocd
+      - name: CheckArgocd
+        command: |
+          kubectl get deployments -n argocd
+        readinessProbe:
+          command: |
+            count=`kubectl get deployment/argocd-server -n argocd -o json |jq '.status.readyReplicas'`
+            if [ $count -ne 1 ]
+            then
+              echo "ReadyReplicas of ArgoCD isn't equal to 1."
+              exit 1
+            fi
+            echo "ReadyReplicas of ArgoCD is $count and ready to go."
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 300
+          successThreshold: 1
+          failureThreshold: -1           
+      - name: RetsetSecret
+        command: |
+          # argocd-server-cf87b5c86-5xlv2=$2a$10$lv90EJg9bW88XqUjjkhpWekVoRZVVgtLULKuiui/eUmAnR/rlL/ui
+          kubectl -n argocd patch secret argocd-secret \
+            -p '{"stringData": {
+              "admin.password": "$2a$10$lv90EJg9bW88XqUjjkhpWekVoRZVVgtLULKuiui/eUmAnR/rlL/ui",
+              "admin.passwordMtime": "'$(date +%FT%T%Z)'"
+            }}'
+          
   inputs:
     # String
     - name: clusterName
@@ -24,13 +57,7 @@ spec:
       require: false
       defaultValue: argocd
 
-  manifests:
-    manifestType: K8s
-    namespace: argocd 
-    files:
-      - k8s/install.yaml
 
-          
   # Ouptputs represnt output value after launched, for 'ContainerApplication' might need leverage specific command to retrive output.
   outputs:
     # String
@@ -40,8 +67,8 @@ spec:
       description: Custom::User
     # FromCommand
     - name: password
-      outputType: FromCommand
-      defaultValueCommand: kubectl get pods -n $NAMESPACE -l app.kubernetes.io/name=argocd-server -o name | cut -d'/' -f 2
+      outputType: String
+      defaultValue: argocd-server-cf87b5c86-5xlv2
       description: Custom::Password        
     - name: argocdServer
       outputType: FromCommand

@@ -89,15 +89,16 @@ type TsManifests struct {
 	Files        []string
 	Folders      []string
 	TileInstance string
-	Flags []string
+	Flags        []string
 }
 
 // TsOutput
 type TsOutput struct {
-	TileName    string
-	TileVersion string
-	StageName   string
-	TsOutputs   map[string]*TsOutputDetail //OutputName -> TsOutputDetail
+	TileName     string
+	TileVersion  string
+	StageName    string
+	OutputsOrder []string                    //Extract data as per order
+	TsOutputs    *map[string]*TsOutputDetail //OutputName -> TsOutputDetail
 }
 
 // TsOutputDetail
@@ -118,7 +119,7 @@ type Ts struct {
 	TsStacks     []*TsStack                // TsStacks is only for go template
 	TsStacksMapN map[string]*TsStack       // TsStacksMap: TileInstance -> TsStack, all initialized values will be store here, include input, env, etc
 	AllTilesN    map[string]*v1alpha1.Tile // AllTiles: TileInstance -> Tile
-	AllOutputsN  map[string]*TsOutput      // AllOutputs:  TileInstance ->TsOutput, all output values will be store here
+	AllOutputsN  *map[string]*TsOutput     // AllOutputs:  TileInstance ->TsOutput, all output values will be store here
 }
 
 // AllTs represents all information about tiles, input, output, etc.,  id(uuid) -> Ts
@@ -126,6 +127,9 @@ var AllTs = make(map[string]Ts)
 
 // AllTilesGrid store all Tiles relationship, id(uuid) -> (tile-instance -> TilesGrid)
 var AllTilesGrids = make(map[string]*map[string]TilesGrid)
+
+// AllPlans store all execution plan
+var AllPlans = make(map[string]*ExecutionPlan)
 
 // SortedTilesGrid return sorted TilesGrid array from AllTilesGrid
 func SortedTilesGrid(dSid string) []TilesGrid {
@@ -250,8 +254,8 @@ func ValueRef(dSid string, ref string, ti string) (string, error) {
 
 				case "outputs":
 					if tileInstance != "self" {
-						if outputs, ok := at.AllOutputsN[tileInstance]; ok {
-							for name, output := range outputs.TsOutputs {
+						if outputs, ok := (*at.AllOutputsN)[tileInstance]; ok {
+							for name, output := range *outputs.TsOutputs {
 								if name == field {
 									return output.OutputValue, nil
 								}
@@ -259,8 +263,8 @@ func ValueRef(dSid string, ref string, ti string) (string, error) {
 						}
 					} else {
 						//TODO: Any possible value ?!
-						for _, outputs := range at.AllOutputsN {
-							for name, output := range outputs.TsOutputs {
+						for _, outputs := range *at.AllOutputsN {
+							for name, output := range *outputs.TsOutputs {
 								if name == field {
 									return output.OutputValue, nil
 								}
@@ -352,6 +356,19 @@ func FamilyTileInstance(dSid string, tileInstance string) []string {
 		return tileInstances
 	}
 	return nil
+}
+
+// AllRootTileInstance return all root tileInstance
+func AllRootTileInstance(dSid string) []string {
+	var root []string
+	if allTG, ok := AllTilesGrids[dSid]; ok {
+		for _, v := range *allTG {
+			if v.ParentTileInstance == "root" {
+				root = append(root, v.TileInstance)
+			}
+		}
+	}
+	return root
 }
 
 // TsContent returns content as per d-sid

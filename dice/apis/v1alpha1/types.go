@@ -139,7 +139,8 @@ type TileSpec struct {
 	Dependencies []TileDependency `json:"dependencies,omitempty"`
 	Inputs       []TileInput      `json:"inputs"`
 	Manifests    TileManifest     `json:"manifests,omitempty"`
-	Outputs      []TileOutput     `json:"outputs" `
+	Outputs      []TileOutput     `json:"outputs"`
+	OutputsOrder []string         `json:"outputsOrder" `
 	PostRun      PostRunDetail    `json:"PostRun,omitempty"`
 	Notes        []string         `json:"notes,omitempty"`
 }
@@ -202,7 +203,7 @@ type TileManifest struct {
 	Namespace    string   `json:"namespace"`
 	Files        []string `json:"files,omitempty"`
 	Folders      []string `json:"folders,omitempty"`
-	Flags []string `json:"flags,omitempty"`
+	Flags        []string `json:"flags,omitempty"`
 }
 
 // TileInputDependency tile.spec.input.dependency
