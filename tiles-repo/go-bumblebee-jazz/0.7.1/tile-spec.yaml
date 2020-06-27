@@ -106,8 +106,10 @@ spec:
           sleep 5
           prodClusterArn=$(echo -n $(self.inputs.prodClusterArn) | sed -e "s#/#\\\/#g")
           prodClusterEndpoint=$(echo -n $(self.inputs.prodClusterEndpoint) | sed -e "s#/#\\\/#g")
+          bearerToken=`aws eks get-token --cluster-name $(self.inputs.prodClusterName) --region $AWS_REGION --role-arn $(self.inputs.prodMasterRoleARN) | jq -r '.status.token'`
 
-          sed -e 's/__caData__/$(self.inputs.prodClusterCertificateAuthorityData)/g' \
+          sed -e 's/__bearerToken__/$bearerToken/g' \
+              -e 's/__caData__/$(self.inputs.prodClusterCertificateAuthorityData)/g' \
               -e 's/__name__/'$prodClusterArn'/g' \
               -e 's/__server__/'$prodClusterEndpoint'/g' ./add-cluster.json > ./add-cluster-go.json
           curl -s -k $(self.inputs.argocdBaseUrl)/api/v1/clusters -H "Authorization: Bearer $ARGOCD_TOKEN" -d "@add-cluster-go.json"
