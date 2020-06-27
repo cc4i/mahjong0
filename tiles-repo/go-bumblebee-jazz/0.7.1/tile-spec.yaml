@@ -102,7 +102,8 @@ spec:
 
           # add production cluster
           aws eks update-kubeconfig --name $(self.inputs.prodClusterName) --region $AWS_REGION --role-arn $(self.inputs.prodMasterRoleARN) --kubeconfig $TILE_HOME/kube.config
-          kubectl apply -f ./argocd-remote.yaml
+          kubectl apply -f ./argocd-remote.yaml -n kube-system
+          sleep 5
           prodClusterArn=$(echo -n $(self.inputs.prodClusterArn) | sed -e "s#/#\\\/#g")
           prodClusterEndpoint=$(echo -n $(self.inputs.prodClusterEndpoint) | sed -e "s#/#\\\/#g")
 
