@@ -29,7 +29,7 @@ type ExecutionPlan struct {
 	CurrentStage     *ExecutionStage            `json:"currentStage"` // Current executing stage
 	Plan             *list.List                 `json:"plan"`         // Ordered plans
 	PlanMirror       map[string]*ExecutionStage `json:"planMirror"`
-	ParallelPlan     []list.List                `json:"parallelPlan"`     // Parallel plans
+	ParallelPlan     []*list.List                `json:"parallelPlan"`     // Parallel plans
 	OriginDeployment *v1alpha1.Deployment       `json:"originDeployment"` // Original deployment data
 }
 

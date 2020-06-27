@@ -21,7 +21,9 @@ then
 
 else 
     aws secretsmanager create-secret --name $SECRET_NAME \
-        --kms-key-id $KMS_KEY_ID \
         --secret-string '{"githubUser":"'$GITHUB_USER'", "accessToken":"'$ACCESS_TOKEN'", "appConfRepo":"'$APP_CONF_REPO'"}'
+    # aws secretsmanager create-secret --name $SECRET_NAME \
+    #     --kms-key-id $KMS_KEY_ID \
+    #     --secret-string '{"githubUser":"'$GITHUB_USER'", "accessToken":"'$ACCESS_TOKEN'", "appConfRepo":"'$APP_CONF_REPO'"}'
 
 fi 

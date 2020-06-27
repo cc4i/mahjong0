@@ -69,7 +69,7 @@ spec:
       - name: CreateSecrets
         command: |
           cd $TILE_HOME/scripts
-          ./create-secrets.sh github-bumblebee $GITHUB_USER $GIT_ACCESS_TOKEN $APP_CONF_REPO
+          ./create-secrets.sh github-bumblebee $GITHUB_USER $GIT_ACCESS_TOKEN $APP_CONF_REPO $KMS_KEY_ID
       - name: RegisterAir2Codebuild
         command: |
           cd $TILE_HOME/scripts

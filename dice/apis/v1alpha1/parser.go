@@ -8,6 +8,7 @@ import (
 	"github.com/xeipuuv/gojsonschema"
 	yamlv2 "gopkg.in/yaml.v2"
 	"sigs.k8s.io/yaml"
+	"strings"
 )
 
 var deploymentSchema = "file://./schema/deployment-schema.json"
@@ -22,6 +23,7 @@ type ParserCore interface {
 	ParseDeployment(ctx context.Context) (*Deployment, error)
 	ValidateTile(ctx context.Context, tile *Tile) error
 	ValidateDeployment(ctx context.Context, deployment *Deployment) error
+	CheckParameter(ctx context.Context, deployment *Deployment) error
 }
 
 // ParseTile parse Tile
@@ -134,6 +136,7 @@ func (d *Data) ParseDeployment(ctx context.Context) (*Deployment, error) {
 
 // ValidateTile validates Tile as per tile-spec.yaml
 func (d *Data) ValidateTile(ctx context.Context, tile *Tile) error {
+	// Validate json schema
 	schemaLoader := gojsonschema.NewReferenceLoader(tileSchema)
 	jsonLoader := gojsonschema.NewGoLoader(tile)
 	result, err := gojsonschema.Validate(schemaLoader, jsonLoader)
@@ -154,12 +157,14 @@ func (d *Data) ValidateTile(ctx context.Context, tile *Tile) error {
 		return err
 
 	}
+	// Validate as per annotation
 	_, err = valid.ValidateStruct(tile)
 	return err
 }
 
 // ValidateDeployment validate Deployment as per deployment-spec.yaml
 func (d *Data) ValidateDeployment(ctx context.Context, deployment *Deployment) error {
+	// Validate json schema
 	schemaLoader := gojsonschema.NewReferenceLoader(deploymentSchema)
 	jsonLoader := gojsonschema.NewGoLoader(deployment)
 	result, err := gojsonschema.Validate(schemaLoader, jsonLoader)
@@ -180,6 +185,29 @@ func (d *Data) ValidateDeployment(ctx context.Context, deployment *Deployment) e
 		return err
 
 	}
+	// Validate as per annotation
 	_, err = valid.ValidateStruct(deployment)
-	return err
+	if err != nil {
+		return err
+	}
+	// Check parameters if need to be replaced
+	return d.CheckParameter(ctx, deployment)
+}
+
+func (d *Data) CheckParameter(ctx context.Context, deployment *Deployment) error {
+	parameters := ""
+	for _, tile := range deployment.Spec.Template.Tiles {
+		for _, input := range tile.Inputs {
+			if strings.Contains(input.InputValue, "!parameter!") {
+				log.Errorf("Input %s needs value : %s", input.Name, input.InputValue)
+				parameters = parameters +", "
+			}
+		}
+	}
+	if parameters != "" {
+		strings.TrimSuffix(parameters, ", ")
+		return errors.New("input parameters: ["+parameters+"] should be replaced by values")
+	} else {
+		return nil
+	}
 }

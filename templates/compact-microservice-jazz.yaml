@@ -27,7 +27,7 @@ spec:
           - name: clusterVersion
             inputValue: 1.16
           - name: keyPair4EC2
-            inputValue: ore-keypair
+            inputValue: [!parameter! key pairs for worker nodes]
           - name: capacityInstance
             inputValues: 
               - m5.large
@@ -45,7 +45,7 @@ spec:
           - name: clusterVersion
             inputValue: 1.16
           - name: keyPair4EC2
-            inputValue: ore-keypair
+            inputValue: [!parameter! key pairs for worker nodes]
           - name: capacityInstance
             inputValues: 
               - m5.large
@@ -130,7 +130,7 @@ spec:
         tileVersion: 0.7.1
         inputs:
           - name: gitAccessToken
-            inputValue: <Replace GitHub_Token by value>
+            inputValue: [!parameter! personal access token for GitHub]
           - name: appRepo
             inputValue: go-bumblebee
           - name: appBranch

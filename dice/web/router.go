@@ -76,6 +76,9 @@ func Router(ctx context.Context) *gin.Engine {
 	r.GET("/v1alpha1/ts/:sid/plan/order", func(c *gin.Context) {
 		PlanOrder(ctx, c)
 	})
+	r.GET("/v1alpha1/ts/:sid/plan/order/parallel", func(c *gin.Context) {
+		ParallelOrder(ctx, c)
+	})
 
 	// List deployments in memory
 	r.GET("/v1alpha1/ts", func(c *gin.Context) {
