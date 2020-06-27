@@ -163,6 +163,10 @@ func (d *AssembleData) GenerateMainApp(ctx context.Context, out *websocket.Conn)
 	}
 	// 6. Store execution plan
 	AllPlans[dSid] = plan
+
+	//7. Generate parallel
+	d.GenerateParallelPlan(ctx, aTs, out)
+
 	return plan, nil
 }
 
@@ -178,6 +182,7 @@ func (d *AssembleData) validateDependsOn(tileInstance string) error {
 // ProcessTiles controls Tiles processing
 func (d *AssembleData) ProcessTiles(ctx context.Context, aTs *Ts, override map[string]*v1alpha1.TileInputOverride, out *websocket.Conn) error {
 	// order factor, every tiles family +1000
+	dSid := ctx.Value("d-sid").(string)
 	executableOrder := 1000
 	toBeProcessedTiles := make(map[string]v1alpha1.DeploymentTemplateDetail) //deploy-instance -> Tile
 
@@ -189,7 +194,8 @@ func (d *AssembleData) ProcessTiles(ctx context.Context, aTs *Ts, override map[s
 					return err
 				}
 				parentTileInstance = deploy.DependsOn
-				if allTG, ok := AllTilesGrids[ctx.Value("d-sid").(string)]; ok && allTG != nil {
+				rootTileInstance := RootTileInstance(dSid, deploy.DependsOn)
+				if allTG, ok := AllTilesGrids[dSid]; ok && allTG != nil {
 					if _, ok := (*allTG)[parentTileInstance]; ok {
 						if err := d.PullTile(ctx,
 							tileInstance,
@@ -197,7 +203,7 @@ func (d *AssembleData) ProcessTiles(ctx context.Context, aTs *Ts, override map[s
 							deploy.TileVersion,
 							executableOrder,
 							parentTileInstance,
-							parentTileInstance, //set same family with dependent deploy if depends on deploy
+							rootTileInstance, //set same family with dependent deploy if depends on deploy
 							aTs,
 							override,
 							deploy.Region,
@@ -236,13 +242,14 @@ func (d *AssembleData) ProcessTiles(ctx context.Context, aTs *Ts, override map[s
 		if deploy.DependsOn != "" {
 			parentTileInstance = deploy.DependsOn
 		}
+		rootTileInstance := RootTileInstance(dSid, parentTileInstance)
 		if err := d.PullTile(ctx,
 			tileInstance,
 			deploy.TileReference,
 			deploy.TileVersion,
 			executableOrder,
 			parentTileInstance,
-			parentTileInstance,
+			rootTileInstance,
 			aTs,
 			override,
 			deploy.Region,
@@ -747,11 +754,12 @@ func (d *AssembleData) GenerateExecutePlan(ctx context.Context, aTs *Ts, out *we
 			stage.Preparation = append(stage.Preparation, "cdk list")
 			cmd := "cdk deploy " + ts.TileStackName + " --require-approval never --exclusively true"
 			stage.Commands = append(stage.Commands, cmd)
+			stage.Commands = append(stage.Commands, "sleep 10")
 			// Force to get output in case CDK doesn't output all
 			cmd = `aws cloudformation describe-stacks --stack-name ` +
 				ts.TileStackName + ` --query "Stacks[0].Outputs[]" | ` +
 				`jq -r  '.[] | [.OutputKey, .OutputValue] | reduce .[1:][] as $i ("` +
-				ts.TileStackName + `\(.[0])"; . + " = \($i)")'`
+				ts.TileStackName + `.\(.[0])"; . + " = \($i)")'`
 			stage.Commands = append(stage.Commands, cmd)
 		}
 
@@ -800,17 +808,42 @@ func (d *AssembleData) GenerateExecutePlan(ctx context.Context, aTs *Ts, out *we
 	//SR(out, buf)
 	SR(out, []byte("Generating execution plan... with success"))
 	SR(out, []byte("\n+--------------Execution Flow--------------+\n"))
-	SR(out, []byte(toFlow(&p)))
+	SR(out, []byte(ToFlow(&p)))
 	SR(out, []byte("\n+--------------Execution Flow--------------+\n"))
 	return &p, nil
 }
 
 func (d *AssembleData) GenerateParallelPlan(ctx context.Context, aTs *Ts, out *websocket.Conn) error {
 	//TODO not implemented, call AllRootTileInstance and group into multiple List to execute
+	dSid := ctx.Value("d-sid").(string)
+	if plan, ok := AllPlans[dSid]; ok {
+		root := AllRootTileInstance(dSid)
+		for _, r := range root {
+			l := list.New()
+			family := FamilyTileInstance(dSid, r)
+			for e := plan.Plan.Back(); e != nil; e = e.Prev() {
+				stage := e.Value.(*ExecutionStage)
+				 if contains(family, stage.Name) {
+				 	l.PushFront(stage)
+				 }
+			}
+			plan.ParallelPlan = append(plan.ParallelPlan, l)
+		}
+	}
 	return nil
 }
 
-func toFlow(p *ExecutionPlan) string {
+func contains(slice []string, item string) bool {
+	set := make(map[string]struct{}, len(slice))
+	for _, s := range slice {
+		set[s] = struct{}{}
+	}
+
+	_, ok := set[item]
+	return ok
+}
+
+func ToFlow(p *ExecutionPlan) string {
 
 	flow := "{Start}"
 	for e := p.Plan.Back(); e != nil; e = e.Prev() {
@@ -819,6 +852,22 @@ func toFlow(p *ExecutionPlan) string {
 	}
 	flow = flow + " -> {Stop}"
 	return flow
+}
+
+func ToParallelFlow(p *ExecutionPlan) []string {
+
+	var flows []string
+	for _, parallel := range p.ParallelPlan {
+		flow := "{Start}"
+		for e := parallel.Back(); e != nil; e = e.Prev() {
+			stage := e.Value.(*ExecutionStage)
+			flow = flow + " -> " + stage.Name
+		}
+		flow = flow + " -> {Stop}"
+		flows = append(flows, flow)
+	}
+
+	return flows
 }
 
 func generateTileInstance(tileInstance string, tileName string, rootTileInstance string) string {

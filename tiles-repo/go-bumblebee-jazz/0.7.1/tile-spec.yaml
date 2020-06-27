@@ -69,7 +69,7 @@ spec:
       - name: CreateSecrets
         command: |
           cd $TILE_HOME/scripts
-          ./create-secrets.sh github-bumblebee $GITHUB_USER $GIT_ACCESS_TOKEN $APP_CONF_REPO
+          ./create-secrets.sh github-bumblebee $GITHUB_USER $GIT_ACCESS_TOKEN $APP_CONF_REPO $KMS_KEY_ID
       - name: RegisterAir2Codebuild
         command: |
           cd $TILE_HOME/scripts
@@ -102,7 +102,8 @@ spec:
 
           # add production cluster
           aws eks update-kubeconfig --name $(self.inputs.prodClusterName) --region $AWS_REGION --role-arn $(self.inputs.prodMasterRoleARN) --kubeconfig $TILE_HOME/kube.config
-          kubectl apply -f ./argocd-remote.yaml
+          kubectl apply -f ./argocd-remote.yaml -n kube-system
+          sleep 5
           prodClusterArn=$(echo -n $(self.inputs.prodClusterArn) | sed -e "s#/#\\\/#g")
           prodClusterEndpoint=$(echo -n $(self.inputs.prodClusterEndpoint) | sed -e "s#/#\\\/#g")
 

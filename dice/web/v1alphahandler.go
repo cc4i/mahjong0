@@ -241,14 +241,15 @@ func Plan(ctx context.Context, c *gin.Context) {
 func PlanOrder(ctx context.Context, c *gin.Context) {
 	sid := c.Param("sid")
 	if plan, ok := engine.AllPlans[sid]; ok {
+		c.JSON(http.StatusOK, []string {engine.ToFlow(plan)})
+	}
+}
+func ParallelOrder(ctx context.Context, c *gin.Context) {
+	sid := c.Param("sid")
+	if plan, ok := engine.AllPlans[sid]; ok {
 
-		flow := " \n{Start}"
-		for e := plan.Plan.Back(); e != nil; e = e.Prev() {
-			stage := e.Value.(*engine.ExecutionStage)
-			flow = flow + " -> " + stage.Name
-		}
-		flow = flow + " -> {Stop}"
-		c.String(http.StatusOK, flow)
+		flows := engine.ToParallelFlow(plan)
+		c.JSON(http.StatusOK, flows)
 	}
 }
 
