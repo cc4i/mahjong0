@@ -70,7 +70,7 @@ type BrewerCore interface {
 	// ExecutePlan executes the generated plan
 	ExecutePlan(ctx context.Context, dryRun bool, out *websocket.Conn) error
 	// CommandExecutor executes the generated script or wire simulated data
-	CommandExecutor(ctx context.Context, dryRun bool, cmdTxt []byte, out *websocket.Conn) (string, error)
+	CommandExecutor(ctx context.Context, dryRun bool, cmdTxt []byte, out *websocket.Conn) error
 	// LinuxCommandExecutor run a command/script
 	LinuxCommandExecutor(ctx context.Context, cmdTxt []byte, stageLog *log.Logger, out *websocket.Conn) error
 	// CommandWrapperExecutor wrap all parameters and commands into a script
@@ -82,7 +82,7 @@ type BrewerCore interface {
 	// ScanOutput scans output values from logs
 	ScanOutput(regx *regexp.Regexp, buf []byte, outputDetail *TsOutputDetail, out *websocket.Conn) error
 	// PostRun execute post jobs after major work
-	PostRun(ctx context.Context, dryRun bool, out *websocket.Conn) error
+	PostRun(ctx context.Context, dryRun bool, out *websocket.Conn) (string, error)
 	// GenerateSummary generate report for Deployment
 	GenerateSummary(ctx context.Context, out *websocket.Conn) error
 	// ExtractAllEnv extracts all possible key,value from environment variables
@@ -132,11 +132,11 @@ func (ep *ExecutionPlan) ExecutePlan(ctx context.Context, dryRun bool, out *webs
 			if ep.CurrentStage.PostRunCommands != nil {
 				cmd, err := ep.PostRun(ctx, dryRun, out)
 				if err != nil {
-					return nil
+					return err
 				}
 				err = ep.CommandExecutor(ctx, dryRun, []byte(cmd), out)
 				if err != nil {
-					return nil
+					return err
 				}
 			}
 			//

@@ -109,7 +109,7 @@ spec:
           argocdManagerToken=`kubectl get serviceaccount/argocd-manager -n kube-system -o json|jq -r '.secrets[0].name'`
           bearerToken=`kubectl get secrets/$argocdManagerToken -n kube-system -o json|jq -r '.data.token'|base64 -D`
 
-          sed -e 's/__bearerToken__/$bearerToken/g' \
+          sed -e 's/__bearerToken__/'$bearerToken'/g' \
               -e 's/__caData__/$(self.inputs.prodClusterCertificateAuthorityData)/g' \
               -e 's/__name__/'$prodClusterArn'/g' \
               -e 's/__server__/'$prodClusterEndpoint'/g' ./add-cluster.json > ./add-cluster-go.json
