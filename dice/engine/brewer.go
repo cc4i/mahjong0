@@ -148,23 +148,30 @@ func (ep *ExecutionPlan) ExecutePlan(ctx context.Context, dryRun bool, out *webs
 
 // GenerateSummary generate summary after running execution plan.
 func (ep *ExecutionPlan) GenerateSummary(ctx context.Context, out *websocket.Conn) error {
-	SR(out, []byte("\n"))
-	SR(out, []byte("============================Summary===================================="))
+	file, err := os.OpenFile(DiceConfig.WorkHome+"/output-summary.txt", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		SRf(out, "Failed to write summary, %s\n", err)
+		return err
+	}
+	defer file.Close()
+
+	SRF(out, file, []byte("\n"))
+	SRF(out, file, []byte("\n\n============================Summary====================================\n\n"))
 	dSid := ctx.Value("d-sid").(string)
 	kv := ep.ExtractAllEnv()
 	if ep.OriginDeployment.Spec.Summary.Description != "" {
 
-		SR(out, []byte(ep.ReplaceAll(ep.OriginDeployment.Spec.Summary.Description, dSid, kv)+"\n"))
+		SRF(out, file, []byte(ep.ReplaceAll(ep.OriginDeployment.Spec.Summary.Description, dSid, kv)+"\n"))
 	}
-	SR(out, []byte("\n"))
+	SRF(out, file, []byte("\n"))
 	for _, ot := range ep.OriginDeployment.Spec.Summary.Outputs {
-		SR(out, []byte(fmt.Sprintf("%s = %s\n", ot.Name, ep.ReplaceAll(ot.Value, dSid, kv))))
+		SRF(out, file, []byte(fmt.Sprintf("%s = %s\n", ot.Name, ep.ReplaceAll(ot.Value, dSid, kv))))
 	}
-	SR(out, []byte("\n"))
+	SRF(out, file, []byte("\n"))
 	for _, n := range ep.OriginDeployment.Spec.Summary.Notes {
-		SR(out, []byte(ep.ReplaceAll(n, dSid, kv)+"\n"))
+		SRF(out, file, []byte(ep.ReplaceAll(n, dSid, kv)+"\n"))
 	}
-	SR(out, []byte("======================================================================="))
+	SRF(out, file, []byte("\n\n=======================================================================\n"))
 	return nil
 }
 
@@ -238,7 +245,7 @@ func (ep *ExecutionPlan) CommandExecutor(ctx context.Context, dryRun bool, cmdTx
 	fileName := DiceConfig.WorkHome + aTs.DR.SuperFolder + "/" + ep.CurrentStage.Name + "-output.log"
 	logFile, err := os.OpenFile(fileName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
-		SRf(out, "Failed to save stage log, using default stderr, %s\n", err)
+		SRf(out, "Failed to save stage log : %s\n", err)
 		return err
 	}
 	defer logFile.Sync()

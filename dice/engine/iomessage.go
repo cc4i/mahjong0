@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gorilla/websocket"
 	log "github.com/sirupsen/logrus"
+	"os"
 	"sync"
 )
 
@@ -31,4 +32,18 @@ func SRf(out *websocket.Conn, format string, v ...interface{}) {
 		log.Printf("write error: %s\n", err)
 	}
 
+}
+// SRF send repose back to client, output logs & files
+func SRF(out *websocket.Conn, file *os.File, response []byte) {
+	log.Printf("%s\n", response)
+	mutex.Lock()
+	defer mutex.Unlock()
+	err := out.WriteMessage(websocket.TextMessage, response)
+	if err != nil {
+		log.Printf("write error: %s\n", err)
+	}
+	_, err = file.Write(response)
+	if err != nil {
+		log.Printf("write error: %s\n", err)
+	}
 }

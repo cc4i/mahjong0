@@ -1,0 +1,65 @@
+apiVersion: mahjong.io/v1alpha1
+kind: Deployment 
+metadata:
+  name: microservice-applications
+spec:
+  template:
+    tiles:
+      # Inject DEMO Applications & setup CI+CD
+      tileGoBumblebeeJazz071:
+        tileReference: Go-Bumblebee-Jazz
+        tileVersion: 0.7.1
+        inputs:
+          - name: gitAccessToken
+            inputValue: <<parameter>>
+          - name: appRepo
+            inputValue: go-bumblebee
+          - name: appBranch
+            inputValue: new-combo-jazz
+          - name: appConfRepo
+            inputValue: <<parameter>>
+          - name: kmsKeyID
+            inputValue: <<parameter>>
+          - name: argocdBaseUrl
+            inputValue: <<parameter>>
+          - name: argocdUser
+            inputValue: <<parameter>>
+          - name: argocdPassword
+            inputValue: <<parameter>>
+          - name: prodClusterCertificateAuthorityData
+            inputValue: <<parameter>>
+          - name: prodClusterArn
+            inputValue: <<parameter>>
+          - name: prodClusterEndpoint
+            inputValue: <<parameter>>
+          - name: prodClusterName
+            inputValue: <<parameter>>
+          - name: prodMasterRoleARN
+            inputValue: <<parameter>>
+          - name: stageClusterName
+            inputValue: <<parameter>>
+          - name: stageMasterRoleARN
+            inputValue: <<parameter>>
+          - name: prodRedisEndpoint
+            inputValue: <<parameter>>
+
+  summary:
+    description: |
+      ++++++++++++++++++++++++++++++++++++++++++++++++++++
+      +                 Demo Applications                +
+      ++++++++++++++++++++++++++++++++++++++++++++++++++++
+    outputs:
+      - name: Jazz Endpoint for Prod
+        value: http://$(tileIstio0ForProd.outputs.ingressHost)
+      - name: Jazz Endpoint for Stage
+        value: http://$(tileIstio0ForStage.outputs.ingressHost)
+      - name: Beijing Air for Stage
+        value: http://$(tileIstio0ForStage.outputs.ingressHost)/air/city/beijing
+      
+    notes:
+      - |
+        Air qulity of city: http://<hostname>/air/city/:city"
+      - |
+        Air qulity of GEO: http://<hostname>/air/geo/:lat/:lng
+      - |
+        README for Air:  http://<hostname>/air/aqi

@@ -13,6 +13,11 @@ spec:
           cd $TILE_HOME/scripts
           ./create-iam-role.sh
           elasticsearch_role_for_app=$(cat role.arn | sed -e "s#/#\\\/#g")
+
+      - name: PreProvision
+        command: |
+          aws_region=`aws configure get region`
+          account_id=`aws sts get-caller-identity --query Account --output text`
           
       - name: ProvisionDomain
         command: |
@@ -20,8 +25,6 @@ spec:
           if [[ $endpoint = "null" || $endpoint = "" ]]
           then 
             cd $TILE_HOME/lib
-            aws_region=`aws configure get region`
-            account_id=`aws sts get-caller-identity --query Account --output text`
             sed -e 's/__domain_name__/$(self.inputs.domainName)/g' \
                 -e 's/__elasticsearch_version_/$(self.inputs.elasticsearchVersion)/g' \
                 -e 's/__data_instance_type__/$(self.inputs.dataInstanceType)/g' \
