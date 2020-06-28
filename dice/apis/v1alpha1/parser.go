@@ -198,14 +198,14 @@ func (d *Data) CheckParameter(ctx context.Context, deployment *Deployment) error
 	parameters := ""
 	for _, tile := range deployment.Spec.Template.Tiles {
 		for _, input := range tile.Inputs {
-			if strings.Contains(input.InputValue, "!parameter!") {
+			if strings.Contains(input.InputValue, "<<parameter>>") {
 				log.Errorf("Input %s needs value : %s", input.Name, input.InputValue)
-				parameters = parameters +", "
+				parameters = parameters + input.Name + ", "
 			}
 		}
 	}
 	if parameters != "" {
-		strings.TrimSuffix(parameters, ", ")
+		parameters = strings.TrimSuffix(parameters, ", ")
 		return errors.New("input parameters: ["+parameters+"] should be replaced by values")
 	} else {
 		return nil

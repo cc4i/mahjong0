@@ -128,7 +128,7 @@ spec:
           - name: clusterName
             inputValue: $(tileEksWithSpotProd.outputs.clusterName)       
           - name: masterRoleARN
-            inputValue: $(tileEksWithSpotProd.outputs.masterRoleARN)
+            inputValue: $(tileEksWithSpotProd.outputs.domainEndpoint)
           - name: aesEndpoint
             inputValue: https://$(tileElasticsearchCmdProd.outputs.masterRoleARN)
       # FluentBit for Stage
@@ -140,7 +140,7 @@ spec:
           - name: clusterName
             inputValue: $(tileEksWithSpotStage.outputs.clusterName)       
           - name: masterRoleARN
-            inputValue: $(tileEksWithSpotStage.outputs.masterRoleARN)
+            inputValue: $(tileEksWithSpotStage.outputs.domainEndpoint)
           - name: aesEndpoint
             inputValue: https://$(tileElasticsearchCmdStage.outputs.masterRoleARN)
 

@@ -1,7 +1,7 @@
 apiVersion: mahjong.io/v1alpha1
 kind: Deployment 
 metadata:
-  name: compact-microservice-jazz
+  name: microservice-infrastructure
 spec:
   template:
     tiles:
@@ -27,7 +27,7 @@ spec:
           - name: clusterVersion
             inputValue: 1.16
           - name: keyPair4EC2
-            inputValue: [!parameter! key pairs for worker nodes]
+            inputValue: <<parameter>> - key pairs for worker nodes
           - name: capacityInstance
             inputValues: 
               - m5.large
@@ -45,28 +45,12 @@ spec:
           - name: clusterVersion
             inputValue: 1.16
           - name: keyPair4EC2
-            inputValue: [!parameter! key pairs for worker nodes]
+            inputValue: <<parameter>> - key pairs for worker nodes
           - name: capacityInstance
             inputValues: 
               - m5.large
               - r5.large
               - c5.large
-      
-      # ElsatiCache Redis for Prod
-      tileAWSElastiCacheRedis506Prod:
-        tileReference: AWS-ElastiCache-Redis
-        tileVersion: 5.0.6
-        dependsOn: tileEksWithSpotProd
-        inputs:
-          - name: vpc
-            # tileInstance.tileName.field
-            inputValue: $cdk(tileEksWithSpotProd.Network0.baseVpc)     
-          - name: subnetIds
-            inputValues:
-              - $cdk(tileEksWithSpotProd.Network0.privateSubnetId1)
-              - $cdk(tileEksWithSpotProd.Network0.privateSubnetId2)
-          - name: redisClusterName
-            inputValue: mahjong-redis-prod
 
       # ElasticSearch for Prod
       tileElasticsearchCmdProd:
@@ -124,76 +108,53 @@ spec:
           - name: masterRoleARN
             inputValue: $(tileEksWithSpotStage.outputs.masterRoleARN) 
       
-      # Inject DEMO Applications & setup CI+CD
-      tileGoBumblebeeJazz071:
-        tileReference: Go-Bumblebee-Jazz
-        tileVersion: 0.7.1
-        inputs:
-          - name: gitAccessToken
-            inputValue: [!parameter! personal access token for GitHub]
-          - name: appRepo
-            inputValue: go-bumblebee
-          - name: appBranch
-            inputValue: new-combo-jazz
-          - name: appConfRepo
-            inputValue: go-bumblebee-jazz-config
-          - name: kmsKeyID
-            inputValue: $(tileAwsKmsKeyGenerator010.outputs.symmetricKeyID)
-          - name: argocdBaseUrl
-            inputValue: $(tileArgocdWithExsitingEks152.outputs.argocdBaseUrl)
-          - name: argocdUser
-            inputValue: $(tileArgocdWithExsitingEks152.outputs.user)
-          - name: argocdPassword
-            inputValue: $(tileArgocdWithExsitingEks152.outputs.password)
-          - name: prodClusterCertificateAuthorityData
-            inputValue: $(tileEksWithSpotProd.outputs.clusterCertificateAuthorityData)
-          - name: prodClusterArn
-            inputValue: $(tileEksWithSpotProd.outputs.clusterArn)
-          - name: prodClusterEndpoint
-            inputValue: $(tileEksWithSpotProd.outputs.clusterEndpoint)
-          - name: prodClusterName
-            inputValue: $(tileEksWithSpotProd.outputs.clusterName)
-          - name: prodMasterRoleARN
-            inputValue: $(tileEksWithSpotProd.outputs.masterRoleARN)
-          - name: stageClusterName
-            inputValue: $(tileEksWithSpotStage.outputs.clusterName)
-          - name: stageMasterRoleARN
-            inputValue: $(tileEksWithSpotStage.outputs.masterRoleARN)
-          - name: prodRedisEndpoint
-            inputValue: $(tileAWSElastiCacheRedis506Prod.outputs.redisEndpoint)
+
 
   summary:
     description: |
       ++++++++++++++++++++++++++++++++++++++++++++++++++++
-      +   Perfect Microservices with Demo Application    +
+      +   Perfect Microservices Infrastructure           +
       ++++++++++++++++++++++++++++++++++++++++++++++++++++
+
     outputs:
       - name: EKS Cluster for Production
         value: $(tileEksWithSpotProd.outputs.clusterName)
-      - name: Master role for Production Cluster
+      - name: Master role for Production
         value: $(tileEksWithSpotProd.outputs.masterRoleARN)
-      - name: Endpoint for Production Cluster
+      - name: Endpoint for Production
         value: $(tileEksWithSpotProd.outputs.clusterEndpoint)
-      - name: EKS Cluster for Staging
+      - name: Update KUBECONFIG for Production
+        value: aws eks update-kubeconfig --name $(tileEksWithSpotProd.outputs.clusterName) --region $(tileEksWithSpotProd.outputs.regionOfCluster) --role-arn $(tileEksWithSpotProd.outputs.masterRoleARN)
+      - name: Ingress Gateway for Production
+        value: $(tileIstio0ForProd.outputs.ingressHost)
+    
+
+      - name: EKS Cluster for Stage
         value: $(tileEksWithSpotStage.outputs.clusterName)
-      - name: Master role for Staging Cluster
+      - name: Master role for Stage
         value: $(tileEksWithSpotStage.outputs.masterRoleARN)
-      - name: Endpoint for Staging Cluster
+      - name: Endpoint for Stage
         value: $(tileEksWithSpotStage.outputs.clusterEndpoint)
+      - name: Update KUBECONFIG for Stage
+        value: aws eks update-kubeconfig --name $(tileEksWithSpotStage.outputs.clusterName) --region $(tileEksWithSpotStage.outputs.regionOfCluster) --role-arn $(tileEksWithSpotStage.outputs.masterRoleARN)
+      - name: Ingress Gateway for Stage
+        value: $(tileIstio0ForStage.outputs.ingressHost)
+
+
       - name: Endpoint for AgroCD
         value: $(tileArgocdWithExsitingEks152.outputs.argocdBaseUrl)
       - name: Administrator for AgroCD
         value: $(tileArgocdWithExsitingEks152.outputs.user)
       - name: Password for AgroCD Administrator
         value: $(tileArgocdWithExsitingEks152.outputs.password)
-      - name: Jazz Endpoint for Prod
-        value: http://$(tileIstio0ForProd.outputs.ingressHost)
-      - name: Jazz Endpoint for Stage
-        value: http://$(tileIstio0ForStage.outputs.ingressHost)
-      - name: Beijing Air for Stage
-        value: http://$(tileIstio0ForStage.outputs.ingressHost)/air/city/beijing
+
       
-    notes:
-      - "Air qulity of city - /air/city/:city"
-      - "Air qulity of GEO - /air/geo/:lat/:lng"
-      - "README for Air - /air/aqi"
+    notes: 
+      - |
+        Jaeger tracing : kubectl port-forward svc/tracing 8080:80 -n istio-system
+      - |
+        Prometheus : kubectl port-forward svc/prometheus 9090:9090 -n istio-system
+      - |
+        Grafana : kubectl port-forward svc/grafana 3000:3000 -n istio-system
+      - |
+        Kiali (admin/admin) : kubectl port-forward svc/kiali 20001:20001 -n istio-system
