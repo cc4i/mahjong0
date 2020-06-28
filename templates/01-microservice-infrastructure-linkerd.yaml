@@ -1,7 +1,7 @@
 apiVersion: mahjong.io/v1alpha1
 kind: Deployment 
 metadata:
-  name: microservice-infrastructure
+  name: microservice-infrastructure-linkerd
 spec:
   template:
     tiles:
@@ -76,26 +76,29 @@ spec:
           - name: aesEndpoint
             inputValue: https://$(tileElasticsearchCmdProd.outputs.domainEndpoint)
 
-      # Istio for Prod
-      tileIstio0ForProd:
-        tileReference: Istio0
-        tileVersion: 1.5.4
+      # Linkerd for Prod
+      tileLinkerdProd:
+        tileReference: Linkerd
+        tileVersion: 2.7.1
         dependsOn: tileEksWithSpotProd
         inputs:
           - name: clusterName
-            inputValue: $(tileEksWithSpotProd.outputs.clusterName)
+            inputValue: $(tileEksWithSpotProd.outputs.clusterName)       
           - name: masterRoleARN
             inputValue: $(tileEksWithSpotProd.outputs.masterRoleARN)
-      # Istio for Stage
-      tileIstio0ForStage:
-        tileReference: Istio0
-        tileVersion: 1.5.4
-        dependsOn: tileEksWithSpotStage
+
+      # Linkerd for Stage
+      tileLinkerdStage:
+        tileReference: Linkerd
+        tileVersion: 2.7.1
+        dependsOn: tileEksWithSpotProd
         inputs:
           - name: clusterName
-            inputValue: $(tileEksWithSpotStage.outputs.clusterName)
+            inputValue: $(tileEksWithSpotStage.outputs.clusterName)       
           - name: masterRoleARN
             inputValue: $(tileEksWithSpotStage.outputs.masterRoleARN)
+      # Traefik for Prod
+      # Traefik for Stage
       
       # ArgoCD
       tileArgocdWithExsitingEks152:

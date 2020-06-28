@@ -88,9 +88,9 @@ spec:
           - name: clusterName
             inputValue: $(tileEksWithSpotProd.outputs.clusterName)       
           - name: masterRoleARN
-            inputValue: $(tileEksWithSpotProd.outputs.domainEndpoint)
+            inputValue: $(tileEksWithSpotProd.outputs.masterRoleARN)
           - name: aesEndpoint
-            inputValue: https://$(tileElasticsearchCmdProd.outputs.masterRoleARN)
+            inputValue: https://$(tileElasticsearchCmdProd.outputs.domainEndpoint)
 
       # Istio for Prod
       tileIstio0ForProd:

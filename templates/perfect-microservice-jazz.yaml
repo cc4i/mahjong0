@@ -128,9 +128,9 @@ spec:
           - name: clusterName
             inputValue: $(tileEksWithSpotProd.outputs.clusterName)       
           - name: masterRoleARN
-            inputValue: $(tileEksWithSpotProd.outputs.domainEndpoint)
+            inputValue: $(tileEksWithSpotProd.outputs.masterRoleARN)
           - name: aesEndpoint
-            inputValue: https://$(tileElasticsearchCmdProd.outputs.masterRoleARN)
+            inputValue: https://$(tileElasticsearchCmdProd.outputs.domainEndpoint)
       # FluentBit for Stage
       tileFluentBit4AesStage:
         tileReference: FluentBit-For-AES
@@ -140,9 +140,9 @@ spec:
           - name: clusterName
             inputValue: $(tileEksWithSpotStage.outputs.clusterName)       
           - name: masterRoleARN
-            inputValue: $(tileEksWithSpotStage.outputs.domainEndpoint)
+            inputValue: $(tileEksWithSpotStage.outputs.masterRoleARN)
           - name: aesEndpoint
-            inputValue: https://$(tileElasticsearchCmdStage.outputs.masterRoleARN)
+            inputValue: https://$(tileElasticsearchCmdStage.outputs.domainEndpoint)
 
       # Istio for Prod
       tileIstio0ForProd:
