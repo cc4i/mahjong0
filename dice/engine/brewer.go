@@ -82,7 +82,7 @@ type BrewerCore interface {
 	// ScanOutput scans output values from logs
 	ScanOutput(regx *regexp.Regexp, buf []byte, outputDetail *TsOutputDetail, out *websocket.Conn) error
 	// PostRun execute post jobs after major work
-	PostRun(ctx context.Context, dryRun bool, out *websocket.Conn) error
+	PostRun(ctx context.Context, dryRun bool, out *websocket.Conn) (string, error)
 	// GenerateSummary generate report for Deployment
 	GenerateSummary(ctx context.Context, out *websocket.Conn) error
 	// ExtractAllEnv extracts all possible key,value from environment variables
@@ -130,7 +130,12 @@ func (ep *ExecutionPlan) ExecutePlan(ctx context.Context, dryRun bool, out *webs
 
 			// 4. Post run with commands
 			if ep.CurrentStage.PostRunCommands != nil {
-				if err := ep.PostRun(ctx, dryRun, out); err != nil {
+				cmd, err := ep.PostRun(ctx, dryRun, out)
+				if err != nil {
+					return err
+				}
+				err = ep.CommandExecutor(ctx, dryRun, []byte(cmd), out)
+				if err != nil {
 					return err
 				}
 			}
@@ -645,13 +650,13 @@ func FindPair(str string) (string, string, error) {
 }
 
 // PostRun manages and executes commands after provision
-func (ep *ExecutionPlan) PostRun(ctx context.Context, dryRun bool, out *websocket.Conn) error {
+func (ep *ExecutionPlan) PostRun(ctx context.Context, dryRun bool, out *websocket.Conn) (string, error) {
 	stage := ep.CurrentStage
 	script := stage.WorkHome + "/script-" + stage.Name + "-Post-" + RandString(8) + ".sh"
 	file, err := os.OpenFile(script, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755) //Create(script)
 	if err != nil {
 		SR(out, []byte(err.Error()))
-		return err
+		return script, err
 	}
 	defer file.Close()
 
@@ -688,7 +693,7 @@ echo $?
 	tp := template.New("script")
 	tp, err = tp.Parse(tContent)
 	if err != nil {
-		return err
+		return script, err
 	}
 
 	// Replace reference value
@@ -701,7 +706,7 @@ echo $?
 		if strings.Contains(ep.CurrentStage.PostRunCommands[i], "dice-probe-") {
 			newCmd, err := ep.ProbeWrapper(ctx, ep.CurrentStage.PostRunCommands[i], ep.CurrentStage.ProbeCommands[ep.CurrentStage.PostRunCommands[i]])
 			if err != nil {
-				return err
+				return script, err
 			}
 			ep.CurrentStage.PostRunCommands[i] = newCmd
 		}
@@ -711,7 +716,7 @@ echo $?
 	err = tp.Execute(file, stage)
 	if err != nil {
 		SR(out, []byte(err.Error()))
-		return err
+		return script, err
 	}
 	// Show script
 	cnt, err := ioutil.ReadFile(script)
@@ -720,7 +725,7 @@ echo $?
 	SR(out, cnt)
 	SR(out, []byte("--EO:-------------------------------------------------"))
 
-	return ep.CommandExecutor(ctx, dryRun, []byte(script), out)
+	return script, nil
 
 }
 
