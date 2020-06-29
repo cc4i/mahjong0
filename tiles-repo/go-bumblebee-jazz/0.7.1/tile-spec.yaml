@@ -107,7 +107,14 @@ spec:
           prodClusterArn=$(echo -n $(self.inputs.prodClusterArn) | sed -e "s#/#\\\/#g")
           prodClusterEndpoint=$(echo -n $(self.inputs.prodClusterEndpoint) | sed -e "s#/#\\\/#g")
           argocdManagerToken=`kubectl get serviceaccount/argocd-manager -n kube-system -o json|jq -r '.secrets[0].name'`
-          bearerToken=`kubectl get secrets/$argocdManagerToken -n kube-system -o json|jq -r '.data.token'|base64 -D`
+
+          os=`uname -s`
+          if [ $os = "Linux" ]
+          then
+            bearerToken=`kubectl get secrets/$argocdManagerToken -n kube-system -o json|jq -r '.data.token'|base64 -d`
+          else
+            bearerToken=`kubectl get secrets/$argocdManagerToken -n kube-system -o json|jq -r '.data.token'|base64 -D`
+          fi
 
           sed -e 's/__bearerToken__/'$bearerToken'/g' \
               -e 's/__caData__/$(self.inputs.prodClusterCertificateAuthorityData)/g' \
