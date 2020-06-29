@@ -46,6 +46,7 @@ vet:
 
 # Build the docker image
 docker-build:
+	cp -r ../probe .
 	docker build \
 		--build-arg VERSION=${VERSION} \
 		--build-arg GIT_COMMIT=`git rev-list -1 HEAD` \
@@ -55,6 +56,7 @@ docker-build:
 		echo "Tag image with latest label"; \
 		docker tag ${DOCKER_IMAGE}:${DOCKER_TAG_GIT_BRANCH} ${DOCKER_IMAGE}:latest; \
 	fi
+	rm -rf probe
 
 
 

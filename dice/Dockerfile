@@ -29,7 +29,7 @@ ENV GO111MODULE=on
 
 # Install git
 RUN apk update && apk add git
-COPY . $GOPATH/src/mypackage/myapp/
+COPY ./probe/. $GOPATH/src/mypackage/myapp/
 WORKDIR $GOPATH/src/mypackage/myapp/
 
 # Get dependancies

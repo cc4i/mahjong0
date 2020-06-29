@@ -153,7 +153,8 @@ func (ep *ExecutionPlan) ExecutePlan(ctx context.Context, dryRun bool, out *webs
 
 // GenerateSummary generate summary after running execution plan.
 func (ep *ExecutionPlan) GenerateSummary(ctx context.Context, out *websocket.Conn) error {
-	file, err := os.OpenFile(DiceConfig.WorkHome+"/output-summary.txt", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	file, err := os.OpenFile(DiceConfig.WorkHome+"/"+ep.Name+"output-summary.txt",
+		os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
 		SRf(out, "Failed to write summary, %s\n", err)
 		return err
