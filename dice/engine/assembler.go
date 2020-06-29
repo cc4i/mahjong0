@@ -645,6 +645,7 @@ func (d *AssembleData) GenerateExecutePlan(ctx context.Context, aTs *Ts, out *we
 	//dSid := ctx.Value("d-sid").(string)
 	SR(out, []byte("Generating execution plan... "))
 	var p = ExecutionPlan{
+		Name: aTs.DR.Name,
 		Plan:             list.New(),
 		PlanMirror:       make(map[string]*ExecutionStage),
 		OriginDeployment: d.Deployment,
