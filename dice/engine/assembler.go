@@ -29,7 +29,7 @@ type AssembleCore interface {
 	GenerateMainApp(ctx context.Context, out *websocket.Conn) (*ExecutionPlan, error)
 
 	// validateDependsOn validates dependent tiles
-	validateDependsOn(tileInstance string) error
+	validateDependsOn(tileInstance []string) error
 
 	// ProcessTiles controls Tile processing
 	ProcessTiles(ctx context.Context, aTs *Ts, override map[string]*v1alpha1.TileInputOverride, out *websocket.Conn) error
@@ -39,7 +39,7 @@ type AssembleCore interface {
 		tileName string,
 		version string,
 		executableOrder int,
-		parentTileInstance string,
+		parentTileInstance []string,
 		rootTileInstance string,
 		aTs *Ts,
 		override map[string]*v1alpha1.TileInputOverride,
@@ -170,13 +170,13 @@ func (d *AssembleData) GenerateMainApp(ctx context.Context, out *websocket.Conn)
 	return plan, nil
 }
 
-func (d *AssembleData) validateDependsOn(tileInstance string) error {
-	for _, ti := range d.Deployment.OriginalOrder {
-		if ti == tileInstance {
-			return nil
+func (d *AssembleData) validateDependsOn(tileInstance []string) error {
+	for _, ti := range tileInstance {
+		if !utils.Contains(d.Deployment.OriginalOrder, ti) {
+			return errors.New(ti + " wasn't existed in the deployment")
 		}
 	}
-	return errors.New(tileInstance + " wasn't existed in the deployment")
+	return nil
 }
 
 // ProcessTiles controls Tiles processing
@@ -188,35 +188,34 @@ func (d *AssembleData) ProcessTiles(ctx context.Context, aTs *Ts, override map[s
 
 	for _, tileInstance := range d.Deployment.OriginalOrder {
 		if deploy, ok := d.Deployment.Spec.Template.Tiles[tileInstance]; ok {
-			parentTileInstance := "root"
-			if deploy.DependsOn != "" {
+			parentTileInstance := []string{"root"}
+			if deploy.DependsOn != nil {
 				if err := d.validateDependsOn(deploy.DependsOn); err != nil {
 					return err
 				}
 				parentTileInstance = deploy.DependsOn
-				rootTileInstance := RootTileInstance(dSid, deploy.DependsOn)
-				if allTG, ok := AllTilesGrids[dSid]; ok && allTG != nil {
-					if _, ok := (*allTG)[parentTileInstance]; ok {
-						if err := d.PullTile(ctx,
-							tileInstance,
-							deploy.TileReference,
-							deploy.TileVersion,
-							executableOrder,
-							parentTileInstance,
-							rootTileInstance, //set same family with dependent deploy if depends on deploy
-							aTs,
-							override,
-							deploy.Region,
-							deploy.Profile,
-							out); err != nil {
-							return err
-						}
-
-					} else {
-						// caching and process later
-						toBeProcessedTiles[tileInstance] = deploy
+				rootTileInstance := RootTileInstance(dSid, parentTileInstance[0])
+				if IsProcessed(dSid, parentTileInstance) {
+					if err := d.PullTile(ctx,
+						tileInstance,
+						deploy.TileReference,
+						deploy.TileVersion,
+						executableOrder,
+						parentTileInstance,
+						rootTileInstance, //set same family with dependent deploy if depends on deploy
+						aTs,
+						override,
+						deploy.Region,
+						deploy.Profile,
+						out); err != nil {
+						return err
 					}
+
+				} else {
+					// caching and process later
+					toBeProcessedTiles[tileInstance] = deploy
 				}
+
 			} else {
 				if err := d.PullTile(ctx,
 					tileInstance,
@@ -238,11 +237,11 @@ func (d *AssembleData) ProcessTiles(ctx context.Context, aTs *Ts, override map[s
 	}
 	// Process Tiles with dependencies
 	for tileInstance, deploy := range toBeProcessedTiles {
-		parentTileInstance := "root"
-		if deploy.DependsOn != "" {
+		parentTileInstance := []string{"root"}
+		if deploy.DependsOn != nil {
 			parentTileInstance = deploy.DependsOn
 		}
-		rootTileInstance := RootTileInstance(dSid, parentTileInstance)
+		rootTileInstance := RootTileInstance(dSid, parentTileInstance[0])
 		if err := d.PullTile(ctx,
 			tileInstance,
 			deploy.TileReference,
@@ -268,7 +267,7 @@ func (d *AssembleData) PullTile(ctx context.Context,
 	tileName string,
 	version string,
 	executableOrder int,
-	parentTileInstance string,
+	parentTileInstance []string,
 	rootTileInstance string,
 	aTs *Ts,
 	override map[string]*v1alpha1.TileInputOverride,
@@ -310,17 +309,18 @@ func (d *AssembleData) PullTile(ctx context.Context,
 		ParentTileInstance: parentTileInstance,
 		RootTileInstance:   rootTileInstance,
 		TileCategory:       parsedTile.Metadata.Category,
+		Status: Created.DSString(),
 	}
 	if allTG, ok := AllTilesGrids[dSid]; ok && allTG != nil {
 		if !IsDuplicatedCategory(dSid, rootTileInstance, parsedTile.Metadata.Name) {
-			(*allTG)[ti] = tg
+			(*allTG)[ti] = &tg
 		} else {
 			log.Debugf("It's duplicated Tile under same group, Ignore : %s / %s / %s\n", tileName, version, parsedTile.Metadata.Category)
 			return nil
 		}
 	} else {
-		val := make(map[string]TilesGrid)
-		val[ti] = tg
+		val := make(map[string]*TilesGrid)
+		val[ti] = &tg
 		AllTilesGrids[dSid] = &val
 
 	}
@@ -412,7 +412,7 @@ func (d *AssembleData) PullTile(ctx context.Context,
 			t.TileReference,
 			t.TileVersion,
 			tg.ExecutableOrder,
-			tg.TileInstance,
+			[]string{tg.TileInstance},
 			tg.RootTileInstance,
 			aTs,
 			override,
@@ -645,7 +645,7 @@ func (d *AssembleData) GenerateExecutePlan(ctx context.Context, aTs *Ts, out *we
 	//dSid := ctx.Value("d-sid").(string)
 	SR(out, []byte("Generating execution plan... "))
 	var p = ExecutionPlan{
-		Name: aTs.DR.Name,
+		Name:             aTs.DR.Name,
 		Plan:             list.New(),
 		PlanMirror:       make(map[string]*ExecutionStage),
 		OriginDeployment: d.Deployment,
@@ -824,24 +824,14 @@ func (d *AssembleData) GenerateParallelPlan(ctx context.Context, aTs *Ts, out *w
 			family := FamilyTileInstance(dSid, r)
 			for e := plan.Plan.Back(); e != nil; e = e.Prev() {
 				stage := e.Value.(*ExecutionStage)
-				 if contains(family, stage.Name) {
-				 	l.PushFront(stage)
-				 }
+				if utils.Contains(family, stage.Name) {
+					l.PushFront(stage)
+				}
 			}
 			plan.ParallelPlan = append(plan.ParallelPlan, l)
 		}
 	}
 	return nil
-}
-
-func contains(slice []string, item string) bool {
-	set := make(map[string]struct{}, len(slice))
-	for _, s := range slice {
-		set[s] = struct{}{}
-	}
-
-	_, ok := set[item]
-	return ok
 }
 
 func ToFlow(p *ExecutionPlan) string {

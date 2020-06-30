@@ -2,6 +2,7 @@ package engine
 
 import (
 	"dice/apis/v1alpha1"
+	"dice/utils"
 	"errors"
 	"regexp"
 	"sort"
@@ -25,13 +26,14 @@ func (c DeploymentStatus) DSString() string {
 
 // TilesGrid represents relationship table of all Tile for each deployment
 type TilesGrid struct {
-	TileInstance       string // TileInstance is unique ID of Tile as instance
-	ExecutableOrder    int    // ExecutableOrder is execution order of Tile
-	TileName           string // TileName is the name of Tile
-	TileVersion        string // TileVersion is the version of Tile
-	TileCategory       string // TileCategory is the category of Tile
-	RootTileInstance   string // RootTileInstance indicates Tiles are in the same group
-	ParentTileInstance string // ParentTileInstance indicates who's dependent on Me - Tile
+	TileInstance       string   // TileInstance is unique ID of Tile as instance
+	ExecutableOrder    int      // ExecutableOrder is execution order of Tile
+	TileName           string   // TileName is the name of Tile
+	TileVersion        string   // TileVersion is the version of Tile
+	TileCategory       string   // TileCategory is the category of Tile
+	RootTileInstance   string   // RootTileInstance indicates Tiles are in the same group
+	ParentTileInstance []string // ParentTileInstance indicates who's dependent on Me - Tile
+	Status             string   // Status of deployment
 }
 
 // DeploymentRecord is a record of each deployment
@@ -126,9 +128,9 @@ type Ts struct {
 var AllTs = make(map[string]Ts)
 
 // AllTilesGrid store all Tiles relationship, id(uuid) -> (tile-instance -> TilesGrid)
-var AllTilesGrids = make(map[string]*map[string]TilesGrid)
+var AllTilesGrids = make(map[string]*map[string]*TilesGrid)
 
-// AllPlans store all execution plan
+// AllPlans store all execution plan, id(uuid) -> ExecutionPlan
 var AllPlans = make(map[string]*ExecutionPlan)
 
 // SortedTilesGrid return sorted TilesGrid array from AllTilesGrid
@@ -136,7 +138,7 @@ func SortedTilesGrid(dSid string) []TilesGrid {
 	if allTG, ok := AllTilesGrids[dSid]; ok {
 		var tg []TilesGrid
 		for _, v := range *allTG {
-			tg = append(tg, v)
+			tg = append(tg, *v)
 		}
 		sort.SliceStable(tg, func(i, j int) bool {
 			return tg[i].ExecutableOrder < tg[j].ExecutableOrder
@@ -152,7 +154,7 @@ func DependentEKSTile(dSid string, tileInstance string) *v1alpha1.Tile {
 	pTileInstance := ParentTileInstance(dSid, tileInstance)
 	if allTG, ok := AllTilesGrids[dSid]; ok {
 		for _, v := range *allTG {
-			if v.TileInstance == pTileInstance {
+			if utils.Contains(pTileInstance, v.TileInstance) {
 				if at, ok := AllTs[dSid]; ok {
 					if tile, ok := at.AllTilesN[v.TileInstance]; ok {
 						if tile.Metadata.VendorService == v1alpha1.EKS.VSString() {
@@ -172,7 +174,7 @@ func AllDependentTiles(dSid string, tileInstance string) []v1alpha1.Tile {
 	if allTG, ok := AllTilesGrids[dSid]; ok {
 		var tiles []v1alpha1.Tile
 		for _, v := range *allTG {
-			if v.ParentTileInstance == tileInstance {
+			if utils.Contains(v.ParentTileInstance, tileInstance) {
 				if at, ok := AllTs[dSid]; ok {
 					if tile, ok := at.AllTilesN[v.TileInstance]; ok {
 						tiles = append(tiles, *tile)
@@ -283,13 +285,13 @@ func ValueRef(dSid string, ref string, ti string) (string, error) {
 }
 
 // ParentTileInstance return Tile instance of parent Tile
-func ParentTileInstance(dSid string, tileInstance string) string {
+func ParentTileInstance(dSid string, tileInstance string) []string {
 	if allTG, ok := AllTilesGrids[dSid]; ok {
 		if tg, ok := (*allTG)[tileInstance]; ok {
 			return tg.ParentTileInstance
 		}
 	}
-	return ""
+	return nil
 }
 
 func CDKAllValueRef(dSid string, str string) (string, error) {
@@ -363,7 +365,7 @@ func AllRootTileInstance(dSid string) []string {
 	var root []string
 	if allTG, ok := AllTilesGrids[dSid]; ok {
 		for _, v := range *allTG {
-			if v.ParentTileInstance == "root" {
+			if len(v.ParentTileInstance) == 1 && v.ParentTileInstance[0] == "root" {
 				root = append(root, v.TileInstance)
 			}
 		}
@@ -406,4 +408,17 @@ func IsRepeatedDeployment(name string) (string, bool) {
 	}
 	return "", false
 
+}
+
+// IsProcessed check if tile instance has been processed
+func IsProcessed(dSid string, tileInstances []string) bool {
+	checkCount := 0
+	if allTG, ok := AllTilesGrids[dSid]; ok && allTG != nil {
+		for _, ti := range tileInstances {
+			if _, ok := (*allTG)[ti]; ok {
+				checkCount++
+			}
+		}
+	}
+	return checkCount == len(tileInstances)
 }

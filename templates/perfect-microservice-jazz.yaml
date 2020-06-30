@@ -56,7 +56,8 @@ spec:
       tileAWSElastiCacheRedis506Prod:
         tileReference: AWS-ElastiCache-Redis
         tileVersion: 5.0.6
-        dependsOn: tileEksWithSpotProd
+        dependsOn: 
+          - tileEksWithSpotProd
         inputs:
           - name: vpc
             # tileInstance.tileName.field
@@ -72,7 +73,8 @@ spec:
       tileAuroraMysqlProd:
         tileReference: AWS-Aurora-Mysql
         tileVersion: 2.07.2
-        dependsOn: tileEksWithSpotProd
+        dependsOn: 
+          - tileEksWithSpotProd
         inputs:
           - name: vpc
             inputValue: $cdk(tileEksWithSpotProd.Network0.baseVpc)        
@@ -86,7 +88,8 @@ spec:
       tileAuroraMysqlStage:
         tileReference: AWS-Aurora-Mysql
         tileVersion: 2.07.2
-        dependsOn: tileEksWithSpotStage
+        dependsOn: 
+          - tileEksWithSpotStage
         inputs:
           - name: vpc
             inputValue: $cdk(tileEksWithSpotStage.Network0.baseVpc)        
@@ -101,7 +104,8 @@ spec:
       tileElasticsearchCmdProd:
         tileReference: AWS-ElasticSearch-CMD
         tileVersion: 7.4.0
-        dependsOn: tileEksWithSpotProd
+        dependsOn: 
+          - tileEksWithSpotProd
         inputs:
           - name: domainName
             inputValue: mahjong-es-prod       
@@ -112,7 +116,8 @@ spec:
       tileElasticsearchCmdStage:
         tileReference: AWS-ElasticSearch-CMD
         tileVersion: 7.4.0
-        dependsOn: tileEksWithSpotStage
+        dependsOn: 
+          - tileEksWithSpotStage
         inputs:
           - name: domainName
             inputValue: mahjong-es-stage       
@@ -123,7 +128,8 @@ spec:
       tileFluentBit4AesProd:
         tileReference: FluentBit-For-AES
         tileVersion: 1.4.6
-        dependsOn: tileEksWithSpotProd
+        dependsOn: 
+          - tileEksWithSpotProd
         inputs:
           - name: clusterName
             inputValue: $(tileEksWithSpotProd.outputs.clusterName)       
@@ -135,7 +141,8 @@ spec:
       tileFluentBit4AesStage:
         tileReference: FluentBit-For-AES
         tileVersion: 1.4.6
-        dependsOn: tileEksWithSpotStage
+        dependsOn: 
+          - tileEksWithSpotStage
         inputs:
           - name: clusterName
             inputValue: $(tileEksWithSpotStage.outputs.clusterName)       
@@ -148,7 +155,8 @@ spec:
       tileIstio0ForProd:
         tileReference: Istio0
         tileVersion: 1.5.4
-        dependsOn: tileEksWithSpotProd
+        dependsOn:
+          - tileEksWithSpotProd
         inputs:
           - name: clusterName
             inputValue: $(tileEksWithSpotProd.outputs.clusterName)
@@ -158,7 +166,8 @@ spec:
       tileIstio0ForStage:
         tileReference: Istio0
         tileVersion: 1.5.4
-        dependsOn: tileEksWithSpotStage
+        dependsOn: 
+          - tileEksWithSpotStage
         inputs:
           - name: clusterName
             inputValue: $(tileEksWithSpotStage.outputs.clusterName)
@@ -169,7 +178,8 @@ spec:
       tileArgocdWithExsitingEks152:
         tileReference: Argocd-With-Existing-EKS
         tileVersion: 1.5.6
-        dependsOn: tileIstio0ForStage
+        dependsOn: 
+          - tileIstio0ForStage
         inputs:
           - name: clusterName
             inputValue: $(tileEksWithSpotStage.outputs.clusterName)         

@@ -56,7 +56,8 @@ spec:
       tileElasticsearchCmdProd:
         tileReference: AWS-ElasticSearch-CMD
         tileVersion: 7.4.0
-        dependsOn: tileEksWithSpotProd
+        dependsOn: 
+          - tileEksWithSpotProd
         inputs:
           - name: domainName
             inputValue: mahjong-es-prod       
@@ -67,7 +68,8 @@ spec:
       tileFluentBit4AesProd:
         tileReference: FluentBit-For-AES
         tileVersion: 1.4.6
-        dependsOn: tileEksWithSpotProd
+        dependsOn: 
+          - tileEksWithSpotProd
         inputs:
           - name: clusterName
             inputValue: $(tileEksWithSpotProd.outputs.clusterName)       
@@ -80,7 +82,8 @@ spec:
       tileLinkerdProd:
         tileReference: Linkerd
         tileVersion: 2.7.1
-        dependsOn: tileEksWithSpotProd
+        dependsOn: 
+          - tileEksWithSpotProd
         inputs:
           - name: clusterName
             inputValue: $(tileEksWithSpotProd.outputs.clusterName)       
@@ -91,7 +94,8 @@ spec:
       tileLinkerdStage:
         tileReference: Linkerd
         tileVersion: 2.7.1
-        dependsOn: tileEksWithSpotProd
+        dependsOn: 
+          - tileEksWithSpotProd
         inputs:
           - name: clusterName
             inputValue: $(tileEksWithSpotStage.outputs.clusterName)       
@@ -104,7 +108,9 @@ spec:
       tileArgocdWithExsitingEks152:
         tileReference: Argocd-With-Existing-EKS
         tileVersion: 1.5.6
-        dependsOn: tileIstio0ForStage
+        dependsOn: 
+          - tileLinkerdProd
+          - tileLinkerdStage
         inputs:
           - name: clusterName
             inputValue: $(tileEksWithSpotStage.outputs.clusterName)         

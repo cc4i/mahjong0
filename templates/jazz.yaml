@@ -25,7 +25,8 @@ spec:
       tileAWSElastiCacheRedis506:
         tileReference: AWS-ElastiCache-Redis
         tileVersion: 5.0.6
-        dependsOn: tileEksWithSpot050
+        dependsOn: 
+          - tileEksWithSpot050
         inputs:
           - name: vpc
             # tileInstance.tileName.field

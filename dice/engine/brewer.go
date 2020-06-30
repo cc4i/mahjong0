@@ -29,7 +29,7 @@ type ExecutionPlan struct {
 	CurrentStage     *ExecutionStage            `json:"currentStage"` // Current executing stage
 	Plan             *list.List                 `json:"plan"`         // Ordered plans
 	PlanMirror       map[string]*ExecutionStage `json:"planMirror"`
-	ParallelPlan     []*list.List                `json:"parallelPlan"`     // Parallel plans
+	ParallelPlan     []*list.List               `json:"parallelPlan"`     // Parallel plans
 	OriginDeployment *v1alpha1.Deployment       `json:"originDeployment"` // Original deployment data
 }
 
@@ -104,15 +104,19 @@ func (ep *ExecutionPlan) ExecutePlan(ctx context.Context, dryRun bool, out *webs
 		for e := ep.Plan.Back(); e != nil; e = e.Prev() {
 			stage := e.Value.(*ExecutionStage)
 			ep.CurrentStage = stage
+			setStatus(dSid, stage.Name, Progress.DSString())
+
 			// 1. Wrap commands into a shell script
 			cmd, err := ep.CommandWrapperExecutor(ctx, dryRun, out)
 			if err != nil {
+				setStatus(dSid, stage.Name, Interrupted.DSString())
 				return err
 			}
 			//
 
 			// 2. Execute wrapped script
 			if err := ep.CommandExecutor(ctx, dryRun, []byte(cmd), out); err != nil {
+				setStatus(dSid, stage.Name, Interrupted.DSString())
 				return err
 			}
 			//
@@ -120,10 +124,12 @@ func (ep *ExecutionPlan) ExecutePlan(ctx context.Context, dryRun bool, out *webs
 			// 3.Extract output values & caching results
 			buf, err := ioutil.ReadFile(DiceConfig.WorkHome + aTs.DR.SuperFolder + "/" + stage.Name + "-output.log")
 			if err != nil {
+				setStatus(dSid, stage.Name, Interrupted.DSString())
 				return err
 			}
 			err = ep.ExtractValue(ctx, buf, out)
 			if err != nil {
+				setStatus(dSid, stage.Name, Interrupted.DSString())
 				return err
 			}
 			//
@@ -132,15 +138,17 @@ func (ep *ExecutionPlan) ExecutePlan(ctx context.Context, dryRun bool, out *webs
 			if ep.CurrentStage.PostRunCommands != nil {
 				cmd, err := ep.PostRun(ctx, dryRun, out)
 				if err != nil {
+					setStatus(dSid, stage.Name, Interrupted.DSString())
 					return err
 				}
 				err = ep.CommandExecutor(ctx, dryRun, []byte(cmd), out)
 				if err != nil {
+					setStatus(dSid, stage.Name, Interrupted.DSString())
 					return err
 				}
 			}
 			//
-
+			setStatus(dSid, stage.Name, Done.DSString())
 		}
 		// 5. GENERATE REPORT
 		if ep.Plan.Len() > 0 { //avoid empty plan
@@ -594,11 +602,13 @@ func (ep *ExecutionPlan) ExtractValue(ctx context.Context, buf []byte, out *webs
 		}
 
 		// Pass output values to parent stack
-		if parentTileInstance := ParentTileInstance(dSid, tileInstance); parentTileInstance != "" {
-			if outputs, ok := (*ts.AllOutputsN)[tileInstance]; ok {
-				if parentOutputs, ok := (*ts.AllOutputsN)[parentTileInstance]; ok {
-					for k, v := range *outputs.TsOutputs {
-						(*parentOutputs.TsOutputs)[k] = v
+		if parentTileInstances := ParentTileInstance(dSid, tileInstance); parentTileInstances != nil {
+			for _, parentTileInstance := range parentTileInstances {
+				if outputs, ok := (*ts.AllOutputsN)[tileInstance]; ok {
+					if parentOutputs, ok := (*ts.AllOutputsN)[parentTileInstance]; ok {
+						for k, v := range *outputs.TsOutputs {
+							(*parentOutputs.TsOutputs)[k] = v
+						}
 					}
 				}
 			}
@@ -644,7 +654,7 @@ func FindPair(str string) (string, string, error) {
 		if len(kv) == 2 {
 			value = strings.TrimSpace(kv[1])
 		} else {
-			value=strings.TrimSpace(str[len(kv[0])+1:])
+			value = strings.TrimSpace(str[len(kv[0])+1:])
 		}
 	}
 	return key, value, nil
@@ -741,4 +751,13 @@ func RandString(n int) string {
 		b[i] = letterBytes[rand.NewSource(time.Now().UnixNano()).Int63()%int64(len(letterBytes))]
 	}
 	return string(b)
+}
+
+//
+func setStatus(dSid string, tileInstance string, status string) {
+	if tilesGrid, ok := AllTilesGrids[dSid]; ok {
+		if tg, ok := (*tilesGrid)[tileInstance]; ok {
+			tg.Status = status
+		}
+	}
 }

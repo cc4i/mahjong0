@@ -25,7 +25,8 @@ spec:
       goBumblebeeOnly001:
         tileReference: Go-Bumblebee-ONLY
         tileVersion: 0.0.1
-        dependsOn: tileArgocd0152A
+        dependsOn: 
+          - tileArgocd0152A
         inputs:
           - name: accessToken
             inputValue: <GITHUB TOKEN>

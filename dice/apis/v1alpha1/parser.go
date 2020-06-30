@@ -206,7 +206,7 @@ func (d *Data) CheckParameter(ctx context.Context, deployment *Deployment) error
 	}
 	if parameters != "" {
 		parameters = strings.TrimSuffix(parameters, ", ")
-		return errors.New("input parameters: ["+parameters+"] should be replaced by values")
+		return errors.New("input parameters: [" + parameters + "] should be replaced by values")
 	} else {
 		return nil
 	}

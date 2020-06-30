@@ -241,7 +241,7 @@ func Plan(ctx context.Context, c *gin.Context) {
 func PlanOrder(ctx context.Context, c *gin.Context) {
 	sid := c.Param("sid")
 	if plan, ok := engine.AllPlans[sid]; ok {
-		c.JSON(http.StatusOK, []string {engine.ToFlow(plan)})
+		c.JSON(http.StatusOK, []string{engine.ToFlow(plan)})
 	}
 }
 func ParallelOrder(ctx context.Context, c *gin.Context) {
@@ -250,6 +250,13 @@ func ParallelOrder(ctx context.Context, c *gin.Context) {
 
 		flows := engine.ToParallelFlow(plan)
 		c.JSON(http.StatusOK, flows)
+	}
+}
+
+func TilesGrid(ctx context.Context, c *gin.Context) {
+	sid := c.Param("sid")
+	if tilesGrid, ok := engine.AllTilesGrids[sid]; ok {
+		c.JSON(http.StatusOK, tilesGrid)
 	}
 }
 

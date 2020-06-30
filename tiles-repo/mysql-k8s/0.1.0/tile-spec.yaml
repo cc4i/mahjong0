@@ -1,0 +1,47 @@
+apiVersion: mahjong.io/v1alpha1
+kind: Tile
+metadata:
+    name: Mysql-K8s
+    category: ContainerApplication
+    version: 0.1.0
+    dependentOnVendorService: EKS
+# Specification
+spec: 
+  preRun:
+    stages:
+      - name: InstallMySQL
+        command: |
+            cd $TILE_HOME
+            kubectl apply -f lib/mysql-pv.yaml -n $(self.inputs.installedNamespace)
+            kubectl apply -f lib/mysql-deployment.yaml -n $(self.inputs.installedNamespace)
+            kubectl apply -f lib/mysql-svc.yaml -n $(self.inputs.installedNamespace)
+
+            # Info
+            kubectl get ns
+            kubectl get deploy -n  -n $(self.inputs.installedNamespace)
+  inputs:
+    # String
+    - name: clusterName
+      inputType: String
+      require: true
+    # String
+    - name: masterRoleARN
+      inputType: String
+      require: true
+    # String
+    - name: installedNamespace
+      inputType: String
+      require: true
+
+          
+  # Ouptputs represnt output value after launched, for 'ContainerApplication' might need leverage specific command to retrive output.
+  outputs:
+    # String
+    - name: installedNamespace
+      outputType: String
+      defaultValue: $(self.inputs.installedNamespace)
+      description: Custom::String
+
+
+  notes: []
+

@@ -19,6 +19,20 @@ spec:
             kubectl get deploy -n linkerd
             kubectl get pods -n linkerd
             kubectl get svc -n linkerd
+        readinessProbe:
+          command: |
+            count=`kubectl get deployments/linkerd-controller -n linkerd -o json |jq '.status.readyReplicas'`
+            if [ $count -ne 1 ]
+            then
+              echo "ReadyReplicas of Linkerd controller isn't equal to 1."
+              exit 1
+            fi
+            echo "ReadyReplicas of deployments/linkerd-controller -n linkerd is $count and ready to go."
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 300
+          successThreshold: 1
+          failureThreshold: -1               
   inputs:
     # String
     - name: clusterName
@@ -28,14 +42,6 @@ spec:
     - name: masterRoleARN
       inputType: String
       require: true
-
-  # manifests:
-  #   # Type of manifest
-  #   manifestType: helm
-  #   namespace: istio-system 
-  #   # manifest folder
-  #   folders:
-  #     - k8s
 
           
   # Ouptputs represnt output value after launched, for 'ContainerApplication' might need leverage specific command to retrive output.

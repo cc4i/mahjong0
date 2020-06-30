@@ -25,7 +25,8 @@ spec:
       tileAuroraMysqlSimple:
         tileReference: AWS-Aurora-Mysql
         tileVersion: 2.07.2
-        dependsOn: tileEksWithSpotStage
+        dependsOn: 
+          - tileEksWithSpotStage
         inputs:
           - name: vpc
             inputValue: $cdk(tileEksWithSpotStage.Network0.baseVpc)        

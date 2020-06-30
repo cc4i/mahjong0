@@ -33,6 +33,7 @@ func SRf(out *websocket.Conn, format string, v ...interface{}) {
 	}
 
 }
+
 // SRF send repose back to client, output logs & files
 func SRF(out *websocket.Conn, file *os.File, response []byte) {
 	log.Printf("%s\n", response)

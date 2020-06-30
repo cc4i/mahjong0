@@ -14,7 +14,7 @@ var tilesGrid1 = TilesGrid{
 	TileVersion:        "0.10.0",
 	TileCategory:       v1alpha1.ContainerProvider.CString(),
 	RootTileInstance:   "tileInstance01",
-	ParentTileInstance: "tileInstance03",
+	ParentTileInstance: []string{"tileInstance03"},
 }
 var tilesGrid2 = TilesGrid{
 	TileInstance:       "tileInstance02",
@@ -23,7 +23,7 @@ var tilesGrid2 = TilesGrid{
 	TileVersion:        "0.11.0",
 	TileCategory:       v1alpha1.Network.CString(),
 	RootTileInstance:   "tileInstance01",
-	ParentTileInstance: "tileInstance01",
+	ParentTileInstance: []string{"tileInstance01"},
 }
 var tilesGrid3 = TilesGrid{
 	TileInstance:       "tileInstance03",
@@ -32,7 +32,7 @@ var tilesGrid3 = TilesGrid{
 	TileVersion:        "0.12.0",
 	TileCategory:       v1alpha1.ContainerApplication.CString(),
 	RootTileInstance:   "tileInstance01",
-	ParentTileInstance: "",
+	ParentTileInstance: []string{"root"},
 }
 var tilesGrid4 = TilesGrid{
 	TileInstance:       "tileInstance04",
@@ -41,7 +41,7 @@ var tilesGrid4 = TilesGrid{
 	TileVersion:        "0.14.0",
 	TileCategory:       v1alpha1.Application.CString(),
 	RootTileInstance:   "tileInstance04",
-	ParentTileInstance: "",
+	ParentTileInstance: []string{"root"},
 }
 var tilesGridMap1 = make(map[string]TilesGrid)
 var tilesGridMap2 = make(map[string]TilesGrid)
