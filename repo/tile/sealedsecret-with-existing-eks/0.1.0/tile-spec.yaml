@@ -1,0 +1,65 @@
+apiVersion: mahjong.io/v1alpha1
+kind: Tile
+metadata:
+    name: SealedSecret-With-Existing-EKS
+    category: ContainerApplication
+    version: 0.1.0
+    dependentOnVendorService: EKS
+spec:
+  inputs:
+    # String
+    - name: clusterName
+      inputType: String
+      require: true
+    # String
+    - name: masterRoleARN
+      inputType: String
+      require: true
+    # String
+    - name: namespace
+      inputType: String
+      require: false
+      defaultValue: kube-system
+    # String
+    - name: tlsCrt
+      inputType: String
+      require: false
+    - name: tlsKey
+      inputType: String
+      require: false
+
+  global:
+    env:
+      - name: NAMESPACE_NAME
+        value: $(self.inputs.namespace)
+      - name: TLS_KEY
+        value: $(self.inputs.tlsKey)
+      - name: TLS_CRT
+        value: $(self.inputs.tlsCrt)
+
+  preRun:
+    stages:
+      - name: SetupNamespaceForKey
+        command: |
+          cd $TILE_HOME/lib/k8s
+          sed -e 's/TLS_CRT/'$TLS_CRT'/g' \
+              -e 's/TLS_KEY/'$TLS_KEY'/g' ./key.yaml > ./key-go.yaml
+      - name: InstallExistingKeyIfHave
+        command: |
+          [[ -n "$TLS_CRT" && -n "$TLS_KEY" ]] && kubectl create ns $NAMESPACE_NAME || true
+      - name: SetupNamespaceForController
+        command: |
+          cd $TILE_HOME/lib/k8s
+          sed -e 's/NAMESPACE_NAME/'$NAMESPACE_NAME'/g' \
+              ./controller-0.12.4.yaml > ./controller-0.12.4-go.yaml
+  outputs:
+    - name: namespace
+      outputType: String
+      defaultValue: namespace
+
+  manifests:
+    manifestType: K8s
+    files:
+      - k8s/controller-0.12.4-go.yaml
+
+  notes: []

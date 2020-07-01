@@ -1,7 +1,8 @@
+
 apiVersion: mahjong.io/v1alpha1
 kind: Tile
 metadata:
-    name: Sample-Tile
+    name: {{ .TileName }}
     category: Analysis
     version: 0.1.0
 spec:

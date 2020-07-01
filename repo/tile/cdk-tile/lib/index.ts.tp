@@ -3,7 +3,7 @@ import * as subs from '@aws-cdk/aws-sns-subscriptions';
 import * as sqs from '@aws-cdk/aws-sqs';
 import * as cdk from '@aws-cdk/core';
 
-export interface SampleTileProps {
+export interface {{.TileNameCDK}}Props {
   /**
    * The name of SQS queue
    */
@@ -22,7 +22,7 @@ export interface SampleTileProps {
   visibilityTimeout?: number;
 }
 
-export class SampleTile extends cdk.Construct {
+export class {{.TileNameCDK}} extends cdk.Construct {
 
   /** @returns the name of the SQS queue */
   public readonly queueName: string;
@@ -33,7 +33,7 @@ export class SampleTile extends cdk.Construct {
   /** @returns the ARN of the SQS queue */
   public readonly queueArn: string;
 
-  constructor(scope: cdk.Construct, id: string, props: SampleTileProps) {
+  constructor(scope: cdk.Construct, id: string, props: {{.TileNameCDK}}Props) {
     super(scope, id);
 
     const queue = new sqs.Queue(this, "SampleQueue", {

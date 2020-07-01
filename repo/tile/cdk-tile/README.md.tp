@@ -1,9 +1,9 @@
-# Sample Tile 
+# {{.TileName}}
 
-This is sample Tile, which is actual contruct based on CDK. The sample tile will provision SQS queue and topic. The Tile spectication - [tile-spec.yaml](./tile-spec.yaml) has full definition, includes metadata, inputs, outputs, etc.
+{{.TileName}} is actual contruct based on CDK. {{.TileName}} will provision SQS queue and topic. The Tile spectication - [tile-spec.yaml](./tile-spec.yaml) has full definition, includes metadata, inputs, outputs, etc.
 
 ## Tile 
-Sample-Tile
+{{.TileName}}
 
 ## Version
 0.1.0

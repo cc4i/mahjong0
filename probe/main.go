@@ -3,10 +3,11 @@ package main
 import (
 	"bufio"
 	"flag"
-	log "github.com/sirupsen/logrus"
 	"io"
 	"os/exec"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // probeHttp for http style
@@ -62,6 +63,7 @@ func probeCmd(command string, periodSeconds int, successThreshold int, failureTh
 
 }
 
+// tail read output from stream
 func tail(reader io.ReadCloser, isErr bool) {
 	scanner := bufio.NewScanner(reader)
 	scanner.Split(bufio.ScanLines)
@@ -76,7 +78,6 @@ func tail(reader io.ReadCloser, isErr bool) {
 	}
 
 }
-
 
 func main() {
 
