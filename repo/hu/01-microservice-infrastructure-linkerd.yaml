@@ -1,0 +1,191 @@
+apiVersion: mahjong.io/v1alpha1
+kind: Deployment 
+metadata:
+  name: microservice-infrastructure-linkerd
+spec:
+  template:
+    tiles:
+      # Generating master key
+      tileAwsKmsKeyGenerator010:
+        tileReference: AWS-KMS-KeyGenerator
+        tileVersion: 0.1.0
+        inputs:
+          - name: symmetricKeyAlias
+            inputValue: majhong/symmetric-key_0
+          - name: asymmetricKeyAlias
+            inputValue: majhong/asymmetric-key_0
+
+      # ESK Cluster for Prod
+      tileEksWithSpotProd:
+        tileReference: Eks-with-Spot
+        tileVersion: 0.5.0
+        inputs:
+          - name: cidr
+            inputValue: 192.0.0.0/16
+          - name: clusterName
+            inputValue: mahjong-eks-prod
+          - name: clusterVersion
+            inputValue: 1.16
+          - name: keyPair4EC2
+            inputValue: <<parameter>> - key pairs for worker nodes
+          - name: capacityInstance
+            inputValues: 
+              - m5.large
+              - r5.large
+              - c5.large
+      # EKS Cluster for Stage
+      tileEksWithSpotStage:
+        tileReference: Eks-with-Spot
+        tileVersion: 0.5.0
+        inputs:
+          - name: cidr
+            inputValue: 192.0.0.0/16
+          - name: clusterName
+            inputValue: mahjong-eks-stage
+          - name: clusterVersion
+            inputValue: 1.16
+          - name: keyPair4EC2
+            inputValue: <<parameter>> - key pairs for worker nodes
+          - name: capacityInstance
+            inputValues: 
+              - m5.large
+              - r5.large
+              - c5.large
+
+      # ElasticSearch for Prod
+      tileElasticsearchCmdProd:
+        tileReference: AWS-ElasticSearch-CMD
+        tileVersion: 7.4.0
+        dependsOn: 
+          - tileEksWithSpotProd
+        inputs:
+          - name: domainName
+            inputValue: mahjong-es-prod       
+          - name: aesAccessRoleArn
+            inputValue: $(tileEksWithSpotProd.outputs.nodesRoleARN)
+      
+      # FluentBit for Prod
+      tileFluentBit4AesProd:
+        tileReference: FluentBit-For-AES
+        tileVersion: 1.4.6
+        dependsOn: 
+          - tileEksWithSpotProd
+        inputs:
+          - name: clusterName
+            inputValue: $(tileEksWithSpotProd.outputs.clusterName)       
+          - name: masterRoleARN
+            inputValue: $(tileEksWithSpotProd.outputs.masterRoleARN)
+          - name: aesEndpoint
+            inputValue: https://$(tileElasticsearchCmdProd.outputs.domainEndpoint)
+
+      # Linkerd for Prod
+      tileLinkerdProd:
+        tileReference: Linkerd
+        tileVersion: 2.7.1
+        dependsOn: 
+          - tileEksWithSpotProd
+        inputs:
+          - name: clusterName
+            inputValue: $(tileEksWithSpotProd.outputs.clusterName)       
+          - name: masterRoleARN
+            inputValue: $(tileEksWithSpotProd.outputs.masterRoleARN)
+
+      # Linkerd for Stage
+      tileLinkerdStage:
+        tileReference: Linkerd
+        tileVersion: 2.7.1
+        dependsOn: 
+          - tileEksWithSpotStage
+        inputs:
+          - name: clusterName
+            inputValue: $(tileEksWithSpotStage.outputs.clusterName)       
+          - name: masterRoleARN
+            inputValue: $(tileEksWithSpotStage.outputs.masterRoleARN)
+
+      # Traefik for Prod
+      tileTraefikProd:
+        tileReference: Traefik
+        tileVersion: 2.2.1
+        dependsOn: 
+          - tileEksWithSpotProd
+        inputs:
+          - name: clusterName
+            inputValue: $(tileEksWithSpotProd.outputs.clusterName)       
+          - name: masterRoleARN
+            inputValue: $(tileEksWithSpotProd.outputs.masterRoleARN)
+            
+      # Traefik for Stage
+      tileTraefikStage:
+        tileReference: Traefik
+        tileVersion: 2.2.1
+        dependsOn: 
+          - tileEksWithSpotStage
+        inputs:
+          - name: clusterName
+            inputValue: $(tileEksWithSpotStage.outputs.clusterName)       
+          - name: masterRoleARN
+            inputValue: $(tileEksWithSpotStage.outputs.masterRoleARN)
+      
+      # ArgoCD
+      tileArgocdWithExsitingEks152:
+        tileReference: Argocd-With-Existing-EKS
+        tileVersion: 1.5.6
+        dependsOn: 
+          - tileLinkerdProd
+          - tileLinkerdStage
+        inputs:
+          - name: clusterName
+            inputValue: $(tileEksWithSpotStage.outputs.clusterName)         
+          - name: masterRoleARN
+            inputValue: $(tileEksWithSpotStage.outputs.masterRoleARN) 
+      
+
+
+  summary:
+    description: |
+      ++++++++++++++++++++++++++++++++++++++++++++++++++++
+      +   Perfect Microservices Infrastructure           +
+      ++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    outputs:
+      - name: EKS Cluster for Production
+        value: $(tileEksWithSpotProd.outputs.clusterName)
+      - name: Master role for Production
+        value: $(tileEksWithSpotProd.outputs.masterRoleARN)
+      - name: Endpoint for Production
+        value: $(tileEksWithSpotProd.outputs.clusterEndpoint)
+      - name: Update KUBECONFIG for Production
+        value: aws eks update-kubeconfig --name $(tileEksWithSpotProd.outputs.clusterName) --region $(tileEksWithSpotProd.outputs.regionOfCluster) --role-arn $(tileEksWithSpotProd.outputs.masterRoleARN)
+      - name: Ingress Gateway for Production
+        value: $(tileIstio0ForProd.outputs.ingressHost)
+    
+
+      - name: EKS Cluster for Stage
+        value: $(tileEksWithSpotStage.outputs.clusterName)
+      - name: Master role for Stage
+        value: $(tileEksWithSpotStage.outputs.masterRoleARN)
+      - name: Endpoint for Stage
+        value: $(tileEksWithSpotStage.outputs.clusterEndpoint)
+      - name: Update KUBECONFIG for Stage
+        value: aws eks update-kubeconfig --name $(tileEksWithSpotStage.outputs.clusterName) --region $(tileEksWithSpotStage.outputs.regionOfCluster) --role-arn $(tileEksWithSpotStage.outputs.masterRoleARN)
+      - name: Ingress Gateway for Stage
+        value: $(tileIstio0ForStage.outputs.ingressHost)
+
+
+      - name: Endpoint for AgroCD
+        value: $(tileArgocdWithExsitingEks152.outputs.argocdBaseUrl)
+      - name: Administrator for AgroCD
+        value: $(tileArgocdWithExsitingEks152.outputs.user)
+      - name: Password for AgroCD Administrator
+        value: $(tileArgocdWithExsitingEks152.outputs.password)
+
+      
+    notes: 
+      - |
+        Jaeger tracing : kubectl port-forward svc/tracing 8080:80 -n istio-system
+      - |
+        Prometheus : kubectl port-forward svc/prometheus 9090:9090 -n istio-system
+      - |
+        Grafana : kubectl port-forward svc/grafana 3000:3000 -n istio-system
+      - |
+        Kiali (admin/admin) : kubectl port-forward svc/kiali 20001:20001 -n istio-system

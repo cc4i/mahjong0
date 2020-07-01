@@ -1,0 +1,57 @@
+apiVersion: mahjong.io/v1alpha1
+kind: Tile
+metadata:
+    name: Linkerd
+    category: ContainerApplication
+    version: 2.7.1
+    dependentOnVendorService: EKS
+# Specification
+spec: 
+  preRun:
+    stages:
+      - name: InstallLinkerd
+        command: |
+            cd $TILE_HOME
+            kubectl apply -f lib/install.yaml
+
+            # Info
+            kubectl get ns
+            kubectl get deploy -n linkerd
+            kubectl get pods -n linkerd
+            kubectl get svc -n linkerd
+        readinessProbe:
+          command: |
+            count=`kubectl get deployments/linkerd-controller -n linkerd -o json |jq '.status.readyReplicas'`
+            if [ $count -ne 1 ]
+            then
+              echo "ReadyReplicas of Linkerd controller isn't equal to 1."
+              exit 1
+            fi
+            echo "ReadyReplicas of deployments/linkerd-controller -n linkerd is $count and ready to go."
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 300
+          successThreshold: 1
+          failureThreshold: -1               
+  inputs:
+    # String
+    - name: clusterName
+      inputType: String
+      require: true
+    # String
+    - name: masterRoleARN
+      inputType: String
+      require: true
+
+          
+  # Ouptputs represnt output value after launched, for 'ContainerApplication' might need leverage specific command to retrive output.
+  outputs:
+    # String
+    - name: installedNamespace
+      outputType: String
+      defaultValue: linkerd
+      description: Custom::String
+
+
+  notes: []
+

@@ -13,10 +13,11 @@ tile_version=$2
 tile_dir=`echo ${tile_name} | tr '[:upper:]' '[:lower:]'`
 tile_name_lowercase=`echo ${tile_name} | tr '[:upper:]' '[:lower:]'`
 tile_tgz=/tmp/${tile_name_lowercase}.tgz
+local_tile_repo=../repo/tile
 
 echo "Syncing < ${tile_name} - ${tile_version} > to S3::${s3_bucket}"
 
-cd ../tiles-repo/${tile_dir}/${tile_version}
+cd ${local_tile_repo}/${tile_dir}/${tile_version}
 tar --exclude='./node_modules' --exclude='.DS_Store' --exclude='role.arn' -zcvf ${tile_tgz} ./*
 aws s3 cp ${tile_tgz} \
     s3://${s3_bucket}/tiles-repo/${tile_name_lowercase}/${tile_version}/${tile_name_lowercase}.tgz \

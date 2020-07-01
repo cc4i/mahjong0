@@ -5,10 +5,11 @@ s3_bucket=cc-mahjong-0
 
 
 super_tgz=/tmp/super.tgz
+local_tile_repo=../repo/tile
 
 echo "Syncing < ${super_tgz} > to S3::${s3_bucket}"
 
-cd ../tiles-repo/super
+cd ${local_tile_repo}/super
 tar --exclude='./node_modules' --exclude='.DS_Store' -zcvf ${super_tgz} ./*
 aws s3 cp ${super_tgz} \
     s3://${s3_bucket}/tiles-repo/super/super.tgz \

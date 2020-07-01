@@ -1,0 +1,98 @@
+# API version
+apiVersion: mahjong.io/v1alpha1
+# Kind of entity
+kind: Tile
+# Metadata
+metadata:
+    # Name of entity
+    name: Argocd0
+    # Category of entity
+    category: ContainerApplication
+    # Version of entity
+    version: 1.5.2
+# Specification
+spec:
+  # Dependencies represent dependency with other Tile
+  dependencies:
+      # As a reference name 
+    - name: network
+      # Tile name
+      tileReference: Network0
+      # Tile version
+      tileVersion: 0.0.1
+    - name: eks
+      # Tile name
+      tileReference: Eks0
+      # Tile version
+      tileVersion: 0.0.5
+      
+  # 
+  inputs:
+    # string
+    - name: cidr
+      inputType: String
+      require: true
+      override: 
+        name: network
+        field: cidr
+    - name: clusterName
+      inputType: String
+      require: true
+      override: 
+        name: eks
+        field: clusterName
+    - name: capacity
+      inputType: Number
+      require: false
+      override: 
+        name: eks
+        field: capacity
+      defaultValue: 2
+    - name: capacityInstance
+      inputType: String
+      require: false
+      override: 
+        name: eks
+        field: capacityInstance
+      defaultValue: c5.xlarge
+    - name: version
+      inputType: String
+      require: false
+      override: 
+        name: eks
+        field: version
+      defaultValue: 1.15
+
+  #aws eks --region <region> update-kubeconfig --name <cluster> --role-arn <master role arn> --kubeconfig <config>
+  manifests:
+    # Type of manifest
+    manifestType: K8s
+    namespace: argocd 
+    # manifest list
+    files:
+      - k8s/install.yaml
+    # manifest folder
+    # folders:
+    #   - k8s
+
+          
+  # Ouptputs represnt output value after launched, for 'ContainerApplication' might need leverage specific command to retrive output.
+  outputs:
+    # String
+    - name: installedNamespace
+      outputType: String
+      defaultValueCommand: echo $NAMESPACE
+      description: Custom::Namespace
+    # String
+    - name: user
+      outputType: String
+      defaultValue: admin
+      description: Custom::User
+    # FromCommand
+    - name: password
+      outputType: String
+      defaultValueCommand: kubectl get pods -n $NAMESPACE -l app.kubernetes.io/name=argocd-server -o name | cut -d'/' -f 2
+      description: Custom::Password        
+
+  notes: []
+

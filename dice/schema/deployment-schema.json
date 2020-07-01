@@ -65,6 +65,12 @@
                                         "tileVersion": {
                                             "type": "string"
                                         },
+                                        "dependsOn": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        },
                                         "inputs": {
                                             "type": "array",
                                             "items": {

@@ -1,0 +1,54 @@
+apiVersion: mahjong.io/v1alpha1
+kind: Tile
+metadata:
+    name: AWS-ElastiCache-Redis
+    category: Database
+    version: 5.0.6x
+spec:
+
+  # Inputs are input parameters when lauching 
+  inputs:
+    # CDKObject
+    - name: vpcId
+      inputType: String
+      description: 'Refer to VPC ID'
+      require: true
+    - name: subnetIds
+      inputType: String[]
+      description: 'Refer to Subnet Id'
+      require: true
+    - name: redisClusterName
+      inputType: String
+      defaultValue: redis-cluster
+      description: 'Redis Cluster Name'
+      require: false
+    - name: replicasPerNodeGroup
+      inputType: Number
+      defaultValue: 2
+      description: 'Node number per node group'
+      require: false
+    - name: numNodeGroups
+      inputType: Number
+      defaultValue: 2
+      description: 'group number of cluster'
+      require: false
+    - name: engineVersion
+      inputType: String
+      defaultValue: 5.0.6
+      description: 'redis version'
+      require: false
+    - name: autoMinorVersionUpgrade
+      inputType: Boolean
+      defaultValue: true
+      description: 'Minor version upgrade'
+      require: false
+
+  outputs:
+    # String
+    - name: redisClusterName
+      outputType: String
+    - name: redisEndpoint
+      outputType: String
+
+  # Notes are description list for addtional information.
+  notes: []

@@ -6,6 +6,7 @@ import (
 	"container/list"
 	"context"
 	"dice/apis/v1alpha1"
+	"dice/utils"
 	"errors"
 	"fmt"
 	"github.com/gorilla/websocket"
@@ -13,7 +14,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
-	"math/rand"
 	"os"
 	"os/exec"
 	"regexp"
@@ -29,7 +29,7 @@ type ExecutionPlan struct {
 	CurrentStage     *ExecutionStage            `json:"currentStage"` // Current executing stage
 	Plan             *list.List                 `json:"plan"`         // Ordered plans
 	PlanMirror       map[string]*ExecutionStage `json:"planMirror"`
-	ParallelPlan     []*list.List                `json:"parallelPlan"`     // Parallel plans
+	ParallelPlan     []*list.List               `json:"parallelPlan"`     // Parallel plans
 	OriginDeployment *v1alpha1.Deployment       `json:"originDeployment"` // Original deployment data
 }
 
@@ -69,6 +69,9 @@ func (sk StageKind) SKString() string {
 type BrewerCore interface {
 	// ExecutePlan executes the generated plan
 	ExecutePlan(ctx context.Context, dryRun bool, out *websocket.Conn) error
+	ExecuteParallelPlan(ctx context.Context, dryRun bool, out *websocket.Conn) error
+	RunPlan(ctx context.Context, dryRun bool, wg *sync.WaitGroup, out *websocket.Conn) error
+
 	// CommandExecutor executes the generated script or wire simulated data
 	CommandExecutor(ctx context.Context, dryRun bool, cmdTxt []byte, out *websocket.Conn) error
 	// LinuxCommandExecutor run a command/script
@@ -99,20 +102,50 @@ type BrewerCore interface {
 // Execution plan would only parse and use test data provided by Tile, but no commands would be sent
 // if dryRun is true
 func (ep *ExecutionPlan) ExecutePlan(ctx context.Context, dryRun bool, out *websocket.Conn) error {
+	// 1. Run Plan
+	if err := ep.RunPlan(ctx, dryRun, nil, out); err != nil {
+		return err
+	}
+	//
+
+	// 2. GENERATE REPORT
+	if ep.Plan.Len() > 0 { //avoid empty plan
+		if err := ep.GenerateSummary(ctx, out); err != nil {
+			return err
+		}
+	}
+	//
+	return nil
+}
+
+func (ep *ExecutionPlan) RunPlan(ctx context.Context, dryRun bool, wg *sync.WaitGroup, out *websocket.Conn) error {
 	dSid := ctx.Value("d-sid").(string)
 	if aTs, ok := AllTs[dSid]; ok {
 		for e := ep.Plan.Back(); e != nil; e = e.Prev() {
 			stage := e.Value.(*ExecutionStage)
+			for {
+				if IsDependenciesDone(dSid, stage.Name) {
+					break
+				} else {
+					time.Sleep(5 * time.Second)
+				}
+				log.Println("I'm stuck in the loop !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+			}
+
 			ep.CurrentStage = stage
+			setStatus(dSid, stage.Name, Progress.DSString())
+
 			// 1. Wrap commands into a shell script
 			cmd, err := ep.CommandWrapperExecutor(ctx, dryRun, out)
 			if err != nil {
+				setStatus(dSid, stage.Name, Interrupted.DSString())
 				return err
 			}
 			//
 
 			// 2. Execute wrapped script
 			if err := ep.CommandExecutor(ctx, dryRun, []byte(cmd), out); err != nil {
+				setStatus(dSid, stage.Name, Interrupted.DSString())
 				return err
 			}
 			//
@@ -120,10 +153,12 @@ func (ep *ExecutionPlan) ExecutePlan(ctx context.Context, dryRun bool, out *webs
 			// 3.Extract output values & caching results
 			buf, err := ioutil.ReadFile(DiceConfig.WorkHome + aTs.DR.SuperFolder + "/" + stage.Name + "-output.log")
 			if err != nil {
+				setStatus(dSid, stage.Name, Interrupted.DSString())
 				return err
 			}
 			err = ep.ExtractValue(ctx, buf, out)
 			if err != nil {
+				setStatus(dSid, stage.Name, Interrupted.DSString())
 				return err
 			}
 			//
@@ -132,22 +167,46 @@ func (ep *ExecutionPlan) ExecutePlan(ctx context.Context, dryRun bool, out *webs
 			if ep.CurrentStage.PostRunCommands != nil {
 				cmd, err := ep.PostRun(ctx, dryRun, out)
 				if err != nil {
+					setStatus(dSid, stage.Name, Interrupted.DSString())
 					return err
 				}
 				err = ep.CommandExecutor(ctx, dryRun, []byte(cmd), out)
 				if err != nil {
+					setStatus(dSid, stage.Name, Interrupted.DSString())
 					return err
 				}
 			}
 			//
+			setStatus(dSid, stage.Name, Done.DSString())
 
 		}
-		// 5. GENERATE REPORT
-		if ep.Plan.Len() > 0 { //avoid empty plan
-			ep.GenerateSummary(ctx, out)
-		}
-		//
 	}
+	if wg!=nil {wg.Done()}
+	return nil
+}
+
+func (ep *ExecutionPlan) ExecuteParallelPlan(ctx context.Context, dryRun bool, out *websocket.Conn) error {
+	// 1. Run plan by parallel
+	wg := new(sync.WaitGroup)
+	for _, pp := range ep.ParallelPlan {
+		sep := &ExecutionPlan{
+			Name: "parallel-plan",
+			Plan: pp,
+		}
+
+		go sep.RunPlan(ctx, dryRun, wg, out)
+		wg.Add(1)
+	}
+	wg.Wait()
+
+	// 2. GENERATE REPORT
+	if ep.Plan.Len() > 0 { //avoid empty plan
+		if err := ep.GenerateSummary(ctx, out); err != nil {
+			return err
+		}
+	}
+	//
+
 	return nil
 }
 
@@ -200,7 +259,6 @@ func (ep *ExecutionPlan) ExtractAllEnv() map[string]string {
 // Replace all possible env & value reference
 func (ep *ExecutionPlan) ReplaceAll(str string, dSid string, kv map[string]string) string {
 	str = ep.ReplaceAllEnv(str, kv)
-	str = ep.ReplaceAllValueRef(str, dSid, ep.CurrentStage.Name) //replace 'self'
 	str = ep.ReplaceAllValueRef(str, dSid, "")                   //replace 'anything else'
 	return str
 }
@@ -315,7 +373,7 @@ func (ep *ExecutionPlan) LinuxCommandExecutor(ctx context.Context, cmdTxt []byte
 // CommandWrapperExecutor wrap commands as a unix script in order to execute.
 func (ep *ExecutionPlan) CommandWrapperExecutor(ctx context.Context, dryRun bool, out *websocket.Conn) (string, error) {
 	//stage.WorkHome
-	script := ep.CurrentStage.WorkHome + "/script-" + ep.CurrentStage.Name + "-" + RandString(8) + ".sh"
+	script := ep.CurrentStage.WorkHome + "/script-" + ep.CurrentStage.Name + "-" + utils.RandString(8) + ".sh"
 	// context id
 	dSid := ctx.Value(`d-sid`).(string)
 	tContent := `#!/bin/bash
@@ -464,7 +522,7 @@ echo $?
 
 func (ep *ExecutionPlan) ProbeWrapper(ctx context.Context, id string, probe v1alpha1.ReadinessProbe) (string, error) {
 	dSid := ctx.Value(`d-sid`).(string)
-	script := ep.CurrentStage.WorkHome + "/" + id + "-" + RandString(8) + ".sh"
+	script := ep.CurrentStage.WorkHome + "/" + id + "-" + utils.RandString(8) + ".sh"
 	tContent := `#!/bin/bash
 set -xe
 
@@ -594,11 +652,13 @@ func (ep *ExecutionPlan) ExtractValue(ctx context.Context, buf []byte, out *webs
 		}
 
 		// Pass output values to parent stack
-		if parentTileInstance := ParentTileInstance(dSid, tileInstance); parentTileInstance != "" {
-			if outputs, ok := (*ts.AllOutputsN)[tileInstance]; ok {
-				if parentOutputs, ok := (*ts.AllOutputsN)[parentTileInstance]; ok {
-					for k, v := range *outputs.TsOutputs {
-						(*parentOutputs.TsOutputs)[k] = v
+		if parentTileInstances := ParentTileInstance(dSid, tileInstance); parentTileInstances != nil {
+			for _, parentTileInstance := range parentTileInstances {
+				if outputs, ok := (*ts.AllOutputsN)[tileInstance]; ok {
+					if parentOutputs, ok := (*ts.AllOutputsN)[parentTileInstance]; ok {
+						for k, v := range *outputs.TsOutputs {
+							(*parentOutputs.TsOutputs)[k] = v
+						}
 					}
 				}
 			}
@@ -644,7 +704,7 @@ func FindPair(str string) (string, string, error) {
 		if len(kv) == 2 {
 			value = strings.TrimSpace(kv[1])
 		} else {
-			value=strings.TrimSpace(str[len(kv[0])+1:])
+			value = strings.TrimSpace(str[len(kv[0])+1:])
 		}
 	}
 	return key, value, nil
@@ -653,7 +713,7 @@ func FindPair(str string) (string, string, error) {
 // PostRun manages and executes commands after provision
 func (ep *ExecutionPlan) PostRun(ctx context.Context, dryRun bool, out *websocket.Conn) (string, error) {
 	stage := ep.CurrentStage
-	script := stage.WorkHome + "/script-" + stage.Name + "-Post-" + RandString(8) + ".sh"
+	script := stage.WorkHome + "/script-" + stage.Name + "-Post-" + utils.RandString(8) + ".sh"
 	file, err := os.OpenFile(script, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755) //Create(script)
 	if err != nil {
 		SR(out, []byte(err.Error()))
@@ -730,15 +790,11 @@ echo $?
 
 }
 
-// RandString return random string as per length 'n'
-func RandString(n int) string {
-	const letterBytes = "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	if n < 0 {
-		n = 0
+//
+func setStatus(dSid string, tileInstance string, status string) {
+	if tilesGrid, ok := AllTilesGrids[dSid]; ok {
+		if tg, ok := (*tilesGrid)[tileInstance]; ok {
+			tg.Status = status
+		}
 	}
-	b := make([]byte, n)
-	for i := range b {
-		b[i] = letterBytes[rand.NewSource(time.Now().UnixNano()).Int63()%int64(len(letterBytes))]
-	}
-	return string(b)
 }

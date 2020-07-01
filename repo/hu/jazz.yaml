@@ -1,0 +1,42 @@
+apiVersion: mahjong.io/v1alpha1
+kind: Deployment 
+metadata:
+  name: jazz
+spec:
+  template:
+    tiles:
+      tileEksWithSpot050:
+        tileReference: Eks-with-Spot
+        tileVersion: 0.5.0
+        inputs:
+          - name: cidr
+            inputValue: 192.168.0.0/16
+          - name: clusterName
+            inputValue: mahjong-spot-cluster0
+          - name: clusterVersion
+            inputValue: 1.16
+          - name: keyPair4EC2
+            inputValue: ore-keypair
+          - name: capacityInstance
+            inputValues: 
+              - m5.large
+              - r5.large
+              - c5.large    
+      tileAWSElastiCacheRedis506:
+        tileReference: AWS-ElastiCache-Redis
+        tileVersion: 5.0.6
+        dependsOn: 
+          - tileEksWithSpot050
+        inputs:
+          - name: vpc
+            # tileInstance.tileName.field
+            inputValue: $cdk(tileEksWithSpot050.Network0.vpc)     
+          - name: subnetIds
+            inputValues:
+              - $cdk(tileEksWithSpot050.Network0.privateSubnetId1)
+              - $cdk(tileEksWithSpot050.Network0.privateSubnetId2)
+  summary:
+      description: Testing.
+      outputs: []
+      notes: []
+    

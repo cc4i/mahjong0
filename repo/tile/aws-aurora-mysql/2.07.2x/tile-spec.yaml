@@ -1,0 +1,46 @@
+apiVersion: mahjong.io/v1alpha1
+kind: Tile
+metadata:
+    name: AWS-Aurora-Mysql
+    category: Database
+    version: 2.07.2
+spec:
+
+  # Inputs are input parameters when lauching 
+  inputs:
+    # CDKObject
+    - name: vpcId
+      inputType: String
+      description: 'Refer to VPC object'
+      require: true
+    - name: clusterIdentifier
+      inputType: String
+      description: 'Identifier for the cluster'
+      require: true
+    - name: masterUser
+      inputType: String
+      description: 'Master user for database'
+      require: true
+    - name: defaultDatabaseName
+      inputType: String
+      description: 'Name of default database, use generated one if not present'
+      require: false
+
+
+  outputs:
+    # String
+    - name: clusterIdentifier
+      outputType: String
+      description: AWS::RDS::DBCluster
+    - name: defaultDatabaseName
+      outputType: String
+      description: AWS::RDS::DBCluster.defaultDbName
+    - name: clusterEndpoint
+      outputType: String
+      description: AWS::RDS::DBCluster.endpoint
+    - name: clusterReadEndpoint
+      outputType: String
+      description: AWS::RDS::DBCluster.endpoint
+
+  # Notes are description list for addtional information.
+  notes: []

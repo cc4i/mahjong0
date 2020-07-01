@@ -1,0 +1,52 @@
+apiVersion: mahjong.io/v1alpha1
+kind: Deployment 
+metadata:
+  name: eks-plus-mysql
+spec:
+  template:
+    tiles:
+      tileEksWithSpotStage:
+        tileReference: Eks-with-Spot
+        tileVersion: 0.5.0
+        inputs:
+          - name: cidr
+            inputValue: 192.0.0.0/16
+          - name: clusterName
+            inputValue: mahjong-eks-cluster-prod0
+          - name: clusterVersion
+            inputValue: 1.16
+          - name: keyPair4EC2
+            inputValue: ore-keypair
+          - name: capacityInstance
+            inputValues: 
+              - m5.large
+              - r5.large
+              - c5.large    
+      tileAuroraMysqlSimple:
+        tileReference: AWS-Aurora-Mysql
+        tileVersion: 2.07.2
+        dependsOn: 
+          - tileEksWithSpotStage
+        inputs:
+          - name: vpc
+            inputValue: $cdk(tileEksWithSpotStage.Network0.baseVpc)        
+          - name: clusterIdentifier
+            inputValue: aurora-mysql-stage       
+          - name: masterUser
+            inputValue: admin        
+          - name: defaultDatabaseName
+            inputValue: testDb          
+          
+
+  summary:
+      description: AWS ElasticSerach Example 
+      outputs:
+          - name: EKS Cluster for Staging
+            value: $(tileEksWithSpotStage.outputs.clusterName)
+          - name: Master role for Staging Cluster
+            value: $(tileEksWithSpotStage.outputs.masterRoleARN)
+          - name: Endpoint for Staging Cluster
+            value: $(tileEksWithSpotStage.outputs.clusterEndpoint)
+
+      notes: []
+    

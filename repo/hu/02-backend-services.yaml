@@ -1,0 +1,58 @@
+apiVersion: mahjong.io/v1alpha1
+kind: Deployment 
+metadata:
+  name: backend-services
+spec:
+  template:
+    tiles:
+      
+      # ElsatiCache Redis for Prod
+      tileAWSElastiCacheRedis506Prod:
+        tileReference: AWS-ElastiCache-Redis
+        tileVersion: 5.0.6x
+        inputs:
+          - name: vpcId
+            inputValue: <<parameter>> - vpcId    
+          - name: subnetIds
+            inputValues:
+              - <<parameter>> - private subnet id  
+              - <<parameter>> - private subnet id   
+          - name: redisClusterName
+            inputValue: mahjong-redis-prod
+
+      # AuroraMySQL for Prod
+      tileAuroraMysqlProd:
+        tileReference: AWS-Aurora-Mysql
+        tileVersion: 2.07.2
+        inputs:
+          - name: vpcId
+            inputValue: <<parameter>> - vpc id      
+          - name: clusterIdentifier
+            inputValue: mahjong-mysql-prod        
+          - name: masterUser
+            inputValue: admin        
+          - name: defaultDatabaseName
+            inputValue: testDb     
+ 
+
+      # ElasticSearch for Prod
+      tileElasticsearchCmdProd:
+        tileReference: AWS-ElasticSearch-CMD
+        tileVersion: 7.4.0
+        inputs:
+          - name: domainName
+            inputValue: mahjong-es-prod       
+          - name: aesAccessRoleArn
+            inputValue: <<parameter>> - role arn
+
+  summary:
+    description: |
+      ++++++++++++++++++++++++++++++++++++++++++++++++++++
+      +                 Backkend Service                 +
+      ++++++++++++++++++++++++++++++++++++++++++++++++++++
+    outputs:
+      - name: The endpoint of ElastiCache Redis for Production
+        value: $(tileAWSElastiCacheRedis506Prod.outputs.redisEndpoint)
+
+      
+    notes: []

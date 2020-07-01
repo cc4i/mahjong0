@@ -5,31 +5,11 @@ import (
 	"testing"
 )
 
-func TestRandString(t *testing.T) {
-	tests := []struct {
-		name   string
-		input  int
-		output int
-	}{
-		{"Testing length = 0", 0, 0},
-		{"Testing length = 3", 3, 3},
-		{"Testing length = 5", 5, 5},
-		{"Testing length = 8", 8, 8},
-		{"Testing length = -1", -1, 0},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			s := RandString(test.input)
-			assert.Equal(t, len(s), test.output)
-		})
-	}
-}
 func TestFindPair(t *testing.T) {
 	tests := []struct {
-		name string
+		name  string
 		input string
-		key string
+		key   string
 		value string
 	}{
 		{"string with space1", "abc= efg", "abc", "efg"},
@@ -41,7 +21,7 @@ func TestFindPair(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			k,v, err := FindPair(test.input)
+			k, v, err := FindPair(test.input)
 			assert.NoError(t, err)
 			assert.Equal(t, test.key, k)
 			assert.Equal(t, test.value, v)
@@ -49,8 +29,28 @@ func TestFindPair(t *testing.T) {
 	}
 }
 
-func TestExecutionPlan_ExtractValue(t *testing.T) {
+var sid = []string{"000-000-001", "000-000-002"}
+var tsEmpty = Ts{}
+var tsNormal = Ts{}
+var plan = &ExecutionPlan{}
 
+func BuildData() {
+
+}
+
+func TestExecutionPlan_ExtractValue(t *testing.T) {
+	tests := []struct {
+		name   string
+		input  string
+		output map[string]string
+	}{
+		{"normal output", ``, map[string]string{"x": "y", "x1": "y1"}},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(testing *testing.T) {
+
+		})
+	}
 }
 
 func TestExecutionPlan_ScanOutput(t *testing.T) {

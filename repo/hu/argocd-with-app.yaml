@@ -1,0 +1,68 @@
+apiVersion: mahjong.io/v1alpha1
+kind: Deployment 
+metadata:
+  name: argocd-with-app
+spec:
+  template:
+    tiles:
+      tileArgocd0152A:
+        tileReference: Argocd0
+        tileVersion: 1.5.2
+        inputs:
+          - name: cidr
+            inputValue: 192.0.0.0/16        
+          - name: clusterName
+            inputValue: argocd-app-cluster2
+          - name: capacity
+            inputValue: 2
+          - name: capacityInstance
+            inputValue: c5.large
+          - name: version
+            inputValue: 1.16
+        manifests:
+          namespace: argocd
+
+      goBumblebeeOnly001:
+        tileReference: Go-Bumblebee-ONLY
+        tileVersion: 0.0.1
+        dependsOn: 
+          - tileArgocd0152A
+        inputs:
+          - name: accessToken
+            inputValue: <GITHUB TOKEN>
+          - name: argocdNamespace
+            # <tileInstance.outputs.name>
+            inputValue: $(tileArgocd0152A.outputs.installedNamespace) 
+          - name: argocdUser
+            inputValue: $(tileArgocd0152A.outputs.user)
+          - name: argocdPassword
+            inputValue: $(tileArgocd0152A.outputs.password)
+
+  summary:
+      description: Argo CD has been installed in $(tileArgocd0152A.outputs.clusterName) with success and checking out following notes to get started.
+      outputs:
+        - name: EKS Cluster Name
+          value: $(tileArgocd0152A.outputs.clusterName)
+        - name: Master role arn for EKS Cluster
+          value: $(tileArgocd0152A.outputs.masterRoleARN)
+        - name: The API endpoint EKS Cluster
+          value: $(tileArgocd0152A.outputs.clusterEndpoint)
+        - name: ArgoCD admin
+          value: $(tileArgocd0152A.outputs.user)
+        - name: ArgoCD password
+          value: $(tileArgocd0152A.outputs.password)
+        - name: Application Repository
+          value: $(goBumblebeeOnly001.outputs.appRepo)
+        
+      notes:
+        - 1.Get all services information, 
+        - |
+          kubectl port-forward svc/argocd-server -n $(tileArgocd0152A.outputs.installedNamespace) 8080:443
+          kubectl port-forward svc/gateservice -n  $(goBumblebeeOnly001.outputs.appNamespace) 8080:443
+        - 2. Push changes to GitRepo $(goBumblebeeOnly001.outputs.appRepo) to to trigger automnated deployment
+        - 3. Execute following commands to quick start,
+        - |
+          cd $WORK_HOME/lib/go-bumblebee-only/apps;./start-argocd.sh
+        - |
+          cd $WORK_HOME/lib/go-bumblebee-only/apps;./login-argocd.sh;create-app.sh
+    

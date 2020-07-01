@@ -1,0 +1,44 @@
+
+apiVersion: mahjong.io/v1alpha1
+kind: Tile
+metadata:
+    name: {{ .TileName }}
+    category: Analysis
+    version: 0.1.0
+spec:
+
+  # Inputs are input parameters when lauching 
+  inputs:
+    # String
+    - name: queueName
+      inputType: String
+      description: 'The name of SQS queue'
+      require: true
+    # String
+    - name: visibilityTimeout
+      inputType: Number
+      description: 'The visibility timeout to be configured on the SQS Queue, in seconds. Default 300s'
+      require: false
+    # String
+    - name: topicName
+      inputType: String
+      description: 'The name of SNS topic'
+      require: true
+
+  outputs:
+    # String
+    - name: queueName
+      outputType: String
+      description: AWS::SQS::Queue.Name
+    # String
+    - name: queueArn
+      outputType: String
+      description: AWS::SQS::Queue.ARN
+    # String
+    - name: topicName
+      outputType: String
+      description: AWS::SNS::Topic.Name
+
+  # Notes are description list for addtional information.
+  notes: []
+

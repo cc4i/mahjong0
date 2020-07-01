@@ -100,11 +100,11 @@ type DeploymentSummaryOutput struct {
 type DeploymentTemplateDetail struct {
 	TileReference string       `json:"tileReference" `
 	TileVersion   string       `json:"tileVersion" `
-	DependsOn     string       `json:"dependsOn"`
+	DependsOn     []string     `json:"dependsOn,omitempty"`
 	Inputs        []TileInput  `json:"inputs"`
-	Manifests     TileManifest `json:"manifests"`
-	Region        string       `json:"region"`
-	Profile       string       `json:"profile"`
+	Manifests     TileManifest `json:"manifests,omitempty"`
+	Region        string       `json:"region,omitempty"`
+	Profile       string       `json:"profile,omitempty"`
 }
 
 // Tile specification

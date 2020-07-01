@@ -1,0 +1,61 @@
+import * as sns from '@aws-cdk/aws-sns';
+import * as subs from '@aws-cdk/aws-sns-subscriptions';
+import * as sqs from '@aws-cdk/aws-sqs';
+import * as cdk from '@aws-cdk/core';
+
+export interface {{.TileNameCDK}}Props {
+  /**
+   * The name of SQS queue
+   */
+  queueName: string;
+
+  /**
+   * The name of SNS topic
+   */
+  topicName: string;
+
+  /**
+   * The visibility timeout to be configured on the SQS Queue, in seconds.
+   *
+   * @default Duration.seconds(300)
+   */
+  visibilityTimeout?: number;
+}
+
+export class {{.TileNameCDK}} extends cdk.Construct {
+
+  /** @returns the name of the SQS queue */
+  public readonly queueName: string;
+
+  /** @returns the name of the SNS topic */
+  public readonly topicName: string;
+
+  /** @returns the ARN of the SQS queue */
+  public readonly queueArn: string;
+
+  constructor(scope: cdk.Construct, id: string, props: {{.TileNameCDK}}Props) {
+    super(scope, id);
+
+    const queue = new sqs.Queue(this, "SampleQueue", {
+      queueName: props.queueName,
+      visibilityTimeout: cdk.Duration.seconds(props.visibilityTimeout || 300)
+    });
+
+    const topic = new sns.Topic(this,"SampleTopic", {
+      topicName: props.topicName
+    });
+
+    topic.addSubscription(new subs.SqsSubscription(queue));
+
+    /** Following value can be referred by other CDK based Tiles */
+    this.queueName = queue.queueName;
+    this.topicName = topic.topicName;
+    this.queueArn = queue.queueArn;
+
+     /** Following value can be referred by other non-CDK based Tiles */
+    new cdk.CfnOutput(scope, "queueName", {value: this.queueName});
+    new cdk.CfnOutput(scope, "topicName", {value: this.queueName});
+    new cdk.CfnOutput(scope, "queueArn", {value: this.queueName});
+    
+  }
+}
