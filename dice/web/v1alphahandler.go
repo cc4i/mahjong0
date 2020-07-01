@@ -31,9 +31,8 @@ type WsBox struct {
 // WsWorker interface for all Websocket handlers
 type WsWorker interface {
 	// Processor acts as core interface between client and engine
-	Processor(ctx context.Context, messageType int, p []byte, dryRun bool) error
-	// SaveStatus persists the status of each deployment
-	SaveStatus(ctx context.Context)
+	Processor(ctx context.Context, messageType int, p []byte, dryRun bool, parallel bool) error
+
 }
 
 // WsHandler handle all coming request from WebSocket
@@ -53,6 +52,7 @@ func WsHandler(ctx context.Context, c *gin.Context) {
 
 	linuxCommand := c.Query("linuxCommand") == "true"
 	dryRun := c.Query("dryRun") == "true"
+	parallel := c.Query("dryRun") == "true"
 	for {
 		mt, message, err := ws.ReadMessage()
 		if err != nil {
@@ -66,7 +66,7 @@ func WsHandler(ctx context.Context, c *gin.Context) {
 			ep := &engine.ExecutionPlan{}
 			ep.LinuxCommandExecutor(stx, message, nil, wb.out)
 		} else {
-			err = wb.Processor(stx, mt, message, dryRun)
+			err = wb.Processor(stx, mt, message, dryRun, parallel)
 		}
 		if err != nil {
 			engine.SR(wb.out, []byte(err.Error()))
@@ -84,7 +84,7 @@ func WsCloseHandler(cancel context.CancelFunc, code int, txt string) error {
 }
 
 // Processor handle full process of deployment request
-func (wb *WsBox) Processor(ctx context.Context, messageType int, p []byte, dryRun bool) error {
+func (wb *WsBox) Processor(ctx context.Context, messageType int, p []byte, dryRun bool, parallel bool) error {
 	var ep *engine.ExecutionPlan
 	//
 	// 1. Parsing YAML
@@ -125,7 +125,11 @@ func (wb *WsBox) Processor(ctx context.Context, messageType int, p []byte, dryRu
 
 	//
 	// 4. execute cdk / manifest +
-	err = ep.ExecutePlan(ctx, dryRun, wb.out)
+	if parallel {
+		err = ep.ExecuteParallelPlan(ctx, dryRun, wb.out)
+	} else {
+		err = ep.ExecutePlan(ctx, dryRun, wb.out)
+	}
 	if err != nil {
 		if aTs, ok := engine.AllTs[dSid]; ok {
 			engine.UpdateDR(aTs.DR, engine.Interrupted.DSString())

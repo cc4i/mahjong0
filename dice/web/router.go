@@ -22,9 +22,15 @@ func Router(ctx context.Context) *gin.Engine {
 	r.GET("/v1alpha1/ws", func(c *gin.Context) {
 		WsHandler(ctx, c)
 	})
-
 	// Deployment API through WebSocket, but dry run only
 	r.GET("/v1alpha1/ws?dryRun=true", func(c *gin.Context) {
+		WsHandler(ctx, c)
+	})
+	// Parallel Deployment
+	r.GET("/v1alpha1/ws?parallel=true", func(c *gin.Context) {
+		WsHandler(ctx, c)
+	})
+	r.GET("/v1alpha1/ws?parallel=true&dryRun=true", func(c *gin.Context) {
 		WsHandler(ctx, c)
 	})
 	// Run Linux commands for purpose

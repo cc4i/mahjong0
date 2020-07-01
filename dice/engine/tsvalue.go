@@ -26,14 +26,14 @@ func (c DeploymentStatus) DSString() string {
 
 // TilesGrid represents relationship table of all Tile for each deployment
 type TilesGrid struct {
-	TileInstance       string   // TileInstance is unique ID of Tile as instance
-	ExecutableOrder    int      // ExecutableOrder is execution order of Tile
-	TileName           string   // TileName is the name of Tile
-	TileVersion        string   // TileVersion is the version of Tile
-	TileCategory       string   // TileCategory is the category of Tile
-	RootTileInstance   string   // RootTileInstance indicates Tiles are in the same group
-	ParentTileInstance []string // ParentTileInstance indicates who's dependent on Me - Tile
-	Status             string   // Status of deployment
+	TileInstance        string   // TileInstance is unique ID of Tile as instance
+	ExecutableOrder     int      // ExecutableOrder is execution order of Tile
+	TileName            string   // TileName is the name of Tile
+	TileVersion         string   // TileVersion is the version of Tile
+	TileCategory        string   // TileCategory is the category of Tile
+	RootTileInstance    string   // RootTileInstance indicates Tiles are in the same group
+	ParentTileInstances []string // ParentTileInstances indicates who's dependent on Me - Tile
+	Status              string   // Status of deployment
 }
 
 // DeploymentRecord is a record of each deployment
@@ -174,7 +174,7 @@ func AllDependentTiles(dSid string, tileInstance string) []v1alpha1.Tile {
 	if allTG, ok := AllTilesGrids[dSid]; ok {
 		var tiles []v1alpha1.Tile
 		for _, v := range *allTG {
-			if utils.Contains(v.ParentTileInstance, tileInstance) {
+			if utils.Contains(v.ParentTileInstances, tileInstance) {
 				if at, ok := AllTs[dSid]; ok {
 					if tile, ok := at.AllTilesN[v.TileInstance]; ok {
 						tiles = append(tiles, *tile)
@@ -187,12 +187,32 @@ func AllDependentTiles(dSid string, tileInstance string) []v1alpha1.Tile {
 	return nil
 }
 
-// IsDuplicatedCategory determine if it's duplicated Tile under same group
-func IsDuplicatedCategory(dSid string, rootTileInstance string, tileName string) bool {
+func IsDependenciesDone(dSid string, tileInstance string) bool {
+
+	if allTG, ok := AllTilesGrids[dSid]; ok {
+		if tg, ok := (*allTG)[tileInstance];ok {
+
+			for _, dp := range tg.ParentTileInstances {
+				if ctg, ok := (*allTG)[dp];ok {
+					if ctg.Status != Done.DSString() {
+						return false
+					}
+				}
+			}
+
+		}
+	}
+	return true
+}
+
+// IsDuplicatedTile determine if it's duplicated Tile under same root-tile-instance
+func IsDuplicatedTile(dSid string, rootTileInstance string, tileName string) bool {
 	if allTG, ok := AllTilesGrids[dSid]; ok {
 		for _, v := range *allTG {
 			if v.RootTileInstance == rootTileInstance {
 				if v.TileName == tileName {
+					//strings.Contains(tileInstance, "Generated")
+					//utils.ContainsArray(v.ParentTileInstances, parentTileInstances)
 					return true
 				}
 			}
@@ -284,11 +304,11 @@ func ValueRef(dSid string, ref string, ti string) (string, error) {
 	return ref, nil
 }
 
-// ParentTileInstance return Tile instance of parent Tile
+// ParentTileInstances return Tile instance of parent Tile
 func ParentTileInstance(dSid string, tileInstance string) []string {
 	if allTG, ok := AllTilesGrids[dSid]; ok {
 		if tg, ok := (*allTG)[tileInstance]; ok {
-			return tg.ParentTileInstance
+			return tg.ParentTileInstances
 		}
 	}
 	return nil
@@ -365,7 +385,7 @@ func AllRootTileInstance(dSid string) []string {
 	var root []string
 	if allTG, ok := AllTilesGrids[dSid]; ok {
 		for _, v := range *allTG {
-			if len(v.ParentTileInstance) == 1 && v.ParentTileInstance[0] == "root" {
+			if len(v.ParentTileInstances) == 1 && v.ParentTileInstances[0] == "root" {
 				root = append(root, v.TileInstance)
 			}
 		}
