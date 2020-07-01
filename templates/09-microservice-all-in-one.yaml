@@ -1,7 +1,7 @@
 apiVersion: mahjong.io/v1alpha1
 kind: Deployment 
 metadata:
-  name: compact-microservice-jazz
+  name: microservice-all-in-one
 spec:
   template:
     tiles:
@@ -27,7 +27,7 @@ spec:
           - name: clusterVersion
             inputValue: 1.16
           - name: keyPair4EC2
-            inputValue: [!parameter! key pairs for worker nodes]
+            inputValue: <<parameter>> - key pairs for worker nodes
           - name: capacityInstance
             inputValues: 
               - m5.large
@@ -45,7 +45,7 @@ spec:
           - name: clusterVersion
             inputValue: 1.16
           - name: keyPair4EC2
-            inputValue: [!parameter! key pairs for worker nodes]
+            inputValue: <<parameter>> - key pairs for worker nodes
           - name: capacityInstance
             inputValues: 
               - m5.large
@@ -86,7 +86,7 @@ spec:
         tileReference: FluentBit-For-AES
         tileVersion: 1.4.6
         dependsOn: 
-          - tileEksWithSpotProd
+          - tileElasticsearchCmdProd
         inputs:
           - name: clusterName
             inputValue: $(tileEksWithSpotProd.outputs.clusterName)       
@@ -106,6 +106,7 @@ spec:
             inputValue: $(tileEksWithSpotProd.outputs.clusterName)
           - name: masterRoleARN
             inputValue: $(tileEksWithSpotProd.outputs.masterRoleARN)
+
       # Istio for Stage
       tileIstio0ForStage:
         tileReference: Istio0
@@ -124,6 +125,9 @@ spec:
         tileVersion: 1.5.6
         dependsOn: 
           - tileIstio0ForStage
+          - tileIstio0ForProd
+          - tileAWSElastiCacheRedis506Prod
+          - tileFluentBit4AesProd
         inputs:
           - name: clusterName
             inputValue: $(tileEksWithSpotStage.outputs.clusterName)         
@@ -134,9 +138,11 @@ spec:
       tileGoBumblebeeJazz071:
         tileReference: Go-Bumblebee-Jazz
         tileVersion: 0.7.1
+        dependsOn: 
+          - tileArgocdWithExsitingEks152
         inputs:
           - name: gitAccessToken
-            inputValue: [!parameter! personal access token for GitHub]
+            inputValue: <<parameter>> - personal access token for GitHub
           - name: appRepo
             inputValue: go-bumblebee
           - name: appBranch
@@ -200,6 +206,6 @@ spec:
         value: http://$(tileIstio0ForStage.outputs.ingressHost)/air/city/beijing
       
     notes:
-      - "Air qulity of city - /air/city/:city"
-      - "Air qulity of GEO - /air/geo/:lat/:lng"
-      - "README for Air - /air/aqi"
+      - Air qulity of city - "/air/city/:city"
+      - Air qulity of GEO - "/air/geo/:lat/:lng"
+      - Definition for AQI - "/air/aqi"

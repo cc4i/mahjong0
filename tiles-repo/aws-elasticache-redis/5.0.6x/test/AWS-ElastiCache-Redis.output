@@ -1,0 +1,84 @@
+{"level":"info","msg":"+ export WORK_HOME=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/go-bumblebee-jazz-application-demo-wE1tltyX"}
+{"level":"info","msg":"+ WORK_HOME=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/go-bumblebee-jazz-application-demo-wE1tltyX"}
+{"level":"info","msg":"+ export TILE_HOME=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/go-bumblebee-jazz-application-demo-wE1tltyX/lib/aws-elasticache-redis"}
+{"level":"info","msg":"+ TILE_HOME=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/go-bumblebee-jazz-application-demo-wE1tltyX/lib/aws-elasticache-redis"}
+{"level":"info","msg":"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/go-bumblebee-jazz-application-demo-wE1tltyX"}
+{"level":"info","msg":"+ npm install"}
+{"level":"info","msg":"npm WARN @aws-cdk/core@1.42.0 requires a peer of @aws-cdk/cdk-assets-schema@1.42.0 but none is installed. You must install peer dependencies yourself."}
+{"level":"info","msg":"npm WARN super@0.1.0 No repository field."}
+{"level":"info","msg":"npm WARN super@0.1.0 No license field."}
+{"level":"info","msg":""}
+{"level":"info","msg":"audited 858 packages in 6.606s"}
+{"level":"info","msg":""}
+{"level":"info","msg":"14 packages are looking for funding"}
+{"level":"info","msg":"  run `npm fund` for details"}
+{"level":"info","msg":""}
+{"level":"info","msg":"found 0 vulnerabilities"}
+{"level":"info","msg":""}
+{"level":"info","msg":"+ npm run build"}
+{"level":"info","msg":""}
+{"level":"info","msg":"\u003e super@0.1.0 build /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/go-bumblebee-jazz-application-demo-wE1tltyX"}
+{"level":"info","msg":"\u003e tsc"}
+{"level":"info","msg":""}
+{"level":"info","msg":"+ cdk list"}
+{"level":"info","msg":"Network0Stack9cd004be"}
+{"level":"info","msg":"Network0Stackbc5a18b6"}
+{"level":"info","msg":"AWSAuroraMysqlStack15d060ef"}
+{"level":"info","msg":"AWSAuroraMysqlStackd4e1e0e1"}
+{"level":"info","msg":"AWSElastiCacheRedisStack5b48a7a6"}
+{"level":"info","msg":"AWSElastiCacheRedisStacka9c8e94b"}
+{"level":"info","msg":"EksWithSpotStack2284e8d0"}
+{"level":"info","msg":"EksWithSpotStack68a88232"}
+{"level":"info","msg":"+ cdk deploy AWSElastiCacheRedisStacka9c8e94b --require-approval never"}
+{"level":"info","msg":"Including dependency stacks: Network0Stack9cd004be"}
+{"level":"info","msg":"Network0Stack9cd004be"}
+{"level":"info","msg":"Network0Stack9cd004be: deploying..."}
+{"level":"info","msg":""}
+{"level":"info","msg":" ✅  Network0Stack9cd004be (no changes)"}
+{"level":"info","msg":""}
+{"level":"info","msg":"Outputs:"}
+{"level":"info","msg":"Network0Stack9cd004be.Network0publicSubnetId1AE831B0A = subnet-09a421484a9fd7825"}
+{"level":"info","msg":"Network0Stack9cd004be.Network0isolatedSubnetId206A72368 = subnet-01d9f17893c56725b"}
+{"level":"info","msg":"Network0Stack9cd004be.Network0privateSubnetId15BEF5820 = subnet-01d5bc68bec7801a0"}
+{"level":"info","msg":"Network0Stack9cd004be.ExportsOutputRefNetwork0BaseVPCingressSubnet2Subnet52888390B37BC1D9 = subnet-00dd5119bae289252"}
+{"level":"info","msg":"Network0Stack9cd004be.ExportsOutputRefNetwork0BaseVPCapplicationSubnet1SubnetBC4191259BA51423 = subnet-01d5bc68bec7801a0"}
+{"level":"info","msg":"Network0Stack9cd004be.ExportsOutputRefNetwork0BaseVPCF17C8F455FAB5CE7 = vpc-0747a487cac350652"}
+{"level":"info","msg":"Network0Stack9cd004be.ExportsOutputRefNetwork0BaseVPCapplicationSubnet2Subnet98478B5F0BDF1D6E = subnet-0b2394de303addade"}
+{"level":"info","msg":"arn:aws:cloudformation:us-west-2:530820415924:stack/Network0Stack9cd004be/02caa590-ab06-11ea-aa34-06a318773a24"}
+{"level":"info","msg":"Network0Stack9cd004be.ExportsOutputRefNetwork0BaseVPCingressSubnet1Subnet5744344C34286214 = subnet-09a421484a9fd7825"}
+{"level":"info","msg":"Network0Stack9cd004be.Network0availabilityZonesuswest2bD55CD48C = us-west-2b"}
+{"level":"info","msg":"Network0Stack9cd004be.ExportsOutputFnGetAttNetwork0BaseVPCF17C8F45CidrBlockEBE760E6 = 192.0.0.0/16"}
+{"level":"info","msg":"Network0Stack9cd004be.Network0publicSubnetId26BBC24FE = subnet-00dd5119bae289252"}
+{"level":"info","msg":"Network0Stack9cd004be.Network0privateSubnetId281C6427A = subnet-0b2394de303addade"}
+{"level":"info","msg":"Network0Stack9cd004be.Network0isolatedSubnetId128715501 = subnet-04177b73b43e37d22"}
+{"level":"info","msg":"Network0Stack9cd004be.Network0vpcId7C11C88F = vpc-0747a487cac350652"}
+{"level":"info","msg":"Network0Stack9cd004be.Network0availabilityZonesuswest2a30BA59C6 = us-west-2a"}
+{"level":"info","msg":""}
+{"level":"info","msg":"Stack ARN:"}
+{"level":"info","msg":"AWSElastiCacheRedisStacka9c8e94b"}
+{"level":"info","msg":"AWSElastiCacheRedisStacka9c8e94b: deploying..."}
+{"level":"info","msg":"AWSElastiCacheRedisStacka9c8e94b: creating CloudFormation changeset..."}
+{"level":"info","msg":" 0/5 | 11:21:13 PM | CREATE_IN_PROGRESS   | AWS::CDK::Metadata                 | CDKMetadata "}
+{"level":"info","msg":" 0/5 | 11:21:13 PM | CREATE_IN_PROGRESS   | AWS::ElastiCache::SubnetGroup      | SubnetGroup "}
+{"level":"info","msg":" 0/5 | 11:21:13 PM | CREATE_IN_PROGRESS   | AWS::EC2::SecurityGroup            | SecurityGroup (SecurityGroupDD263621) "}
+{"level":"info","msg":" 0/5 | 11:21:14 PM | CREATE_IN_PROGRESS   | AWS::ElastiCache::SubnetGroup      | SubnetGroup Resource creation Initiated"}
+{"level":"info","msg":" 0/5 | 11:21:15 PM | CREATE_IN_PROGRESS   | AWS::CDK::Metadata                 | CDKMetadata Resource creation Initiated"}
+{"level":"info","msg":" 1/5 | 11:21:15 PM | CREATE_COMPLETE      | AWS::CDK::Metadata                 | CDKMetadata "}
+{"level":"info","msg":" 2/5 | 11:21:15 PM | CREATE_COMPLETE      | AWS::ElastiCache::SubnetGroup      | SubnetGroup "}
+{"level":"info","msg":" 2/5 | 11:21:18 PM | CREATE_IN_PROGRESS   | AWS::EC2::SecurityGroup            | SecurityGroup (SecurityGroupDD263621) Resource creation Initiated"}
+{"level":"info","msg":" 3/5 | 11:21:20 PM | CREATE_COMPLETE      | AWS::EC2::SecurityGroup            | SecurityGroup (SecurityGroupDD263621) "}
+{"level":"info","msg":" 3/5 | 11:21:22 PM | CREATE_IN_PROGRESS   | AWS::ElastiCache::ReplicationGroup | ReplicationGroup "}
+{"level":"info","msg":" 3/5 | 11:21:24 PM | CREATE_IN_PROGRESS   | AWS::ElastiCache::ReplicationGroup | ReplicationGroup Resource creation Initiated"}
+{"level":"info","msg":"3/5 Currently in progress: ReplicationGroup"}
+{"level":"info","msg":" 4/5 | 11:29:27 PM | CREATE_COMPLETE      | AWS::ElastiCache::ReplicationGroup | ReplicationGroup "}
+{"level":"info","msg":" 5/5 | 11:29:29 PM | CREATE_COMPLETE      | AWS::CloudFormation::Stack         | AWSElastiCacheRedisStacka9c8e94b "}
+{"level":"info","msg":""}
+{"level":"info","msg":" ✅  AWSElastiCacheRedisStacka9c8e94b"}
+{"level":"info","msg":""}
+{"level":"info","msg":"Outputs:"}
+{"level":"info","msg":"AWSElastiCacheRedisStacka9c8e94b.redisEndpoint = redis-cluster-prod-wgxac.okngyw.clustercfg.usw2.cache.amazonaws.com:6379"}
+{"level":"info","msg":"AWSElastiCacheRedisStacka9c8e94b.redisClusterName = redis-cluster-prod-wgxac"}
+{"level":"info","msg":""}
+{"level":"info","msg":"Stack ARN:"}
+{"level":"info","msg":"arn:aws:cloudformation:us-west-2:530820415924:stack/AWSElastiCacheRedisStacka9c8e94b/776dc020-ab0c-11ea-8ad7-0621d00a30ea"}
+{"level":"info","msg":"+ echo 0"}

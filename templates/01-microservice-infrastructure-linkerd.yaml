@@ -95,14 +95,36 @@ spec:
         tileReference: Linkerd
         tileVersion: 2.7.1
         dependsOn: 
-          - tileEksWithSpotProd
+          - tileEksWithSpotStage
         inputs:
           - name: clusterName
             inputValue: $(tileEksWithSpotStage.outputs.clusterName)       
           - name: masterRoleARN
             inputValue: $(tileEksWithSpotStage.outputs.masterRoleARN)
+
       # Traefik for Prod
+      tileTraefikProd:
+        tileReference: Traefik
+        tileVersion: 2.2.1
+        dependsOn: 
+          - tileEksWithSpotProd
+        inputs:
+          - name: clusterName
+            inputValue: $(tileEksWithSpotProd.outputs.clusterName)       
+          - name: masterRoleARN
+            inputValue: $(tileEksWithSpotProd.outputs.masterRoleARN)
+            
       # Traefik for Stage
+      tileTraefikStage:
+        tileReference: Traefik
+        tileVersion: 2.2.1
+        dependsOn: 
+          - tileEksWithSpotStage
+        inputs:
+          - name: clusterName
+            inputValue: $(tileEksWithSpotStage.outputs.clusterName)       
+          - name: masterRoleARN
+            inputValue: $(tileEksWithSpotStage.outputs.masterRoleARN)
       
       # ArgoCD
       tileArgocdWithExsitingEks152:

@@ -15,16 +15,16 @@ spec:
   # Dependencies represent dependency with other Tile
   dependencies:
       # As a reference name 
-    - name: eks
-      # Tile name
-      tileReference: Eks0
-      # Tile version
-      tileVersion: 0.0.5
     - name: network
       # Tile name
       tileReference: Network0
       # Tile version
       tileVersion: 0.0.1
+    - name: eks
+      # Tile name
+      tileReference: Eks0
+      # Tile version
+      tileVersion: 0.0.5
       
   # 
   inputs:

@@ -3,15 +3,15 @@ kind: Tile
 metadata:
     name: AWS-ElastiCache-Redis
     category: Database
-    version: 5.0.6
+    version: 5.0.6x
 spec:
 
   # Inputs are input parameters when lauching 
   inputs:
     # CDKObject
-    - name: vpc
-      inputType: CDKObject
-      description: 'Refer to VPC object'
+    - name: vpcId
+      inputType: String
+      description: 'Refer to VPC ID'
       require: true
     - name: subnetIds
       inputType: String[]

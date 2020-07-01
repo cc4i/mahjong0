@@ -9,14 +9,14 @@ spec:
       # ElsatiCache Redis for Prod
       tileAWSElastiCacheRedis506Prod:
         tileReference: AWS-ElastiCache-Redis
-        tileVersion: 5.0.6
+        tileVersion: 5.0.6x
         inputs:
-          - name: vpc
-            inputValue: $cdk(tileEksWithSpotProd.Network0.baseVpc)     
+          - name: vpcId
+            inputValue: <<parameter>> - vpcId    
           - name: subnetIds
             inputValues:
-              - $cdk(tileEksWithSpotProd.Network0.privateSubnetId1)
-              - $cdk(tileEksWithSpotProd.Network0.privateSubnetId2)
+              - <<parameter>> - private subnet id  
+              - <<parameter>> - private subnet id   
           - name: redisClusterName
             inputValue: mahjong-redis-prod
 
@@ -25,8 +25,8 @@ spec:
         tileReference: AWS-Aurora-Mysql
         tileVersion: 2.07.2
         inputs:
-          - name: vpc
-            inputValue: $cdk(tileEksWithSpotProd.Network0.baseVpc)        
+          - name: vpcId
+            inputValue: <<parameter>> - vpc id      
           - name: clusterIdentifier
             inputValue: mahjong-mysql-prod        
           - name: masterUser
@@ -43,16 +43,16 @@ spec:
           - name: domainName
             inputValue: mahjong-es-prod       
           - name: aesAccessRoleArn
-            inputValue: $(tileEksWithSpotProd.outputs.nodesRoleARN)
+            inputValue: <<parameter>> - role arn
 
   summary:
     description: |
       ++++++++++++++++++++++++++++++++++++++++++++++++++++
-      +   Perfect Microservices with Demo Application    +
+      +                 Backkend Service                 +
       ++++++++++++++++++++++++++++++++++++++++++++++++++++
     outputs:
-      - name: ElastiCache Redis for Production
-        value: 
+      - name: The endpoint of ElastiCache Redis for Production
+        value: $(tileAWSElastiCacheRedis506Prod.outputs.redisEndpoint)
 
       
     notes: []

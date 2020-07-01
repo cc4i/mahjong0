@@ -1,0 +1,31 @@
+apiVersion: mahjong.io/v1alpha1
+kind: Deployment 
+metadata:
+  name: elastiredis-simple
+spec:
+  template:
+    tiles:
+      tileAwsElastiCacheRedis:
+        tileReference: AWS-ElastiCache-Redis
+        tileVersion: 5.0.6x
+        inputs:
+          - name: vpcId
+            inputValue: vpc-0f03f72a79a1deda3
+          - name: subnetIds
+            inputValues: 
+              - subnet-0c8fbad4b0ac0b6a5
+              - subnet-0c8fbad4b0ac0b6a5
+          - name: redisClusterName
+            inputValue: elastiredis-simple
+          
+
+  summary:
+      description: AWS ElasticSerach Example 
+      outputs:
+        - name: Domain Name
+          value: $(tileAwsElasticSearch740.outputs.domainName)
+        - name: Domain Endpoint
+          value: $(tileAwsElasticSearch740.outputs.domainEndpoint)
+
+      notes: []
+    
