@@ -187,7 +187,7 @@ func AllDependentTiles(dSid string, tileInstance string) []v1alpha1.Tile {
 	return nil
 }
 
-func IsDependenciesDone(dSid string, tileInstance string) bool {
+func IsDependenciesDone(dSid string, tileInstance string)(string,bool) {
 
 	if allTG, ok := AllTilesGrids[dSid]; ok {
 		if tg, ok := (*allTG)[tileInstance];ok {
@@ -195,14 +195,14 @@ func IsDependenciesDone(dSid string, tileInstance string) bool {
 			for _, dp := range tg.ParentTileInstances {
 				if ctg, ok := (*allTG)[dp];ok {
 					if ctg.Status != Done.DSString() {
-						return false
+						return ctg.TileInstance, false
 					}
 				}
 			}
 
 		}
 	}
-	return true
+	return "", true
 }
 
 // IsDuplicatedTile determine if it's duplicated Tile under same root-tile-instance
