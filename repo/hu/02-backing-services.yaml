@@ -1,7 +1,7 @@
 apiVersion: mahjong.io/v1alpha1
 kind: Deployment 
 metadata:
-  name: backend-services
+  name: backing-services
 spec:
   template:
     tiles:
