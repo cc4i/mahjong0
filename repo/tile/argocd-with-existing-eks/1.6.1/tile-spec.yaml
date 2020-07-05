@@ -3,7 +3,7 @@ kind: Tile
 metadata:
     name: Argocd-With-Existing-EKS
     category: ContainerApplication
-    version: 1.5.6
+    version: 1.6.1
     # Dependent on what kind of vendor service, to determine what input parameters are required. 
     # For example, dependentOnVendorService: EKS, that's required 'clusterName', 'masterRoleARN'
     dependentOnVendorService: EKS
@@ -15,7 +15,7 @@ spec:
         command: |
           cd $TILE_HOME
           kubectl create ns argocd || true
-          kubectl apply -f lib/k8s/install.yaml -n argocd
+          kubectl apply -f lib/argocd.yaml -n argocd
       - name: CheckArgocd
         command: |
           kubectl get deployments -n argocd
@@ -41,6 +41,11 @@ spec:
               "admin.password": "$2a$10$lv90EJg9bW88XqUjjkhpWekVoRZVVgtLULKuiui/eUmAnR/rlL/ui",
               "admin.passwordMtime": "'$(date +%FT%T%Z)'"
             }}'
+      - name: InstallRollouts
+        command: |
+          cd $TILE_HOME
+          kubectl create namespace argo-rollouts || true
+          kubectl apply -f lib/rollouts.yaml -n argo-rollouts
           
   inputs:
     # String
