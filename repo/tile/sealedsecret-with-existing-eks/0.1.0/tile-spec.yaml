@@ -47,6 +47,7 @@ spec:
       - name: InstallExistingKeyIfHave
         command: |
           [[ -n "$TLS_CRT" && -n "$TLS_KEY" ]] && kubectl create ns $NAMESPACE_NAME || true
+          [[ -n "$TLS_CRT" && -n "$TLS_KEY" ]] && kubectl apply -f ./key-go.yaml -n $NAMESPACE_NAME
       - name: SetupNamespaceForController
         command: |
           cd $TILE_HOME/lib/k8s
@@ -55,10 +56,11 @@ spec:
   outputs:
     - name: namespace
       outputType: String
-      defaultValue: namespace
+      defaultValue: kube-system
 
   manifests:
     manifestType: K8s
+    namespace: kube-system
     files:
       - k8s/controller-0.12.4-go.yaml
 
