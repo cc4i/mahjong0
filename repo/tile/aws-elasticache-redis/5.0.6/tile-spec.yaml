@@ -14,7 +14,7 @@ spec:
       description: 'Refer to VPC object'
       require: true
     - name: subnetIds
-      inputType: String[]
+      inputType: CDKObject[]
       description: 'Refer to Subnet Id'
       require: true
     - name: redisClusterName
