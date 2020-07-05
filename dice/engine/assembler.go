@@ -872,7 +872,7 @@ func ToParallelFlow(p *ExecutionPlan) []string {
 
 func generateTileInstance(tileInstance string, tileName string, rootTileInstance string) string {
 	if tileInstance == "" {
-		return fmt.Sprintf("%s%s%s%s", tileName, rootTileInstance, "Generated", utils.RandString(6))
+		return fmt.Sprintf("%s%s%s", tileName, rootTileInstance, "Generated")
 	} else {
 		return tileInstance
 	}

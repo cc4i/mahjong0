@@ -124,11 +124,15 @@ func (ep *ExecutionPlan) RunPlan(ctx context.Context, dryRun bool, wg *sync.Wait
 		for e := ep.Plan.Back(); e != nil; e = e.Prev() {
 			stage := e.Value.(*ExecutionStage)
 			for {
-				if dependency, ok := IsDependenciesDone(dSid, stage.Name); ok {
+				if dependency, ok, err := IsDependenciesDone(dSid, stage.Name); ok {
 					break
 				} else {
-					log.Infof("Dependent tile : %s was not ready yet and waiting 5s ...", dependency)
-					time.Sleep(5 * time.Second)
+					if err != nil {
+						return err
+					} else {
+						log.Infof("Dependent tile : %s was not ready yet and waiting 5s ...", dependency)
+						time.Sleep(5 * time.Second)
+					}
 				}
 			}
 

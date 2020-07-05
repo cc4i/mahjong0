@@ -52,7 +52,7 @@ func WsHandler(ctx context.Context, c *gin.Context) {
 
 	linuxCommand := c.Query("linuxCommand") == "true"
 	dryRun := c.Query("dryRun") == "true"
-	parallel := c.Query("dryRun") == "true"
+	parallel := c.Query("parallel") == "true"
 	for {
 		mt, message, err := ws.ReadMessage()
 		if err != nil {

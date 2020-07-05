@@ -187,22 +187,24 @@ func AllDependentTiles(dSid string, tileInstance string) []v1alpha1.Tile {
 	return nil
 }
 
-func IsDependenciesDone(dSid string, tileInstance string)(string,bool) {
+func IsDependenciesDone(dSid string, tileInstance string)(string, bool, error) {
 
 	if allTG, ok := AllTilesGrids[dSid]; ok {
 		if tg, ok := (*allTG)[tileInstance];ok {
 
 			for _, dp := range tg.ParentTileInstances {
 				if ctg, ok := (*allTG)[dp];ok {
-					if ctg.Status != Done.DSString() {
-						return ctg.TileInstance, false
+					if ctg.Status == Interrupted.DSString() {
+						return ctg.TileInstance, false, errors.New(ctg.TileInstance + " was failed to provision")
+					} else if  ctg.Status != Done.DSString() {
+						return ctg.TileInstance, false, nil
 					}
 				}
 			}
 
 		}
 	}
-	return "", true
+	return "", true, nil
 }
 
 // IsDuplicatedTile determine if it's duplicated Tile under same root-tile-instance
