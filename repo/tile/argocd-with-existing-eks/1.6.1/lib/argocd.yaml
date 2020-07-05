@@ -2568,6 +2568,9 @@ spec:
         - argocd-server
         - --staticassets
         - /shared/app
+        # add root path for UI and API server
+        - --rootpath
+        - /argocd
         image: argoproj/argocd:v1.6.1
         imagePullPolicy: Always
         livenessProbe:
