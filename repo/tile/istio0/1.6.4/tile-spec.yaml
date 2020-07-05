@@ -1,0 +1,79 @@
+apiVersion: mahjong.io/v1alpha1
+kind: Tile
+metadata:
+    name: Istio0
+    category: ContainerApplication
+    version: 1.6.4
+    dependentOnVendorService: EKS
+# Specification
+spec: 
+  preRun:
+    stages:
+      - name: InstallIstio1.6
+        command: |
+            cd $TILE_HOME
+            kubectl apply -f lib/istio-operator-1.6.4.yaml
+            sleep 10
+            kubectl get pods -n istio-operator
+            
+            # Create namespace for Istio
+            kubectl create ns istio-system || true
+
+            # Active Istio with demo profile
+            kubectl apply -f lib/control-plane.yaml
+
+            # Info
+            kubectl get ns
+            kubectl get pods -n istio-system
+            kubectl get svc -n istio-system
+        readinessProbe:
+          command: |
+            hostname=`kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'`
+            if [ $hostname = "" ]
+            then
+              echo "Failed to get hostname"
+              exit 1
+            fi
+            echo "hostname = $hostname"
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 300
+          successThreshold: 1
+          failureThreshold: -1    
+  inputs:
+    # String
+    - name: clusterName
+      inputType: String
+      require: true
+    # String
+    - name: masterRoleARN
+      inputType: String
+      require: true
+
+
+  # Ouptputs represnt output value after launched, for 'ContainerApplication' might need leverage specific command to retrive output.
+  outputs:
+    # String
+    - name: installedNamespace
+      outputType: String
+      defaultValue: istio-system
+      description: Custom::String
+    - name: ingressHost
+      outputType: String
+      defaultValueCommand: kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
+      description: Custom::String
+    - name: ingressPort
+      outputType: String
+      defaultValueCommand: kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="http2")].port}'
+      description: Custom::String
+    - name: secureIngressHost
+      outputType: String
+      defaultValueCommand: kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="https")].port}'
+      description: Custom::String
+    - name: tcpIngressPort
+      outputType: String
+      defaultValueCommand: kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="tcp")].port}'
+      description: Custom::String
+
+  notes: []
+

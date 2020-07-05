@@ -1,0 +1,86 @@
+{"level":"info","msg":"+ aws eks update-kubeconfig --name mahjong-eks-prod --role-arn arn:aws:iam::530820415924:role/EksWithSpotStacktileEksWi-EksWithSpotEksClusterMas-1DJZRIMZUKZJT --kubeconfig /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/compact-microservice-jazz/lib/istio0/kube.config"}
+{"level":"info","msg":"Added new context arn:aws:eks:us-west-2:530820415924:cluster/mahjong-eks-prod to /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/compact-microservice-jazz/lib/istio0/kube.config"}
+{"level":"info","msg":"+ export KUBECONFIG=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/compact-microservice-jazz/lib/istio0/kube.config"}
+{"level":"info","msg":"+ KUBECONFIG=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/compact-microservice-jazz/lib/istio0/kube.config"}
+{"level":"info","msg":"+ export WORK_HOME=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/compact-microservice-jazz"}
+{"level":"info","msg":"+ WORK_HOME=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/compact-microservice-jazz"}
+{"level":"info","msg":"+ export TILE_HOME=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/compact-microservice-jazz/lib/istio0"}
+{"level":"info","msg":"+ TILE_HOME=/Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/compact-microservice-jazz/lib/istio0"}
+{"level":"info","msg":"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/compact-microservice-jazz"}
+{"level":"info","msg":"+ cd /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/compact-microservice-jazz/lib/istio0"}
+{"level":"info","msg":"+ kubectl apply -f lib/istio-operator-1.6.0.yaml"}
+{"level":"info","msg":"namespace/istio-operator unchanged"}
+{"level":"info","msg":"serviceaccount/istio-operator unchanged"}
+{"level":"info","msg":"customresourcedefinition.apiextensions.k8s.io/istiooperators.install.istio.io configured"}
+{"level":"info","msg":"clusterrole.rbac.authorization.k8s.io/istio-operator configured"}
+{"level":"info","msg":"clusterrolebinding.rbac.authorization.k8s.io/istio-operator unchanged"}
+{"level":"info","msg":"service/istio-operator unchanged"}
+{"level":"info","msg":"deployment.apps/istio-operator unchanged"}
+{"level":"info","msg":"+ sleep 10"}
+{"level":"info","msg":"+ kubectl get pods -n istio-operator"}
+{"level":"info","msg":"NAME                              READY   STATUS    RESTARTS   AGE"}
+{"level":"info","msg":"istio-operator-58f98cd489-nmmv8   1/1     Running   0          4h31m"}
+{"level":"info","msg":"+ kubectl create ns istio-system"}
+{"level":"info","msg":"Error from server (AlreadyExists): namespaces \"istio-system\" already exists"}
+{"level":"info","msg":"+ true"}
+{"level":"info","msg":"+ kubectl apply -f lib/control-plane.yaml"}
+{"level":"info","msg":"istiooperator.install.istio.io/istiocontrolplane unchanged"}
+{"level":"info","msg":"+ kubectl get ns"}
+{"level":"info","msg":"NAME              STATUS   AGE"}
+{"level":"info","msg":"default           Active   32h"}
+{"level":"info","msg":"go-bumblebee      Active   28h"}
+{"level":"info","msg":"istio-operator    Active   28h"}
+{"level":"info","msg":"istio-system      Active   28h"}
+{"level":"info","msg":"kube-node-lease   Active   32h"}
+{"level":"info","msg":"kube-public       Active   32h"}
+{"level":"info","msg":"kube-system       Active   32h"}
+{"level":"info","msg":"logging           Active   28h"}
+{"level":"info","msg":"+ kubectl get pods -n istio-system"}
+{"level":"info","msg":"NAME                                    READY   STATUS    RESTARTS   AGE"}
+{"level":"info","msg":"grafana-74dc798895-tg8g2                1/1     Running   0          4h31m"}
+{"level":"info","msg":"istio-ingressgateway-5d869f5bbf-85xh9   1/1     Running   0          4h31m"}
+{"level":"info","msg":"istio-tracing-8584b4d7f9-q8t6q          1/1     Running   0          4h31m"}
+{"level":"info","msg":"istiod-648555b9b7-5ztpx                 1/1     Running   0          4h31m"}
+{"level":"info","msg":"kiali-6f457f5964-vtczc                  1/1     Running   0          4h31m"}
+{"level":"info","msg":"prometheus-7fb8c98b68-7c7bb             2/2     Running   0          4h31m"}
+{"level":"info","msg":"+ kubectl get svc -n istio-system"}
+{"level":"info","msg":"NAME                        TYPE           CLUSTER-IP       EXTERNAL-IP                                                              PORT(S)                                                                      AGE"}
+{"level":"info","msg":"grafana                     ClusterIP      172.20.175.170   \u003cnone\u003e                                                                   3000/TCP                                                                     28h"}
+{"level":"info","msg":"istio-ingressgateway        LoadBalancer   172.20.140.240   a7484ac3b0240413aab63ed1d0ce903d-147089296.us-west-2.elb.amazonaws.com   15020:30741/TCP,80:30784/TCP,443:30676/TCP,31400:31148/TCP,15443:31994/TCP   28h"}
+{"level":"info","msg":"istiod                      ClusterIP      172.20.159.21    \u003cnone\u003e                                                                   15010/TCP,15012/TCP,443/TCP,15014/TCP,53/UDP,853/TCP                         28h"}
+{"level":"info","msg":"jaeger-agent                ClusterIP      None             \u003cnone\u003e                                                                   5775/UDP,6831/UDP,6832/UDP                                                   28h"}
+{"level":"info","msg":"jaeger-collector            ClusterIP      172.20.176.245   \u003cnone\u003e                                                                   14267/TCP,14268/TCP,14250/TCP                                                28h"}
+{"level":"info","msg":"jaeger-collector-headless   ClusterIP      None             \u003cnone\u003e                                                                   14250/TCP                                                                    28h"}
+{"level":"info","msg":"jaeger-query                ClusterIP      172.20.137.134   \u003cnone\u003e                                                                   16686/TCP                                                                    28h"}
+{"level":"info","msg":"kiali                       ClusterIP      172.20.90.78     \u003cnone\u003e                                                                   20001/TCP                                                                    28h"}
+{"level":"info","msg":"+ probe -command /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/compact-microservice-jazz/dice-probe-5f7b6413-3a62-4166-b8ed-d441c28ec263-bwaUXhzp.sh -initialDelaySeconds 10 -periodSeconds 10 -timeoutSeconds 300 -successThreshold 1 -failureThreshold -1"}
+{"level":"info","msg":"prometheus                  ClusterIP      172.20.206.23    \u003cnone\u003e                                                                   9090/TCP                                                                     28h"}
+{"level":"info","msg":"tracing                     ClusterIP      172.20.224.10    \u003cnone\u003e                                                                   80/TCP                                                                       28h"}
+{"level":"info","msg":"zipkin                      ClusterIP      172.20.212.177   \u003cnone\u003e                                                                   9411/TCP                                                                     28h"}
+{"level":"info","msg":"time=\"2020-06-26T18:06:11+12:00\" level=info msg=\"The probe is kicking start ...\""}
+{"level":"info","msg":"time=\"2020-06-26T18:06:24+12:00\" level=info msg=\"hostname = a7484ac3b0240413aab63ed1d0ce903d-147089296.us-west-2.elb.amazonaws.com\""}
+{"level":"info","msg":"time=\"2020-06-26T18:06:24+12:00\" level=error msg=\"++ kubectl -n istio-system get service istio-ingressgateway -o 'jsonpath={.status.loadBalancer.ingress[0].hostname}'\""}
+{"level":"info","msg":"time=\"2020-06-26T18:06:24+12:00\" level=error msg=\"+ hostname=a7484ac3b0240413aab63ed1d0ce903d-147089296.us-west-2.elb.amazonaws.com\""}
+{"level":"info","msg":"time=\"2020-06-26T18:06:24+12:00\" level=error msg=\"+ '[' a7484ac3b0240413aab63ed1d0ce903d-147089296.us-west-2.elb.amazonaws.com = '' ']'\""}
+{"level":"info","msg":"time=\"2020-06-26T18:06:24+12:00\" level=error msg=\"+ echo 'hostname = a7484ac3b0240413aab63ed1d0ce903d-147089296.us-west-2.elb.amazonaws.com'\""}
+{"level":"info","msg":"time=\"2020-06-26T18:06:24+12:00\" level=info msg=\"exit at success : failure=0, success=1\""}
+{"level":"info","msg":"time=\"2020-06-26T18:06:24+12:00\" level=info msg=\"The service is ready!\""}
+{"level":"info","msg":"time=\"2020-06-26T18:06:24+12:00\" level=info msg=\"Probe - /Users/chuancc/mywork/mylabs/csdc/mahjong-workspace/compact-microservice-jazz/dice-probe-5f7b6413-3a62-4166-b8ed-d441c28ec263-bwaUXhzp.sh was success\""}
+{"level":"info","msg":"time=\"2020-06-26T18:06:24+12:00\" level=info msg=Done"}
+{"level":"info","msg":"+ sleep 10"}
+{"level":"info","msg":"+ echo '{\"installedNamespace=istio-system\"}'"}
+{"installedNamespace=istio-system"}
+{"level":"info","msg":"++ kubectl -n istio-system get service istio-ingressgateway -o 'jsonpath={.status.loadBalancer.ingress[0].hostname}'"}
+{"level":"info","msg":"+ echo '{\"ingressHost=a7484ac3b0240413aab63ed1d0ce903d-147089296.us-west-2.elb.amazonaws.com\"}'"}
+{"ingressHost=a7484ac3b0240413aab63ed1d0ce903d-147089296.us-west-2.elb.amazonaws.com"}
+{"level":"info","msg":"++ kubectl -n istio-system get service istio-ingressgateway -o 'jsonpath={.spec.ports[?(@.name==\"http2\")].port}'"}
+{"level":"info","msg":"+ echo '{\"ingressPort=80\"}'"}
+{"ingressPort=80"}
+{"level":"info","msg":"++ kubectl -n istio-system get service istio-ingressgateway -o 'jsonpath={.spec.ports[?(@.name==\"https\")].port}'"}
+{"level":"info","msg":"+ echo '{\"secureIngressHost=443\"}'"}
+{"secureIngressHost=443"}
+{"level":"info","msg":"++ kubectl -n istio-system get service istio-ingressgateway -o 'jsonpath={.spec.ports[?(@.name==\"tcp\")].port}'"}
+{"level":"info","msg":"+ echo '{\"tcpIngressPort=31400\"}'"}
+{"tcpIngressPort=31400"}
+{"level":"info","msg":"0"}
+{"level":"info","msg":"+ echo 0"}
