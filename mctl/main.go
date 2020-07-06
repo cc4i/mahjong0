@@ -29,7 +29,13 @@ func main() {
 	addr := cmd.PersistentFlags().Lookup("addr")
 	addr.Shorthand = "s"
 
+	// dry-run
 	cmd.PersistentFlags().Bool("dry-run", false, "Only print out the yaml that would be executed")
+
+	// parallel execution
+	cmd.PersistentFlags().Bool("parallel", false, "Deployment would be executed with parallel manner")
+	parallel := cmd.PersistentFlags().Lookup("parallel")
+	parallel.Shorthand = "p"
 
 	// Initial commands
 	cmd.AddCommand(initial.Init,

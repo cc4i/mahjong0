@@ -26,10 +26,11 @@ func deployFunc(c *cobra.Command, args []string) {
 	filename, _ := c.Flags().GetString("filename")
 	addr, _ := c.Flags().GetString("addr")
 	dryRun, _ := c.Flags().GetBool("dry-run")
+	parallel, _ := c.Flags().GetBool("parallel")
 	buf, err := ioutil.ReadFile(filename)
 	if err != nil {
 		logger.Info("%s\n", err)
 	}
-	cmd.Run(addr, dryRun, buf)
+	cmd.Run(addr, dryRun, parallel, buf)
 
 }

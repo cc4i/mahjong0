@@ -45,8 +45,8 @@ func RunPostByVersion(addr string, uri string, body []byte) (int, error) {
 	return resp.StatusCode, err
 }
 
-func Run(addr string, dryRun bool, cmd []byte) error {
-	if c, err := Connect2Dice(addr, dryRun); err != nil {
+func Run(addr string, dryRun bool, parallel bool, cmd []byte) error {
+	if c, err := Connect2Dice(addr, dryRun, parallel); err != nil {
 		logger.Warning("failed to connect with Dice: %s \n", err)
 		return err
 	} else {
@@ -54,7 +54,7 @@ func Run(addr string, dryRun bool, cmd []byte) error {
 	}
 }
 
-func Connect2Dice(addr string, dryRun bool) (*websocket.Conn, error) {
+func Connect2Dice(addr string, dryRun bool, parallel bool) (*websocket.Conn, error) {
 	u := &url.URL{
 		Scheme: "ws",
 		Host:   addr,
@@ -62,6 +62,15 @@ func Connect2Dice(addr string, dryRun bool) (*websocket.Conn, error) {
 	}
 	if dryRun {
 		u.RawQuery = "dryRun=true"
+		if parallel {
+			u.RawQuery = "dryRun=true&parallel=true"
+		}
+	}
+	if parallel {
+		u.RawQuery = "parallel=true"
+		if dryRun {
+			u.RawQuery = "dryRun=true&parallel=true"
+		}
 	}
 	logger.Info("Connecting to %s\n", u.String())
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
