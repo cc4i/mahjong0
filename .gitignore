@@ -89,3 +89,7 @@ mctl/mctl
 mctl/sample-tile
 role.arn
 **/demo.yaml
+**/demo1.yaml
+**/demo2.yaml
+**/demo3.yaml
+**/demo4.yaml

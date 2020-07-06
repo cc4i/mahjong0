@@ -1,0 +1,24 @@
+{
+    "metadata": {
+      "name": "go-bumblebee-jazz-stage",
+      "namespace": "argocd"
+    },
+    "spec": {
+      "source": {
+        "repoURL": "__github_repo__",
+        "path": "kustomize/staging",
+        "targetRevision": "HEAD"
+      },
+      "destination": {
+        "server": "https://kubernetes.default.svc",
+        "namespace": "go-bumblebee"
+      },
+      "project": "default",
+      "syncPolicy": {
+        "automated": {
+          "prune": true,
+          "selfHeal": true
+        }
+      }
+    }
+  }

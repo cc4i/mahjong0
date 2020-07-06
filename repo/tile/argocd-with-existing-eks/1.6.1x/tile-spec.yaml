@@ -1,0 +1,186 @@
+apiVersion: mahjong.io/v1alpha1
+kind: Tile
+metadata:
+    name: Argocd-With-Existing-EKS
+    category: ContainerApplication
+    version: 1.6.1
+    # Dependent on what kind of vendor service, to determine what input parameters are required. 
+    # For example, dependentOnVendorService: EKS, that's required 'clusterName', 'masterRoleARN'
+    dependentOnVendorService: EKS
+# Specification
+spec:
+  global:
+    env:
+      - name: GITHUB_USER
+        value: $(self.inputs.githubUser)
+      - name: GITHUB_ACCESS_TOKEN
+        value: $(self.inputs.githubAccessToken)
+      - name: APP_CONF_REPO
+        value: $(self.inputs.appConfRepo)        
+  preRun:
+    stages:
+      - name: InstallArgoCD
+        command: |
+          cd $TILE_HOME
+          kubectl create ns argocd || true
+          kubectl apply -f lib/argocd.yaml -n argocd
+
+      - name: CheckArgocd
+        command: |
+          kubectl get deployments -n argocd
+
+        readinessProbe:
+          command: |
+            count=`kubectl get deployment/argocd-server -n argocd -o json |jq '.status.readyReplicas'`
+            if [ $count -ne 1 ]
+            then
+              echo "ReadyReplicas of ArgoCD isn't equal to 1."
+              exit 1
+            fi
+            echo "ReadyReplicas of ArgoCD is $count and ready to go."
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 300
+          successThreshold: 1
+          failureThreshold: -1      
+
+      - name: RetsetSecret
+        command: |
+          # argocd-server-cf87b5c86-5xlv2=$2a$10$lv90EJg9bW88XqUjjkhpWekVoRZVVgtLULKuiui/eUmAnR/rlL/ui
+          kubectl -n argocd patch secret argocd-secret \
+            -p '{"stringData": {
+              "admin.password": "$2a$10$lv90EJg9bW88XqUjjkhpWekVoRZVVgtLULKuiui/eUmAnR/rlL/ui",
+              "admin.passwordMtime": "'$(date +%FT%T%Z)'"
+            }}'
+      - name: InstallRollouts
+        command: |
+          cd $TILE_HOME
+          kubectl create namespace argo-rollouts || true
+          kubectl apply -f lib/rollouts.yaml -n argo-rollouts
+
+      - name: GetArgoCDToken
+          ARGOCD_SERVER=`kubectl get svc argocd-server -n argocd -o json  |jq -r '.status.loadBalancer.ingress[].hostname'`
+          ARGOCD_BASE_URL=https://$ARGOCD_SERVER/argocd
+          ARGOCD_TOKEN=`curl -s -k $ARGOCD_BASE_URL/api/v1/session -d $'{"username":"admin","password":"argocd-server-cf87b5c86-5xlv2"}'|jq -r '.token'`
+
+      - name: SetupRemoteCluster
+        command: |
+          cd $TILE_HOME/lib
+          # add production cluster
+          aws eks update-kubeconfig --name $(self.inputs.prodClusterName) --region $AWS_REGION --role-arn $(self.inputs.prodMasterRoleARN) --kubeconfig $TILE_HOME/kube.config
+          kubectl apply -f ./argocd-remote.yaml -n kube-system
+          sleep 5
+          prodClusterArn=$(echo -n $(self.inputs.prodClusterArn) | sed -e "s#/#\\\/#g")
+          prodClusterEndpoint=$(echo -n $(self.inputs.prodClusterEndpoint) | sed -e "s#/#\\\/#g")
+          argocdManagerToken=`kubectl get serviceaccount/argocd-manager -n kube-system -o json|jq -r '.secrets[0].name'`
+
+          os=`uname -s`
+          if [ $os = "Linux" ]
+          then
+            bearerToken=`kubectl get secrets/$argocdManagerToken -n kube-system -o json|jq -r '.data.token'|base64 -d`
+          else
+            bearerToken=`kubectl get secrets/$argocdManagerToken -n kube-system -o json|jq -r '.data.token'|base64 -D`
+          fi
+
+          sed -e 's/__bearerToken__/'$bearerToken'/g' \
+              -e 's/__caData__/$(self.inputs.prodClusterCertificateAuthorityData)/g' \
+              -e 's/__name__/'$prodClusterArn'/g' \
+              -e 's/__server__/'$prodClusterEndpoint'/g' ./add-cluster.json > ./add-cluster-go.json
+          curl -s -k $ARGOCD_BASE_URL/api/v1/clusters -H "Authorization: Bearer $ARGOCD_TOKEN" -d "@add-cluster-go.json"
+
+          # install Rollouts
+          kubectl create namespace argo-rollouts || true
+          kubectl apply -f ./rollouts.yaml -n argo-rollouts
+
+      - name: CreateConfigurationRepository
+        command: |
+          curl -H "Authorization: token $GITHUB_ACCESS_TOKEN" --data '{"name":"'$APP_CONF_REPO'", "private": true}' https://api.github.com/user/repos
+        readinessProbe:
+          command: |
+            retcode=`curl -H "Authorization: token $GITHUB_ACCESS_TOKEN" -s -o /dev/null -w "%{http_code}" https://api.github.com/repos/$GITHUB_USER/$APP_CONF_REPO`
+            if [ $retcode -ne 200 ]
+            then
+              echo "failed to create repo"
+              exit 1
+            fi
+            echo "$APP_CONF_REPO is ready to go!"
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 300
+          successThreshold: 1
+          failureThreshold: -1
+      - name: RegisterConfigurationRepository
+        command: |
+          cd $TILE_HOME/lib
+          githubRepo=$(echo https://$GITHUB_ACCESS_TOKEN:x-oauth-basic@github.com/$GITHUB_USER/$APP_CONF_REPO.git | sed -e "s#/#\\\/#g")
+          sed -e 's/__github_repo__/'$githubRepo'/g' \
+              -e 's/__github_access_token__/'$GITHUB_ACCESS_TOKEN'/g' ./add-repo.json > ./add-repo-go.json
+          curl -s -k $ARGOCD_BASE_URL/api/v1/repositories -H "Authorization: Bearer $ARGOCD_TOKEN" -d "@add-repo-go.json"
+        
+          
+  inputs:
+    # String
+    - name: clusterName
+      inputType: String
+      require: true
+    # String
+    - name: masterRoleARN
+      inputType: String
+      require: true
+    # Base64
+    - name: prodClusterCertificateAuthorityData
+      inputType: Base64
+      require: true
+    # String
+    - name: prodClusterArn
+      inputType: String
+      require: true
+    # String
+    - name: prodClusterEndpoint
+      inputType: String
+      require: true
+    # String
+    - name: prodClusterName
+      inputType: String
+      require: true
+    # String
+    - name: prodMasterRoleARN
+      inputType: String
+      require: true
+    # String
+    - name: githubUser
+      inputType: String
+      require: true
+    # String
+    - name: githubAccessToken
+      inputType: String
+      require: true
+    - name: appConfRepo
+      inputType: String
+      require: true
+
+
+  # Ouptputs represnt output value after launched, for 'ContainerApplication' might need leverage specific command to retrive output.
+  outputs:
+    # String
+    - name: user
+      outputType: String
+      defaultValue: admin
+      description: Custom::User
+    # FromCommand
+    - name: password
+      outputType: String
+      defaultValue: argocd-server-cf87b5c86-5xlv2
+      description: Custom::Password    
+    # FromCommand    
+    - name: argocdServer
+      outputType: FromCommand
+      defaultValueCommand: kubectl get svc argocd-server -n argocd -o json  |jq -r '.status.loadBalancer.ingress[].hostname'
+      description: Custom::String        
+    - name: argocdBaseUrl
+      outputType: String
+      defaultValue: https://$(self.outputs.argocdServer)/argocd
+      description: Custom::String        
+
+  notes: []
+

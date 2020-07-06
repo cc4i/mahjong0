@@ -9,9 +9,9 @@ spec:
   global:
     env:
       - name: GITHUB_USER
-        value: cc4i
-      - name: GIT_ACCESS_TOKEN
-        value: $(self.inputs.gitAccessToken)
+        value: $(self.inputs.githubUser)
+      - name: GITHUB_ACCESS_TOKEN
+        value: $(self.inputs.githubAccessToken)
       - name: APP_REPO
         value: $(self.inputs.appRepo)
       - name: APP_BRANCH
@@ -23,23 +23,6 @@ spec:
 
   preRun:
     stages:
-      - name: CreateRepository
-        command: |
-          curl -H "Authorization: token $GIT_ACCESS_TOKEN" --data '{"name":"'$APP_CONF_REPO'", "private": true}' https://api.github.com/user/repos
-        readinessProbe:
-          command: |
-            retcode=`curl -H "Authorization: token $GIT_ACCESS_TOKEN" -s -o /dev/null -w "%{http_code}" https://api.github.com/repos/$GITHUB_USER/$APP_CONF_REPO`
-            if [ $retcode -ne 200 ]
-            then
-              echo "failed to create repo"
-              exit 1
-            fi
-            echo "$APP_CONF_REPO is ready to go!"
-          initialDelaySeconds: 5
-          periodSeconds: 5
-          timeoutSeconds: 300
-          successThreshold: 1
-          failureThreshold: -1
       - name: PrepareAppContent
         command: |
           cd $TILE_HOME
@@ -56,7 +39,7 @@ spec:
       - name: SyncAppContentToRepository
         command: |
           cd $TILE_HOME
-          rm -rf APP_CONF_REPO;git clone https://$GIT_ACCESS_TOKEN:x-oauth-basic@github.com/$GITHUB_USER/$APP_CONF_REPO.git
+          rm -rf APP_CONF_REPO;git clone https://$GITHUB_ACCESS_TOKEN:x-oauth-basic@github.com/$GITHUB_USER/$APP_CONF_REPO.git
           cd $APP_CONF_REPO
           cp -r ../$APP_REPO/manifests/* .
           git add -A
@@ -69,7 +52,7 @@ spec:
       - name: CreateSecrets
         command: |
           cd $TILE_HOME/scripts
-          ./create-secrets.sh github-bumblebee $GITHUB_USER $GIT_ACCESS_TOKEN $APP_CONF_REPO $KMS_KEY_ID
+          ./create-secrets.sh github-bumblebee $GITHUB_USER $GITHUB_ACCESS_TOKEN $APP_CONF_REPO $KMS_KEY_ID
       - name: Register2Codebuild
         command: |
           cd $TILE_HOME/scripts
@@ -89,46 +72,23 @@ spec:
         command: |
           cd $TILE_HOME/manifest/argocd
           ARGOCD_TOKEN=`curl -s -k $(self.inputs.argocdBaseUrl)/api/v1/session -d $'{"username":"$(self.inputs.argocdUser)","password":"$(self.inputs.argocdPassword)"}'|jq -r '.token'`
-
-          # add git repo
-          githubRepo=$(echo https://$GIT_ACCESS_TOKEN:x-oauth-basic@github.com/$GITHUB_USER/$APP_CONF_REPO.git | sed -e "s#/#\\\/#g")
-          sed -e 's/__github_repo__/'$githubRepo'/g' \
-              -e 's/__github_access_token__/'$GIT_ACCESS_TOKEN'/g' ./add-repo.json > ./add-repo-go.json
-          curl -s -k $(self.inputs.argocdBaseUrl)/api/v1/repositories -H "Authorization: Bearer $ARGOCD_TOKEN" -d "@add-repo-go.json"
+          githubRepo=$(echo https://$GITHUB_ACCESS_TOKEN:x-oauth-basic@github.com/$GITHUB_USER/$APP_CONF_REPO.git | sed -e "s#/#\\\/#g")
 
           # add staging deployment 
           sed -e 's/__github_repo__/'$githubRepo'/g' ./stage-all-in-one.json > ./stage-all-in-one-go.json
           curl -s -k $(self.inputs.argocdBaseUrl)/api/v1/applications -H "Authorization: Bearer $ARGOCD_TOKEN" -d "@stage-all-in-one-go.json"
-
-          # add production cluster
-          aws eks update-kubeconfig --name $(self.inputs.prodClusterName) --region $AWS_REGION --role-arn $(self.inputs.prodMasterRoleARN) --kubeconfig $TILE_HOME/kube.config
-          kubectl apply -f ./argocd-remote.yaml -n kube-system
-          sleep 5
-          prodClusterArn=$(echo -n $(self.inputs.prodClusterArn) | sed -e "s#/#\\\/#g")
-          prodClusterEndpoint=$(echo -n $(self.inputs.prodClusterEndpoint) | sed -e "s#/#\\\/#g")
-          argocdManagerToken=`kubectl get serviceaccount/argocd-manager -n kube-system -o json|jq -r '.secrets[0].name'`
-
-          os=`uname -s`
-          if [ $os = "Linux" ]
-          then
-            bearerToken=`kubectl get secrets/$argocdManagerToken -n kube-system -o json|jq -r '.data.token'|base64 -d`
-          else
-            bearerToken=`kubectl get secrets/$argocdManagerToken -n kube-system -o json|jq -r '.data.token'|base64 -D`
-          fi
-
-          sed -e 's/__bearerToken__/'$bearerToken'/g' \
-              -e 's/__caData__/$(self.inputs.prodClusterCertificateAuthorityData)/g' \
-              -e 's/__name__/'$prodClusterArn'/g' \
-              -e 's/__server__/'$prodClusterEndpoint'/g' ./add-cluster.json > ./add-cluster-go.json
-          curl -s -k $(self.inputs.argocdBaseUrl)/api/v1/clusters -H "Authorization: Bearer $ARGOCD_TOKEN" -d "@add-cluster-go.json"
           
           # add production deployment
+          prodClusterEndpoint=$(echo -n $(self.inputs.prodClusterEndpoint) | sed -e "s#/#\\\/#g")
           sed -e 's/__server__/'$prodClusterEndpoint'/g' \
               -e 's/__github_repo__/'$githubRepo'/g' ./prod-all-in-one.json > ./prod-all-in-one-go.json
           curl -s -k $(self.inputs.argocdBaseUrl)/api/v1/applications -H "Authorization: Bearer $ARGOCD_TOKEN" -d "@prod-all-in-one-go.json"
 
   inputs:
-    - name: gitAccessToken
+    - name: githubUser
+      inputType: String
+      require: true
+    - name: githubAccessToken
       inputType: String
       require: true
     - name: appRepo
@@ -150,12 +110,6 @@ spec:
       inputType: String
       require: true
     - name: argocdPassword
-      inputType: String
-      require: true
-    - name: prodClusterCertificateAuthorityData
-      inputType: Base64
-      require: true
-    - name: prodClusterArn
       inputType: String
       require: true
     - name: prodClusterEndpoint

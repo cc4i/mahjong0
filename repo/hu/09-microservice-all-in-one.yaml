@@ -98,7 +98,7 @@ spec:
       # Istio for Prod
       tileIstio0ForProd:
         tileReference: Istio0
-        tileVersion: 1.5.4
+        tileVersion: 1.6.4
         dependsOn: 
           - tileEksWithSpotProd
         inputs:
@@ -110,7 +110,7 @@ spec:
       # Istio for Stage
       tileIstio0ForStage:
         tileReference: Istio0
-        tileVersion: 1.5.4
+        tileVersion: 1.6.4
         dependsOn: 
           - tileEksWithSpotStage
         inputs:
@@ -118,11 +118,35 @@ spec:
             inputValue: $(tileEksWithSpotStage.outputs.clusterName)
           - name: masterRoleARN
             inputValue: $(tileEksWithSpotStage.outputs.masterRoleARN)
-      
+
+      # Install SealedSecret for Prod
+      tileSealedSecret010Prod:
+        tileReference: SealedSecret-With-Existing-EKS
+        tileVersion: 0.1.0
+        dependsOn: 
+          - tileEksWithSpotProd
+        inputs:
+          - name: clusterName
+            inputValue: $(tileEksWithSpotProd.outputs.clusterName)
+          - name: masterRoleARN
+            inputValue: $(tileEksWithSpotProd.outputs.masterRoleARN)
+
+      # Install SealedSecret for Stage
+      tileSealedSecret010Stage:
+        tileReference: SealedSecret-With-Existing-EKS
+        tileVersion: 0.1.0
+        dependsOn: 
+          - tileEksWithSpotStage
+        inputs:
+          - name: clusterName
+            inputValue: $(tileEksWithSpotStage.outputs.clusterName)
+          - name: masterRoleARN
+            inputValue: $(tileEksWithSpotStage.outputs.masterRoleARN)
+
       # ArgoCD
-      tileArgocdWithExsitingEks152:
+      tileArgocdWithExsitingEks161:
         tileReference: Argocd-With-Existing-EKS
-        tileVersion: 1.5.6
+        tileVersion: 1.6.1
         dependsOn: 
           - tileIstio0ForStage
           - tileIstio0ForProd
@@ -139,7 +163,7 @@ spec:
         tileReference: Go-Bumblebee-Jazz
         tileVersion: 0.7.1
         dependsOn: 
-          - tileArgocdWithExsitingEks152
+          - tileArgocdWithExsitingEks161
         inputs:
           - name: gitAccessToken
             inputValue: <<parameter>> - personal access token for GitHub
@@ -152,11 +176,11 @@ spec:
           - name: kmsKeyID
             inputValue: $(tileAwsKmsKeyGenerator010.outputs.symmetricKeyID)
           - name: argocdBaseUrl
-            inputValue: $(tileArgocdWithExsitingEks152.outputs.argocdBaseUrl)
+            inputValue: $(tileArgocdWithExsitingEks161.outputs.argocdBaseUrl)
           - name: argocdUser
-            inputValue: $(tileArgocdWithExsitingEks152.outputs.user)
+            inputValue: $(tileArgocdWithExsitingEks161.outputs.user)
           - name: argocdPassword
-            inputValue: $(tileArgocdWithExsitingEks152.outputs.password)
+            inputValue: $(tileArgocdWithExsitingEks161.outputs.password)
           - name: prodClusterCertificateAuthorityData
             inputValue: $(tileEksWithSpotProd.outputs.clusterCertificateAuthorityData)
           - name: prodClusterArn
@@ -173,6 +197,7 @@ spec:
             inputValue: $(tileEksWithSpotStage.outputs.masterRoleARN)
           - name: prodRedisEndpoint
             inputValue: $(tileAWSElastiCacheRedis506Prod.outputs.redisEndpoint)
+
 
   summary:
     description: |
@@ -193,11 +218,11 @@ spec:
       - name: Endpoint for Staging Cluster
         value: $(tileEksWithSpotStage.outputs.clusterEndpoint)
       - name: Endpoint for AgroCD
-        value: $(tileArgocdWithExsitingEks152.outputs.argocdBaseUrl)
+        value: $(tileArgocdWithExsitingEks161.outputs.argocdBaseUrl)
       - name: Administrator for AgroCD
-        value: $(tileArgocdWithExsitingEks152.outputs.user)
+        value: $(tileArgocdWithExsitingEks161.outputs.user)
       - name: Password for AgroCD Administrator
-        value: $(tileArgocdWithExsitingEks152.outputs.password)
+        value: $(tileArgocdWithExsitingEks161.outputs.password)
       - name: Jazz Endpoint for Prod
         value: http://$(tileIstio0ForProd.outputs.ingressHost)
       - name: Jazz Endpoint for Stage

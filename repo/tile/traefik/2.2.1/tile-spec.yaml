@@ -32,7 +32,7 @@ spec:
     # String
     - name: ingressEndpoint
       outputType: String
-      defaultValueCommand: k get svc -n traefik-v2 -o json | jq -r '.items[0].status.loadBalancer.ingress[0].hostname'
+      defaultValueCommand: kubectl get svc -n traefik-v2 -o json | jq -r '.items[0].status.loadBalancer.ingress[0].hostname'
       description: Custom::String
 
 

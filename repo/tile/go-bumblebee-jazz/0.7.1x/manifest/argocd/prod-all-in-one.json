@@ -1,0 +1,18 @@
+{
+    "metadata": {
+      "name": "go-bumblebee-jazz-prod",
+      "namespace": "argocd"
+    },
+    "spec": {
+      "source": {
+        "repoURL": "__github_repo__",
+        "path": "kustomize/production",
+        "targetRevision": "HEAD"
+      },
+      "destination": {
+        "server": "__server__",
+        "namespace": "go-bumblebee"
+      },
+      "project": "default"
+    }
+  }
