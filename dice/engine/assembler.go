@@ -789,6 +789,7 @@ func (d *AssembleData) GenerateExecutePlan(ctx context.Context, aTs *Ts, out *we
 				}
 				// Adding PreRun's commands into stage.Preparation
 				for _, s := range tile.Spec.PreRun.Stages {
+					stage.Preparation = append(stage.Preparation, "# "+s.Name)
 					stage.Preparation = append(stage.Preparation, s.Command)
 					if s.ReadinessProbe != nil {
 						id := "dice-probe-" + uuid.New().String()
@@ -800,6 +801,7 @@ func (d *AssembleData) GenerateExecutePlan(ctx context.Context, aTs *Ts, out *we
 
 				// Adding PostRun's commands into stage.PostRunCommands
 				for _, s := range tile.Spec.PostRun.Stages {
+					stage.PostRunCommands = append(stage.PostRunCommands, "# "+s.Name)
 					stage.PostRunCommands = append(stage.PostRunCommands, s.Command)
 					if s.ReadinessProbe != nil {
 						id := "dice-probe-" + uuid.New().String()
