@@ -7,7 +7,8 @@
 ## Description
 AWS Solutions Assembler is also known as [Mahjong](./docs/All-Concept.md), which has built-in mechanism to leverage pattern based abstracts to build up any solution.
 
-Builders can use Mahjong to share solutions with the best industry practice. Customers can quickly experience those solutions or build their own.
+Builders can use [Mahjong](./docs/All-Concept.md) to share solutions with the best industry practice. Customers can quickly experience those solutions or build their own.
+
 
 ## Prerequisite
 
@@ -30,7 +31,7 @@ open http://127.0.0.1:9090/toy
 
 ```
 
-## Solutions
+## Hu
 
 - Containerized microservices on EKS
 > Modernized microservices on EKS with built-in automated release pipeline, service mesh, log, metrics, tracing, secret management, and more, which's a one-stop solution for containerized microservices.
